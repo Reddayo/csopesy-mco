@@ -1,0 +1,33 @@
+BasedOnStyle: LLVM
+IndentWidth: 4
+ObjCBlockIndentWidth: 4
+ContinuationIndentWidth: 4
+
+UseTab: Never
+SpaceBeforeParens: Custom
+SpaceBeforeParensOptions:
+    AfterControlStatements: true
+    AfterFunctionDefinitionName: true
+
+ColumnLimit: 80
+IndentCaseLabels: false
+
+BreakBeforeBraces: Linux
+AllowAllArgumentsOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
+
+PenaltyReturnTypeOnItsOwnLine: 999999
+BreakAfterReturnType: Automatic
+AllowShortLoopsOnASingleLine: true
+
+# AlignConsecutiveDeclarations:
+#    Enabled: true
+#    AcrossEmptyLines: true
+#    AcrossComments: true
+AllowShortBlocksOnASingleLine: false
+
+AlignTrailingComments:
+    Kind: Always
+    OverEmptyLines: 1
+
+BinPackParameters: false
