@@ -1,13 +1,12 @@
-#include <curses.h>
-#include <thread>
-#include <string>
 #include <cstring>
+#include <curses.h>
+#include <string>
+#include <thread>
 
 #include "../inc/marquee.h"
+#include "../inc/process.h"
 
 const int INPUT_WINDOW_HEIGHT = 10;
-
-
 
 int main ()
 {
@@ -41,11 +40,23 @@ int main ()
     // curses requires a C-style char buffer to hold the thing
     char buffer[100] = "";
 
+    while (1) {
+        mvwgetstr(inputWindow, 1, 1, const_cast<char *>(buffer));
+
+        std::string text(buffer);
+
+        // Create a new "process" to start the marquee, idk
+        Process marquee(outWindow, inputWindow, [outWindow, &text, max_x] () {
+            startMarquee(outWindow, text, 10, max_x - 2);
+        });
+    }
+
+    /*
     // Currently prompts a string from the user and plays a marquee animation
     std::thread t2([buffer, inputWindow, outWindow,  max_x]() {
         while(1) {
             mvwgetstr(inputWindow, 1, 1, const_cast<char*>(buffer));
-            // mvwprintw(outWindow, 10, 1, buffer); 
+            // mvwprintw(outWindow, 10, 1, buffer);
             std::thread t1([buffer, outWindow, max_x]() {
                 std::string text(buffer);
                 startMarquee(outWindow, text, 10, max_x - 2);
@@ -57,6 +68,7 @@ int main ()
     });
 
     t2.join();
+    */
 
     // TODO: This currently simply infinite loops
     // startMarquee(outWindow, text, 10, max_x - 2);
