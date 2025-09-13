@@ -5,14 +5,14 @@
 
 #include "../inc/process.h"
 // Uses initializer list, so that execution doesn't start immediately
-Process::Process (std::function<void()> execution): execution(std::move(execution)), running(false), paused(false){}
+Process::Process (std::function<void()> execution, int delayMs)
+                 : execution(std::move(execution)),
+                   running(false),
+                   paused(false), 
+                   delayMs(delayMs){}
 
 Process::~Process() {
     stop();
-    if (thread.joinable()) {
-        thread.join();
-    }
-        
 }
 
 void Process::start() {
@@ -26,6 +26,9 @@ void Process::start() {
 void Process::stop() {
     running = false;
     resume();
+      if (thread.joinable()) {
+        thread.join();
+    }
 }
 
 void Process::pause() {
@@ -47,7 +50,9 @@ bool Process::isPaused() const {
     return paused;
 }
 
-
+void Process::setDelayMs(int newDelayMs){
+    delayMs = newDelayMs;
+}
 void Process::run() {
 
     if (execution) {
@@ -62,10 +67,10 @@ void Process::runWrapper() {
 
         cv.wait(lock, [this]{ return !paused || !running; });
 
-        lock.unlock();
-
         if (!running) break;
-
+        lock.unlock();
+        
+        std::this_thread::sleep_for(std::chrono::milliseconds(delayMs));
         run();
     }
 }

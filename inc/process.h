@@ -12,7 +12,7 @@
 class Process
 {
   public:
-    Process(std::function<void()> execution);
+    Process(std::function<void()> execution, int delayMs = 0);
 
     virtual ~Process();
 
@@ -23,13 +23,16 @@ class Process
     
     bool isRunning() const;
     bool isPaused() const;
-  
+    
+    void setDelayMs(int newDelayMs);
+
   protected:
     virtual void run();
     
 
   private:
     void runWrapper();
+    std::atomic<int> delayMs;
     std::function<void()> execution;
     std::thread thread;
     std::atomic<bool> running{false};

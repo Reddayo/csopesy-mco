@@ -9,26 +9,38 @@
 #include "../inc/process.h"
 
 const int DEFAULT_SCREEN_WIDTH = 80;
-const int DEFAULT_REFRESH_DELAY = 100;
+const int DEFAULT_REFRESH_DELAY = 10;
 const int DEFAULT_FONT_HEIGHT = 6;
 
-class Marquee : public Process {
+class Marquee {
   public:
     Marquee ( WINDOW *outWindow,
-              int screenWidth = DEFAULT_SCREEN_WIDTH) ;
+              int screenWidth = DEFAULT_SCREEN_WIDTH,
+              int delayMs =  DEFAULT_REFRESH_DELAY ) ;
 
     ~Marquee();
+
+    void start();
+    void stop();
+    void pause();
+    void resume();
+    bool isRunning();
 
     void setText(const std::string& newText);
     void setRefreshDelay(int newRefreshDelay);
 
   private:
-    void run() override;
+    void drawNextFrame();
 
     WINDOW* outWindow;
     int screenWidth;
-    std::atomic<int> refreshDelay;
+    Process process;
     std::vector<std::string> asciiArtRef;
+    std::vector<std::string> display;
+    int currentDisplayCol;
+    size_t rowCount;
+    size_t rowLen;
+    
 
 };
 #endif

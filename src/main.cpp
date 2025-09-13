@@ -3,8 +3,9 @@
 #include <string>
 #include <thread>
 
-#include "../inc/marquee.h"
+
 #include "../inc/process.h"
+#include "../inc/marquee.h"
 
 const int INPUT_WINDOW_HEIGHT = 10;
 
