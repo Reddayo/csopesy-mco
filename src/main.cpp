@@ -40,6 +40,7 @@ int main ()
     // curses requires a C-style char buffer to hold the thing
     char buffer[100] = "";
 
+    /*
     while (1) {
         mvwgetstr(inputWindow, 1, 1, const_cast<char *>(buffer));
 
@@ -50,12 +51,14 @@ int main ()
             startMarquee(outWindow, text, 10, max_x - 2);
         });
     }
+    */
 
-    /*
+    // hmmMMMMMMMMMMMMMM
+    mvwgetstr(inputWindow, 1, 1, const_cast<char*>(buffer));
+
     // Currently prompts a string from the user and plays a marquee animation
     std::thread t2([buffer, inputWindow, outWindow,  max_x]() {
         while(1) {
-            mvwgetstr(inputWindow, 1, 1, const_cast<char*>(buffer));
             // mvwprintw(outWindow, 10, 1, buffer);
             std::thread t1([buffer, outWindow, max_x]() {
                 std::string text(buffer);
@@ -67,8 +70,15 @@ int main ()
         }
     });
 
+    std::thread t3([buffer, inputWindow, outWindow,  max_x]() {
+        while(1) {
+            mvwgetstr(inputWindow, 1, 1, const_cast<char*>(buffer));
+        }
+    });
+
+
     t2.join();
-    */
+    t3.join();
 
     // TODO: This currently simply infinite loops
     // startMarquee(outWindow, text, 10, max_x - 2);
