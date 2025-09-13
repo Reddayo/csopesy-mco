@@ -56,9 +56,14 @@ int main ()
         if (command == "help") {
             
         } else if (command == "start_marquee") {
-            marquee.start();
+            if(marquee.isRunning()){
+                marquee.resume();
+            }else{
+                marquee.start();
+            }
+
         } else if (command == "stop_marquee") {
-            marquee.stop();
+            marquee.pause();
         } else if (command.rfind("set_text ", 0) == 0) {
             marquee.setText(command.substr(9));
         } else if (command.rfind("set_speed ", 0) == 0) {
