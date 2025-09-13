@@ -7,6 +7,7 @@
 #include "../inc/process.h"
 
 const int INPUT_WINDOW_HEIGHT = 10;
+const int DEFAULT_REFRESH_DELAY = 100;
 
 int main ()
 {
@@ -39,17 +40,37 @@ int main ()
 
     // curses requires a C-style char buffer to hold the thing
     char buffer[100] = "";
+    
 
-    while (1) {
+
+    // Create a new "process" to start the marquee, idk
+    Marquee marquee(outWindow, max_x - 2);
+
+    bool running = true;
+    while (running) {
         mvwgetstr(inputWindow, 1, 1, const_cast<char *>(buffer));
 
-        std::string text(buffer);
+        // Where the commands go    
+        std::string command(buffer);
 
-        // Create a new "process" to start the marquee, idk
-        Process marquee(outWindow, inputWindow, [outWindow, &text, max_x] () {
-            startMarquee(outWindow, text, 10, max_x - 2);
-        });
+        if (command == "help") {
+            
+        } else if (command == "start_marquee") {
+            marquee.start();
+        } else if (command == "stop_marquee") {
+            marquee.stop();
+        } else if (command.rfind("set_text ", 0) == 0) {
+            marquee.setText(command.substr(9));
+        } else if (command.rfind("set_speed ", 0) == 0) {
+            marquee.setRefreshDelay(std::stoi(command.substr(10)));
+        } else if (command == "exit") {
+            marquee.stop();
+            running = false;
+            break;
+        }
+
     }
+    endwin();
 
     /*
     // Currently prompts a string from the user and plays a marquee animation
