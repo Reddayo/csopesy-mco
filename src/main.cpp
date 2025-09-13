@@ -7,7 +7,6 @@
 #include "../inc/process.h"
 
 const int INPUT_WINDOW_HEIGHT = 10;
-const int DEFAULT_REFRESH_DELAY = 100;
 
 int main ()
 {

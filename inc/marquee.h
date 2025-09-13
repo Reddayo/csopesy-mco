@@ -9,31 +9,26 @@
 #include "../inc/process.h"
 
 const int DEFAULT_SCREEN_WIDTH = 80;
-class Marquee
-{
+const int DEFAULT_REFRESH_DELAY = 100;
+const int DEFAULT_FONT_HEIGHT = 6;
+
+class Marquee : public Process {
   public:
     Marquee ( WINDOW *outWindow,
-              int screenWidth = DEFAULT_SCREEN_WIDTH);
+              int screenWidth = DEFAULT_SCREEN_WIDTH) ;
 
     ~Marquee();
 
-    void start();   // Launches the thread
-    void stop();    // Kills the thread
-    void pause();   // Pauses the thread
-    void resume();  // Resume if paused
     void setText(const std::string& newText);
     void setRefreshDelay(int newRefreshDelay);
-    bool isRunning() const;
 
   private:
-    void run();
+    void run() override;
+
     WINDOW* outWindow;
-    std::string text;
     int screenWidth;
     std::atomic<int> refreshDelay;
-    std::atomic<bool> paused;
-
-    Process process;
+    std::vector<std::string> asciiArtRef;
 
 };
 #endif

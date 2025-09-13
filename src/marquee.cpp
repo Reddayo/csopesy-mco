@@ -6,52 +6,34 @@
 #include "../inc/ascii_map.h"
 #include "../inc/marquee.h"
 
-const int DEFAULT_FONT_HEIGHT = 6;
-const int DEFAULT_REFRESH_DELAY = 100;
 
 Marquee::Marquee (  WINDOW *outWindow,
                     int screenWidth)
-                    :   outWindow(outWindow),
+                    :   Process(nullptr),
+                        outWindow(outWindow),
                         screenWidth(screenWidth),
-                        paused(false),
-                        process([this]() { this->run(); }) {}
+                        asciiArtRef({""}),
+                        refreshDelay(DEFAULT_REFRESH_DELAY) {}
 Marquee::~Marquee() {
     stop();
 }
 
-void Marquee::start() {
-    paused = false;
-    process.start();
-}
-void Marquee::stop() {
-    process.stop();
-}
-void Marquee::pause() {
-    paused = true;
-}
-void Marquee::resume() {
-    paused = false; 
-}
-
-bool Marquee::isRunning() const{
-    return process.isRunning();
-}
 void Marquee::setText(const std::string& newText) {
 
     /* Handle error detection here, instead of at the main thread*/
-    text = newText;
+    asciiArtRef = convertToASCIIArt(newText, screenWidth);
+
 }
 
 void Marquee::setRefreshDelay(int newRefreshDelay) {
     refreshDelay.store(newRefreshDelay);
-
 }
 
 void Marquee::run() {
     const size_t rowCount = DEFAULT_FONT_HEIGHT;
     size_t col = 0;
     // Convert text string to ASCII art
-    const std::vector<std::string> asciiArtRef = convertToASCIIArt(text, screenWidth);
+    
 
     // 'display' is what the screen looks like,  
     // where each element of the vector represents a row,  
@@ -61,8 +43,8 @@ void Marquee::run() {
     std::vector<std::string> display(rowCount, std::string(screenWidth, ' '));
 
     
-    while (process.isRunning()) {
-        if (paused) {
+    while (isRunning()) {
+        if (isPaused()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
             continue;
         }

@@ -14,7 +14,7 @@ class Process
   public:
     Process(std::function<void()> execution);
 
-    ~Process();
+    virtual ~Process();
 
     void start();   // Launches the thread
     void stop();    // Kills the thread
@@ -22,9 +22,14 @@ class Process
     void resume();  // Resume if paused
     
     bool isRunning() const;
+    bool isPaused() const;
+  
+  protected:
+    virtual void run();
+    
 
   private:
-    void run();
+    void runWrapper();
     std::function<void()> execution;
     std::thread thread;
     std::atomic<bool> running{false};

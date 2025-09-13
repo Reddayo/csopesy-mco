@@ -5,18 +5,21 @@
 
 #include "../inc/process.h"
 // Uses initializer list, so that execution doesn't start immediately
-Process::Process (std::function<void()> execution): execution(std::move(execution)){}
+Process::Process (std::function<void()> execution): execution(std::move(execution)), running(false), paused(false){}
 
 Process::~Process() {
     stop();
-    if (thread.joinable()) thread.join();
+    if (thread.joinable()) {
+        thread.join();
+    }
+        
 }
 
 void Process::start() {
     if (!running) {
         running = true;
         paused = false;
-        thread = std::thread([this]() { this->run(); });
+        thread = std::thread([this]() { this->runWrapper(); });
     }
 }
 
@@ -40,7 +43,19 @@ bool Process::isRunning() const {
     return running;
 }
 
+bool Process::isPaused() const {
+    return paused;
+}
+
+
 void Process::run() {
+
+    if (execution) {
+        execution();
+    }
+}
+
+void Process::runWrapper() {
     while (running) {
 
         std::unique_lock<std::mutex> lock(mtx);
@@ -51,6 +66,6 @@ void Process::run() {
 
         if (!running) break;
 
-        execution();
+        run();
     }
 }
