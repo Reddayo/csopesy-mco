@@ -15,39 +15,42 @@ void startMarquee (WINDOW *outWindow,
                    int screenWidth = DEFAULT_SCREEN_WIDTH)
 {
     // Convert text string to ASCII art
-    const std::vector<std::string> lines = convertToASCIIArt(text, screenWidth);
+    const std::vector<std::string> asciiArtRef = convertToASCIIArt(text, screenWidth);
 
-    if (lines.empty()) {
+    if (asciiArtRef.empty()) {
         // TODO: Do something when ASCII art is empty
         return;
     }
 
     const size_t rowCount = DEFAULT_FONT_HEIGHT;
-    const size_t rowLen = lines[0].size();
+    const size_t rowLen = asciiArtRef[0].size();
 
     // I haven't processed what kind of black magic is happening from this point
     // onward. I just removed the std::cout stuff and replaced them with calls
     // to PDCurses to print to the window instead - lowest
 
-    std::string seq; // Convert to 1D first, cause my brain would melt
-    for (const auto &l : lines) {
-        seq += l;
-    }
-
-    const size_t seqLen = seq.size();
-
+    // 'display' is what the screen looks like,  
+    // where each element of the vector represents a row,  
+    // and each character in the string represents a column,  
+    // initially filled with spaces to act as a blank canvas for drawing.
+    // added explanation, hope this helps - red
     std::vector<std::string> display(rowCount, std::string(screenWidth, ' '));
 
-    size_t pos = 0;
+    size_t col = 0;
+
+    // Loop for generating the marquee
     while (true) {
+
         for (size_t row = 0; row < rowCount; row++) {
+            // Remove the leftmost character from this row
             display[row].erase(0, 1);
-            size_t idx = (pos + row * rowLen) % seqLen;
-            display[row].push_back(seq[idx]);
+            // Add the next character from the ASCII art reference
+            display[row].push_back(asciiArtRef[row][col]);
             mvwprintw(outWindow, row + 1, 1, display[row].c_str());
         }
         wrefresh(outWindow);
-        pos = (pos + 1) % rowLen;
+        // To wrap once it reaches the end
+        col = (col + 1) % rowLen;
         std::this_thread::sleep_for(std::chrono::milliseconds(refreshDelay));
     }
 }
