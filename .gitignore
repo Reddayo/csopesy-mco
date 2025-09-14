@@ -1,3 +1,7 @@
+# Kate swap files
+.*.kate-swp
+.swp.*
+
 # .vscode folder
 .vscode/
 
