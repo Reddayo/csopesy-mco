@@ -42,6 +42,9 @@ void refreshWindows ()
     box(outBorder, 0, 0);
     box(inputBorder, 0, 0);
 
+    mvwprintw(outBorder, 0, 2, " CSOPESY S12 ");
+    mvwprintw(outBorder, 0, max_x - 38, " CESAR | LLOVIT | MARQUESES | SILVA ");
+
     wrefresh(outBorder);
     wrefresh(inputBorder);
     wrefresh(outWindow);
@@ -84,6 +87,9 @@ int main ()
     inputWindow = subwin(inputBorder, INPUT_WINDOW_HEIGHT - 2, max_x - 2,
                          max_y - INPUT_WINDOW_HEIGHT + 1, 1);
 
+    mvwprintw(outBorder, 0, 2, " CSOPESY S12 ");
+    mvwprintw(outBorder, 0, max_x - 38, " CESAR | LLOVIT | MARQUESES | SILVA ");
+    
     // Refresh all windows
     wrefresh(outBorder);
     wrefresh(inputBorder);
@@ -92,6 +98,7 @@ int main ()
 
     // Enable scrolling for input window
     scrollok(inputWindow, true);
+    idlok(inputWindow, true);
 
     // Initialize the marquee
     Marquee marquee(outWindow);
