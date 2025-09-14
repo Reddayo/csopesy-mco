@@ -19,18 +19,17 @@ Marquee::Marquee (WINDOW *outWindow)
 
 void Marquee::setRefreshDelay (int refreshDelay)
 {
-    this->refreshDelay = refreshDelay;
+    {
+        std::lock_guard<std::mutex> lock(mymutex);
+        this->refreshDelay = refreshDelay;
+        flag = true;
+    }
+    mycond.notify_all();
 }
 
 void Marquee::setText (std::string text)
 {
-    {
-        std::lock_guard<std::mutex> lock(mymutex);
-        this->asciiText = convertToASCIIArt(text, this->screenWidth);
-        flag = true;
-    }
-    mycond.notify_all();
-    
+    this->asciiText = convertToASCIIArt(text, this->screenWidth);   
 }
 
 void Marquee::stop ()
