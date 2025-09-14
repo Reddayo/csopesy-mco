@@ -24,7 +24,13 @@ void Marquee::setRefreshDelay (int refreshDelay)
 
 void Marquee::setText (std::string text)
 {
-    this->asciiText = convertToASCIIArt(text, this->screenWidth);
+    {
+        std::lock_guard<std::mutex> lock(mymutex);
+        this->asciiText = convertToASCIIArt(text, this->screenWidth);
+        flag = true;
+    }
+    mycond.notify_all();
+    
 }
 
 void Marquee::stop ()
@@ -56,6 +62,17 @@ void Marquee::start ()
     // Loop for generating the marquee
     while (this->running) {
 
+        std::unique_lock<std::mutex> lock(mymutex);
+
+         /* Wait for either flag becomes true when setText gets called
+            or refreshDelay to count down to 0  */
+        mycond.wait_for( lock,
+                        std::chrono::milliseconds(refreshDelay),
+                        [this]() { return flag; } );
+
+        // reset the flag
+        flag = false;
+
         for (size_t row = 0; row < rowCount; row++) {
             // Remove the leftmost character from this row
             display[row].erase(0, 1);
@@ -70,6 +87,6 @@ void Marquee::start ()
 
         // Wrap once it reaches the end
         col = (col + 1) % rowLen;
-        std::this_thread::sleep_for(std::chrono::milliseconds(refreshDelay));
+
     }
 }

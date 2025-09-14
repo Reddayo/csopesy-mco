@@ -4,6 +4,8 @@
 #include <curses.h>
 #include <string>
 #include <vector>
+#include <mutex>
+#include <condition_variable>
 
 class Marquee
 {
@@ -45,6 +47,13 @@ class Marquee
     bool running;
 
     std::vector<std::string> asciiText;
+
+    std::mutex mymutex;
+  
+    std::condition_variable mycond;
+    
+    bool flag;
+
 };
 
 #endif
