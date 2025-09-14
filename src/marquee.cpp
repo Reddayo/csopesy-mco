@@ -54,6 +54,7 @@ void Marquee::setText(const std::string& newText) {
     asciiArtRef = convertToASCIIArt(newText, screenWidth);
     rowLen = asciiArtRef[0].size();
     rowCount = asciiArtRef.size();
+    currentDisplayCol = rowLen - screenWidth;
 }
 
 void Marquee::setRefreshDelay(int newRefreshDelay) {
@@ -72,11 +73,10 @@ void Marquee::drawNextFrame() {
     // to PDCurses to print to the window instead - lowest
 
     for (size_t row = 0; row < rowCount; row++) {
-        // Remove the leftmost character from this row
-        display[row].erase(0, 1);
-        // Add the next character from the ASCII art reference
-        display[row].push_back(asciiArtRef[row][currentDisplayCol]);
-        mvwprintw(outWindow, row + 1, 1, display[row].c_str());
+        for (size_t col = 0; col < screenWidth; col++) {
+            size_t artCol = (currentDisplayCol + col) % rowLen;
+            mvwaddch(outWindow, row + 1, col + 1, asciiArtRef[row][artCol]);
+        }
     }
     wrefresh(outWindow);
     // To wrap once it reaches the end
