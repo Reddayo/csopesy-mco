@@ -5,17 +5,46 @@
 #include <string>
 #include <vector>
 
-/**
- * Begins a marquee animation given a specified string and refresh delay.
- *
- * @param outWindow     The target curses window to output the animation to
- * @param text          The string to show in the animation
- * @param refreshDelay  The delay between each animation frame in ms
- * @param screenWidth   The width of the output window/screen
- */
-void startMarquee(WINDOW *outWindow,
-                  std::string &text,
-                  int refreshDelay,
-                  int screenWidth);
+class Marquee
+{
+  public:
+    /**
+     * Creates a new marquee instance.
+     *
+     * @param outWindow     The target curses window for output
+     * @param refreshDelay  The delay between each animation frame in ms
+     */
+    Marquee(WINDOW *outWindow);
+
+    /** Begins the marquee animation. */
+    void start();
+
+    /** Pauses the marquee animation. */
+    void pause();
+
+    /** Stops (and clears) the marquee animation */
+    void stop();
+
+    /** Sets refresh delay for the marquee animation */
+    void setRefreshDelay(int refreshDelay);
+
+    /**
+     * Sets the text to display in the marquee. Forcibly stops the animation if
+     * it is currently playing. TODO: In this case, should it auto-start
+     * afterwards or does it have to wait for another start_marquee command?
+     *
+     * @param text  The text to show in the animation
+     */
+    void setText(std::string text);
+
+  private:
+    WINDOW *outWindow;
+
+    int refreshDelay, screenWidth;
+
+    bool running;
+
+    std::vector<std::string> asciiText;
+};
 
 #endif

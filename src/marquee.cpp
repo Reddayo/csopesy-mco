@@ -4,52 +4,71 @@
 #include <vector>
 
 #include "../inc/ascii_map.h"
+#include "../inc/marquee.h"
 
 const int DEFAULT_FONT_HEIGHT = 6;
 const int DEFAULT_REFRESH_DELAY = 100;
-const int DEFAULT_SCREEN_WIDTH = 80;
 
-void startMarquee (WINDOW *outWindow,
-                   std::string &text,
-                   int refreshDelay = DEFAULT_REFRESH_DELAY,
-                   int screenWidth = DEFAULT_SCREEN_WIDTH)
+Marquee::Marquee (WINDOW *outWindow)
 {
-    // Convert text string to ASCII art
-    const std::vector<std::string> asciiArtRef = convertToASCIIArt(text, screenWidth);
+    this->outWindow = outWindow;
+    this->refreshDelay = DEFAULT_REFRESH_DELAY;
+    this->running = false;
+    this->screenWidth = getmaxx(outWindow);
+}
 
-    if (asciiArtRef.empty()) {
+void Marquee::setRefreshDelay (int refreshDelay)
+{
+    this->refreshDelay = refreshDelay;
+}
+
+void Marquee::setText (std::string text)
+{
+    this->asciiText = convertToASCIIArt(text, this->screenWidth);
+}
+
+void Marquee::stop ()
+{
+    this->running = false;
+    wclear(this->outWindow);
+    wrefresh(this->outWindow);
+}
+
+void Marquee::start ()
+{
+    if (this->asciiText.empty()) {
         // TODO: Do something when ASCII art is empty
         return;
     }
 
     const size_t rowCount = DEFAULT_FONT_HEIGHT;
-    const size_t rowLen = asciiArtRef[0].size();
+    const size_t rowLen = this->asciiText[0].size();
 
-    // I haven't processed what kind of black magic is happening from this point
-    // onward. I just removed the std::cout stuff and replaced them with calls
-    // to PDCurses to print to the window instead - lowest
-
-    // 'display' is what the screen looks like,  
-    // where each element of the vector represents a row,  
-    // and each character in the string represents a column,  
-    // initially filled with spaces to act as a blank canvas for drawing.
-    // added explanation, hope this helps - red
-    std::vector<std::string> display(rowCount, std::string(screenWidth, ' '));
+    // Each element is a row; each character is a column
+    // Initialized with whitespace to act as a blank canvas.
+    std::vector<std::string> display(rowCount,
+                                     std::string(this->screenWidth, ' '));
 
     size_t col = 0;
 
+    this->running = true;
+
     // Loop for generating the marquee
-    while (true) {
+    while (this->running) {
 
         for (size_t row = 0; row < rowCount; row++) {
             // Remove the leftmost character from this row
             display[row].erase(0, 1);
+
             // Add the next character from the ASCII art reference
-            display[row].push_back(asciiArtRef[row][col]);
-            mvwprintw(outWindow, row + 1, 1, display[row].c_str());
+            display[row].push_back(asciiText[row][col]);
+
+            mvwprintw(this->outWindow, row, 0, display[row].c_str());
         }
-        wrefresh(outWindow);
-        // To wrap once it reaches the end
+
+        wrefresh(this->outWindow);
+
+        // Wrap once it reaches the end
         col = (col + 1) % rowLen;
         std::this_thread::sleep_for(std::chrono::milliseconds(refreshDelay));
     }

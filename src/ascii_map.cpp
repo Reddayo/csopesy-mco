@@ -1,6 +1,3 @@
-#ifndef ASCII_MAP_CPP
-#define ASCII_MAP_CPP
-
 #include <map>
 #include <string>
 #include <vector>
@@ -536,8 +533,9 @@ const std::map<char, std::vector<std::string>> asciiArtMap = {
      }},
 };
 
-std::vector<std::string> convertToASCIIArt (const std::string &text,
-                                            int trailingWidth = DEFAULT_SCREEN_WIDTH)
+std::vector<std::string> convertToASCIIArt (
+    const std::string &text,
+    int trailingWidth = DEFAULT_SCREEN_WIDTH)
 {
     if (text.empty())
         return {};
@@ -555,7 +553,7 @@ std::vector<std::string> convertToASCIIArt (const std::string &text,
             for (size_t row = 0; row < DEFAULT_FONT_HEIGHT; row++) {
                 displayText[row] += asciiArt[row];
             }
-        // If match not found for a character, just add a space
+            // If match not found for a character, just add a space
         } else {
             for (size_t row = 0; row < DEFAULT_FONT_HEIGHT; row++) {
                 displayText[row] += std::string(DEFAULT_SPACE_GAP, ' ');
@@ -570,5 +568,3 @@ std::vector<std::string> convertToASCIIArt (const std::string &text,
 
     return displayText;
 }
-
-#endif
