@@ -26,8 +26,13 @@ int main ()
 
     // =========================================================================
 
-    initscr(); // Initialize the screen
-    cbreak();  // Disable line buffering
+    initscr();     // Initialize the screen
+    cbreak();      // Disable line buffering
+    start_color(); // Allow for colors because colors are pretty
+
+    // Define color pairss
+    init_pair(1, COLOR_BLACK, COLOR_CYAN);
+    init_pair(2, COLOR_BLACK, COLOR_RED);
 
     // Get the dimensions of the terminal
     // WARNING: Display will break if you resize the terminal!
@@ -55,6 +60,9 @@ int main ()
     wrefresh(outWindow);
     wrefresh(inputWindow);
 
+    // Enable scrolling for input window
+    scrollok(inputWindow, true);
+
     // Initialize the marquee
     Marquee marquee(outWindow);
 
@@ -65,13 +73,19 @@ int main ()
     char buffer[100] = "";
 
     while (1) {
-        mvwgetstr(inputWindow, 0, 0, const_cast<char *>(buffer));
+        wattron(inputWindow, COLOR_PAIR(1));
+        wprintw(inputWindow, " Command ");
+        wattroff(inputWindow, COLOR_PAIR(1));
+
+        wprintw(inputWindow, " > ");
+
+        wgetstr(inputWindow, const_cast<char *>(buffer));
 
         // Convert the command input buffer into a C++ string
         std::string command(buffer);
 
         // Parse command
-        // TODO: help command
+        // TODO: Help and pause commands
         if (command == "start_marquee") {
             // marquee.stop() will end the infinite loop in marquee.start()
 
@@ -92,6 +106,11 @@ int main ()
         } else if (command.rfind("set_speed ", 0) == 0) {
             // TODO: Can we bypass std::this_thread::sleep_for()?
             marquee.setRefreshDelay(std::stoi(command.substr(10)));
+        } else {
+            wattron(inputWindow, COLOR_PAIR(2));
+            wprintw(inputWindow, " Error   ");
+            wattroff(inputWindow, COLOR_PAIR(2));
+            wprintw(inputWindow, " Unknown command.\n");
         }
     }
 
