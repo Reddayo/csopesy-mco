@@ -63,7 +63,7 @@ void Marquee::start ()
             // Add the next character from the ASCII art reference
             display[row].push_back(asciiText[row][col]);
 
-            mvwprintw(this->outWindow, row, 0, display[row].c_str());
+            mvwprintw(this->outWindow, row, 0, "%s", display[row].c_str());
         }
 
         wrefresh(this->outWindow);
