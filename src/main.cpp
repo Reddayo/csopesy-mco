@@ -10,25 +10,55 @@
  */
 const int INPUT_WINDOW_HEIGHT = 10;
 
+// Terminal dimensions
+int max_y, max_x;
+
+// Borders for input and output
+WINDOW *outBorder, *inputBorder;
+
+// Borders for printing content
+WINDOW *outWindow, *inputWindow;
+
+/** Refreshes both the input and the output window */
+void refreshWindows ()
+{
+    // TODO: Very redundant? I don't know'
+    getmaxyx(stdscr, max_y, max_x);
+
+    mvwin(inputBorder, max_y - INPUT_WINDOW_HEIGHT, 0);
+    wresize(inputBorder, INPUT_WINDOW_HEIGHT, max_x);
+
+    mvwin(inputWindow, max_y - INPUT_WINDOW_HEIGHT + 1, 1);
+    wresize(inputWindow, INPUT_WINDOW_HEIGHT - 2, max_x - 2);
+
+    wresize(outBorder, max_y - INPUT_WINDOW_HEIGHT, max_x);
+    wresize(outWindow, max_y - INPUT_WINDOW_HEIGHT - 2, max_x - 2);
+
+    // We only clear output window to preserve history in input window. This has
+    // the side effect of causing the input window to appear glitchy.
+    wclear(outWindow);
+    clear();
+
+    box(outBorder, 0, 0);
+    box(inputBorder, 0, 0);
+
+    wrefresh(outBorder);
+    wrefresh(inputBorder);
+    wrefresh(outWindow);
+    wrefresh(inputWindow);
+}
+
 int main ()
 {
-    // Terminal dimensions
-    int max_y, max_x;
-
-    // Borders for input and output
-    WINDOW *outBorder, *inputBorder;
-
-    // Borders for printing content
-    WINDOW *outWindow, *inputWindow;
-
     // Thread for marquee animation
     std::thread animThread;
 
     // =========================================================================
 
-    initscr();     // Initialize the screen
-    cbreak();      // Disable line buffering
-    start_color(); // Allow for colors because colors are pretty
+    initscr();            // Initialize the screen
+    cbreak();             // Disable line buffering
+    start_color();        // Allow for colors because colors are pretty
+    keypad(stdscr, TRUE); // Enable special keys like KEY_RESIZE
 
     // Define color pairss
     init_pair(1, COLOR_BLACK, COLOR_CYAN);
@@ -72,14 +102,27 @@ int main ()
     // curses requires a C-style char buffer to hold the thing
     char buffer[100] = "";
 
+    bool show_prompt = true;
+
     while (1) {
-        wattron(inputWindow, COLOR_PAIR(1));
-        wprintw(inputWindow, " Command ");
-        wattroff(inputWindow, COLOR_PAIR(1));
+        if (show_prompt) {
+            wattron(inputWindow, COLOR_PAIR(1));
+            wprintw(inputWindow, " Command ");
+            wattroff(inputWindow, COLOR_PAIR(1));
+            wprintw(inputWindow, " > ");
+        }
 
-        wprintw(inputWindow, " > ");
+        echo();
 
-        wgetstr(inputWindow, const_cast<char *>(buffer));
+        // If wgetstr() is interrupted by a SIGWINCH signal (terminal was
+        // resized), it returns KEY_RESIZE
+        if (wgetstr(inputWindow, const_cast<char *>(buffer)) == KEY_RESIZE) {
+            refreshWindows();
+            show_prompt = false; // Don't print a prompt on the next iteration
+            continue;            // Skip parsing
+        }
+
+        show_prompt = true;
 
         // Convert the command input buffer into a C++ string
         std::string command(buffer);
@@ -106,6 +149,8 @@ int main ()
         } else if (command.rfind("set_speed ", 0) == 0) {
             // TODO: Can we bypass std::this_thread::sleep_for()?
             marquee.setRefreshDelay(std::stoi(command.substr(10)));
+        } else if (command == "refresh") {
+            refreshWindows();
         } else {
             wattron(inputWindow, COLOR_PAIR(2));
             wprintw(inputWindow, " Error   ");
