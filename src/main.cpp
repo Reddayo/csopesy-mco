@@ -89,7 +89,7 @@ int main ()
 
     mvwprintw(outBorder, 0, 2, " CSOPESY S12 ");
     mvwprintw(outBorder, 0, max_x - 38, " CESAR | LLOVIT | MARQUESES | SILVA ");
-    
+
     // Refresh all windows
     wrefresh(outBorder);
     wrefresh(inputBorder);
@@ -144,8 +144,12 @@ int main ()
             marquee.stop();
             animThread = std::thread([&marquee, &animThread] () {
                 marquee.start();
-                animThread.detach();
+
+                if (animThread.joinable()) {
+                    animThread.detach();
+                }
             });
+
         } else if (command == "stop_marquee") {
             marquee.stop();
         } else if (command == "exit") {
@@ -164,6 +168,11 @@ int main ()
             wattroff(inputWindow, COLOR_PAIR(2));
             wprintw(inputWindow, " Unknown command.\n");
         }
+    }
+
+    // Wait for thread
+    if (animThread.joinable()) {
+        animThread.join();
     }
 
     // End curses environment

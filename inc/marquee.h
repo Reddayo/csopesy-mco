@@ -1,11 +1,11 @@
 #ifndef MARQUEE_H
 #define MARQUEE_H
 
+#include <condition_variable>
 #include <curses.h>
+#include <mutex>
 #include <string>
 #include <vector>
-#include <mutex>
-#include <condition_variable>
 
 class Marquee
 {
@@ -49,11 +49,10 @@ class Marquee
     std::vector<std::string> asciiText;
 
     std::mutex mymutex;
-  
-    std::condition_variable mycond;
-    
-    bool flag;
 
+    std::condition_variable mycond;
+
+    bool flag;
 };
 
 #endif
