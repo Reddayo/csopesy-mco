@@ -53,6 +53,8 @@ class Marquee
     std::condition_variable mycond;
 
     bool flag;
+
+    size_t rowLen;
 };
 
 #endif

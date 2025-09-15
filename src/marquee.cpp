@@ -30,6 +30,7 @@ void Marquee::setRefreshDelay (int refreshDelay)
 void Marquee::setText (std::string text)
 {
     this->asciiText = convertToASCIIArt(text, this->screenWidth);
+    this->rowLen = this->asciiText[0].size();
 }
 
 void Marquee::stop ()
@@ -47,7 +48,6 @@ void Marquee::start ()
     }
 
     const size_t rowCount = DEFAULT_FONT_HEIGHT;
-    const size_t rowLen = this->asciiText[0].size();
 
     // Each element is a row; each character is a column
     // Initialized with whitespace to act as a blank canvas.
