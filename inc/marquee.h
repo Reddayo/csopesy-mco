@@ -55,6 +55,7 @@ class Marquee
     bool flag;
 
     size_t rowLen;
+    int col;
 };
 
 #endif

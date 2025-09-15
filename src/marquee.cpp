@@ -29,8 +29,16 @@ void Marquee::setRefreshDelay (int refreshDelay)
 
 void Marquee::setText (std::string text)
 {
-    this->asciiText = convertToASCIIArt(text, this->screenWidth);
-    this->rowLen = this->asciiText[0].size();
+    {
+        std::lock_guard<std::mutex> lock(mymutex);
+
+        this->asciiText = convertToASCIIArt(text, this->screenWidth);
+        this->rowLen = this->asciiText[0].size();
+        this->col = (int)rowLen - screenWidth;
+
+        flag = true;
+    }
+    mycond.notify_all();
 }
 
 void Marquee::stop ()
@@ -70,7 +78,7 @@ void Marquee::start ()
 
         // reset the flag
         flag = false;
-
+        
         for (size_t row = 0; row < rowCount; row++) {
             // Remove the leftmost character from this row
             display[row].erase(0, 1);
