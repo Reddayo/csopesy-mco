@@ -53,11 +53,6 @@ void refreshWindows ()
 
 int main ()
 {
-    // Thread for marquee animation
-    std::thread animThread;
-
-    // =========================================================================
-
     initscr();            // Initialize the screen
     cbreak();             // Disable line buffering
     start_color();        // Allow for colors because colors are pretty
@@ -138,19 +133,10 @@ int main ()
         // Parse command
         // TODO: Help and pause commands
         if (command == "start_marquee") {
-            // marquee.stop() will end the infinite loop in marquee.start()
-
-            // WARNING: This is done so that the thread can properly DETACH
-            // itself and die before we create a new thread
+            // WARNING: This is done so that the thread can properly JOIN with
+            // the main thread and die before we create a new thread
             marquee.stop();
-            animThread = std::thread([&marquee, &animThread] () {
-                marquee.start();
-
-                if (animThread.joinable()) {
-                    animThread.detach();
-                }
-            });
-
+            marquee.start();
         } else if (command == "stop_marquee") {
             marquee.stop();
         } else if (command == "exit") {
@@ -159,9 +145,9 @@ int main ()
         } else if (command.rfind("set_text ", 0) == 0) {
             marquee.setText(command.substr(9));
         } else if (command.rfind("set_speed ", 0) == 0) {
-            // TODO: Can we bypass std::this_thread::sleep_for()?
             marquee.setRefreshDelay(std::stoi(command.substr(10)));
         } else if (command == "refresh") {
+            // TODO: Cleaner way to refresh windows
             refreshWindows();
         } else {
             wattron(inputWindow, COLOR_PAIR(2));
@@ -169,11 +155,6 @@ int main ()
             wattroff(inputWindow, COLOR_PAIR(2));
             wprintw(inputWindow, " Unknown command.\n");
         }
-    }
-
-    // Wait for thread
-    if (animThread.joinable()) {
-        animThread.join();
     }
 
     // End curses environment

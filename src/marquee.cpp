@@ -1,5 +1,6 @@
 #include <curses.h>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include "../inc/ascii_map.h"
@@ -34,8 +35,10 @@ void Marquee::setText (std::string text)
 void Marquee::stop ()
 {
     this->running = false;
-    wclear(this->outWindow);
-    wrefresh(this->outWindow);
+
+    if (this->animThread.joinable()) {
+        this->animThread.join();
+    }
 }
 
 void Marquee::start ()
@@ -49,29 +52,33 @@ void Marquee::start ()
 
     this->running = true;
 
-    // Loop for generating the marquee
-    while (this->running) {
+    // WARNING: Does not join the existing animThread before intantiating a new
+    // thread. Call Marquee::stop() first!
+    this->animThread = std::thread([this] () {
+        // Loop for generating the marquee
+        while (this->running) {
 
-        std::unique_lock<std::mutex> lock(mymutex);
+            std::unique_lock<std::mutex> lock(mymutex);
 
-        /* Wait for either flag becomes true when setText gets called
-           or refreshDelay to count down to 0  */
-        mycond.wait_for(lock, std::chrono::milliseconds(refreshDelay),
-                        [this] () { return flag; });
+            /* Wait for either flag becomes true when setText gets called
+             *      or refreshDelay to count down to 0  */
+            mycond.wait_for(lock, std::chrono::milliseconds(refreshDelay),
+                            [this] () { return flag; });
 
-        // Reset the flag
-        flag = false;
+            // Reset the flag
+            flag = false;
 
-        for (size_t row = 0; row < rowCount; row++) {
-            // Cycle the ASCII art
-            asciiText[row].push_back(asciiText[row][0]);
-            asciiText[row].erase(0, 1);
+            for (size_t row = 0; row < rowCount; row++) {
+                // Cycle the ASCII art
+                asciiText[row].push_back(asciiText[row][0]);
+                asciiText[row].erase(0, 1);
 
-            // Print up to window size
-            mvwprintw(this->outWindow, row, 0, "%.*s", this->screenWidth,
-                      asciiText[row].c_str());
+                // Print up to window size
+                mvwprintw(this->outWindow, row, 0, "%.*s", this->screenWidth,
+                          asciiText[row].c_str());
+            }
+
+            wrefresh(this->outWindow);
         }
-
-        wrefresh(this->outWindow);
-    }
+    });
 }

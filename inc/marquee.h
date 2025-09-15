@@ -5,6 +5,7 @@
 #include <curses.h>
 #include <mutex>
 #include <string>
+#include <thread>
 #include <vector>
 
 class Marquee
@@ -53,6 +54,8 @@ class Marquee
     std::condition_variable mycond;
 
     bool flag;
+
+    std::thread animThread;
 };
 
 #endif
