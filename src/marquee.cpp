@@ -1,6 +1,5 @@
 #include <curses.h>
 #include <string>
-#include <thread>
 #include <vector>
 
 #include "../inc/ascii_map.h"
@@ -47,14 +46,6 @@ void Marquee::start ()
     }
 
     const size_t rowCount = DEFAULT_FONT_HEIGHT;
-    const size_t rowLen = this->asciiText[0].size();
-
-    // Each element is a row; each character is a column
-    // Initialized with whitespace to act as a blank canvas.
-    std::vector<std::string> display(rowCount,
-                                     std::string(this->screenWidth, ' '));
-
-    size_t col = 0;
 
     this->running = true;
 
@@ -68,22 +59,19 @@ void Marquee::start ()
         mycond.wait_for(lock, std::chrono::milliseconds(refreshDelay),
                         [this] () { return flag; });
 
-        // reset the flag
+        // Reset the flag
         flag = false;
 
         for (size_t row = 0; row < rowCount; row++) {
-            // Remove the leftmost character from this row
-            display[row].erase(0, 1);
+            // Cycle the ASCII art
+            asciiText[row].push_back(asciiText[row][0]);
+            asciiText[row].erase(0, 1);
 
-            // Add the next character from the ASCII art reference
-            display[row].push_back(asciiText[row][col]);
-
-            mvwprintw(this->outWindow, row, 0, "%s", display[row].c_str());
+            // Print up to window size
+            mvwprintw(this->outWindow, row, 0, "%.*s", this->screenWidth,
+                      asciiText[row].c_str());
         }
 
         wrefresh(this->outWindow);
-
-        // Wrap once it reaches the end
-        col = (col + 1) % rowLen;
     }
 }

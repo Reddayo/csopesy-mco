@@ -123,7 +123,8 @@ int main ()
 
         // If wgetstr() is interrupted by a SIGWINCH signal (terminal was
         // resized), it returns KEY_RESIZE
-        if (wgetstr(inputWindow, const_cast<char *>(buffer)) == KEY_RESIZE) {
+        if (wgetnstr(inputWindow, const_cast<char *>(buffer), 99) ==
+            KEY_RESIZE) {
             refreshWindows();
             show_prompt = false; // Don't print a prompt on the next iteration
             continue;            // Skip parsing
