@@ -139,7 +139,9 @@ int main ()
             marquee.start();
         } else if (command == "stop_marquee") {
             marquee.stop();
-        } else if (command == "exit") {
+        }  else if (command == "help") {
+            marquee.help();
+        }  else if (command == "exit") {
             marquee.stop();
             break;
         } else if (command.rfind("set_text ", 0) == 0) {

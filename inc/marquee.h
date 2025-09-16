@@ -28,6 +28,9 @@ class Marquee
     /** Stops (and clears) the marquee animation */
     void stop();
 
+    /** Displays the commands */
+    void help();
+
     /** Sets refresh delay for the marquee animation */
     void setRefreshDelay(int refreshDelay);
 

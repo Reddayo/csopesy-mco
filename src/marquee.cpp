@@ -6,7 +6,7 @@
 #include "../inc/ascii_map.h"
 #include "../inc/marquee.h"
 
-const int DEFAULT_FONT_HEIGHT = 6;
+const int DEFAULT_FONT_HEIGHT = 7;
 const int DEFAULT_REFRESH_DELAY = 100;
 
 Marquee::Marquee (WINDOW *outWindow)
@@ -39,6 +39,30 @@ void Marquee::stop ()
     if (this->animThread.joinable()) {
         this->animThread.join();
     }
+
+    wrefresh(this->outWindow);
+}
+
+void Marquee::help ()
+{
+    this->running = false;
+    
+    if (this->animThread.joinable()) {
+        this->animThread.join();
+    }
+
+    this->animThread = std::thread([this] () {
+        mvwprintw(this->outWindow, 0, 0, "%s",
+        "help           - displays the commands and its description\n"
+        "start_marquee  - starts the marquee animation\n"
+        "stop_marquee   - stops the marquee animation\n"
+        "set_text       - accepts a text input and displays it as a marquee\n"
+        "set_speed      - sets the marquee animation refresh in milliseconds\n"
+        "exit           - terminates the console\n"
+        "refresh        - refresh the windows");
+
+        wrefresh(this->outWindow);
+    });
 }
 
 void Marquee::start ()
@@ -61,7 +85,7 @@ void Marquee::start ()
             std::unique_lock<std::mutex> lock(mymutex);
 
             /* Wait for either flag becomes true when setText gets called
-             *      or refreshDelay to count down to 0  */
+             *      or refreshWindowsDelay to count down to 0  */
             mycond.wait_for(lock, std::chrono::milliseconds(refreshDelay),
                             [this] () { return flag; });
 
