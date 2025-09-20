@@ -2,6 +2,11 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <Windows.h>
+#include <mmsystem.h>
+#include <iostream>
+
+#pragma comment(lib, "winm.lib")
 
 #include "../inc/ascii_map.h"
 #include "../inc/marquee.h"
@@ -56,6 +61,8 @@ void Marquee::start ()
     // thread. Call Marquee::stop() first!
     this->animThread = std::thread([this] () {
         // Loop for generating the marquee
+        PlaySound(TEXT("shupogaki.wav"), NULL, SND_FILENAME | SND_ASYNC);
+
         while (this->running) {
 
             std::unique_lock<std::mutex> lock(mymutex);
@@ -77,8 +84,9 @@ void Marquee::start ()
                 mvwprintw(this->outWindow, row, 0, "%.*s", this->screenWidth,
                           asciiText[row].c_str());
             }
-
             wrefresh(this->outWindow);
         }
+
+        PlaySound(NULL, NULL, SND_PURGE); 
     });
 }
