@@ -1,55 +1,11 @@
 #include <curses.h>
 #include <string>
-#include <thread>
 
+#include "../inc/display_manager.h"
 #include "../inc/marquee.h"
-
-/**
- * The height of the input window. The rest of the vertical space in the
- * terminal is allocated for the output window.
- */
-const int INPUT_WINDOW_HEIGHT = 10;
 
 // Terminal dimensions
 int max_y, max_x;
-
-// Borders for input and output
-WINDOW *outBorder, *inputBorder;
-
-// Borders for printing content
-WINDOW *outWindow, *inputWindow;
-
-/** Refreshes both the input and the output window */
-void refreshWindows ()
-{
-    // TODO: Very redundant? I don't know'
-    getmaxyx(stdscr, max_y, max_x);
-
-    mvwin(inputBorder, max_y - INPUT_WINDOW_HEIGHT, 0);
-    wresize(inputBorder, INPUT_WINDOW_HEIGHT, max_x);
-
-    mvwin(inputWindow, max_y - INPUT_WINDOW_HEIGHT + 1, 1);
-    wresize(inputWindow, INPUT_WINDOW_HEIGHT - 2, max_x - 2);
-
-    wresize(outBorder, max_y - INPUT_WINDOW_HEIGHT, max_x);
-    wresize(outWindow, max_y - INPUT_WINDOW_HEIGHT - 2, max_x - 2);
-
-    // We only clear output window to preserve history in input window. This has
-    // the side effect of causing the input window to appear glitchy.
-    wclear(outWindow);
-    clear();
-
-    box(outBorder, 0, 0);
-    box(inputBorder, 0, 0);
-
-    mvwprintw(outBorder, 0, 2, " CSOPESY S12 ");
-    mvwprintw(outBorder, 0, max_x - 38, " CESAR | LLOVIT | MARQUESES | SILVA ");
-
-    wrefresh(outBorder);
-    wrefresh(inputBorder);
-    wrefresh(outWindow);
-    wrefresh(inputWindow);
-}
 
 int main ()
 {
@@ -57,72 +13,38 @@ int main ()
     cbreak();             // Disable line buffering
     start_color();        // Allow for colors because colors are pretty
     keypad(stdscr, TRUE); // Enable special keys like KEY_RESIZE
+    noecho();
 
     // Define color pairss
     init_pair(1, COLOR_BLACK, COLOR_CYAN);
     init_pair(2, COLOR_BLACK, COLOR_RED);
 
-    // Get the dimensions of the terminal
-    // WARNING: Display will break if you resize the terminal!
-    getmaxyx(stdscr, max_y, max_x);
+    // Initialize display manager
+    DisplayManager dm = DisplayManager();
 
-    // Create border windows
-    outBorder = newwin(max_y - INPUT_WINDOW_HEIGHT, max_x, 0, 0);
-    inputBorder =
-        newwin(INPUT_WINDOW_HEIGHT, max_x, max_y - INPUT_WINDOW_HEIGHT, 0);
-
-    // Draw the borders
-    box(outBorder, 0, 0);
-    box(inputBorder, 0, 0);
-
-    // Content windows are created as subwindows of the border windows
-    outWindow =
-        subwin(outBorder, max_y - INPUT_WINDOW_HEIGHT - 2, max_x - 2, 1, 1);
-
-    inputWindow = subwin(inputBorder, INPUT_WINDOW_HEIGHT - 2, max_x - 2,
-                         max_y - INPUT_WINDOW_HEIGHT + 1, 1);
-
-    mvwprintw(outBorder, 0, 2, " CSOPESY S12 ");
-    mvwprintw(outBorder, 0, max_x - 38, " CESAR | LLOVIT | MARQUESES | SILVA ");
-
-    // Refresh all windows
-    wrefresh(outBorder);
-    wrefresh(inputBorder);
-    wrefresh(outWindow);
-    wrefresh(inputWindow);
-
-    // Enable scrolling for input window
-    scrollok(inputWindow, true);
-    idlok(inputWindow, true);
-
-    // Initialize the marquee
-    Marquee marquee(outWindow);
+    // Initialize the marquee animation
+    Marquee marquee(dm);
 
     // =========================================================================
 
     // Main loop for fetching input
     // curses requires a C-style char buffer to hold the thing
     char buffer[100] = "";
+    size_t size = 0;
 
     bool show_prompt = true;
 
     while (1) {
         if (show_prompt) {
-            wattron(inputWindow, COLOR_PAIR(1));
-            wprintw(inputWindow, " Command ");
-            wattroff(inputWindow, COLOR_PAIR(1));
-            wprintw(inputWindow, " > ");
+            dm.showInputPrompt();
         }
 
-        echo();
+        int read = dm._wgetnstr(buffer, 100, size);
 
-        // If wgetstr() is interrupted by a SIGWINCH signal (terminal was
-        // resized), it returns KEY_RESIZE
-        if (wgetnstr(inputWindow, const_cast<char *>(buffer), 99) ==
-            KEY_RESIZE) {
-            refreshWindows();
-            show_prompt = false; // Don't print a prompt on the next iteration
-            continue;            // Skip parsing
+        if (read != 1) {
+            show_prompt = false;
+
+            continue;
         }
 
         show_prompt = true;
@@ -148,12 +70,9 @@ int main ()
             marquee.setRefreshDelay(std::stoi(command.substr(10)));
         } else if (command == "refresh") {
             // TODO: Cleaner way to refresh windows
-            refreshWindows();
+            dm.refreshAll();
         } else {
-            wattron(inputWindow, COLOR_PAIR(2));
-            wprintw(inputWindow, " Error   ");
-            wattroff(inputWindow, COLOR_PAIR(2));
-            wprintw(inputWindow, " Unknown command.\n");
+            dm.showErrorPrompt();
         }
     }
 

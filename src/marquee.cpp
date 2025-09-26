@@ -4,17 +4,17 @@
 #include <vector>
 
 #include "../inc/ascii_map.h"
+#include "../inc/display_manager.h"
 #include "../inc/marquee.h"
 
 const int DEFAULT_FONT_HEIGHT = 6;
 const int DEFAULT_REFRESH_DELAY = 100;
 
-Marquee::Marquee (WINDOW *outWindow)
+Marquee::Marquee (DisplayManager &dm) : dm(dm)
 {
-    this->outWindow = outWindow;
     this->refreshDelay = DEFAULT_REFRESH_DELAY;
     this->running = false;
-    this->screenWidth = getmaxx(outWindow);
+    this->screenWidth = dm.getWindowWidth();
 }
 
 void Marquee::setRefreshDelay (int refreshDelay)
@@ -73,12 +73,11 @@ void Marquee::start ()
                 asciiText[row].push_back(asciiText[row][0]);
                 asciiText[row].erase(0, 1);
 
-                // Print up to window size
-                mvwprintw(this->outWindow, row, 0, "%.*s", this->screenWidth,
-                          asciiText[row].c_str());
+                dm._mvwprintw(row, 0, "%.*s", this->screenWidth,
+                              asciiText[row].c_str());
             }
 
-            wrefresh(this->outWindow);
+            dm.refreshAll();
         }
     });
 }

@@ -8,16 +8,17 @@
 #include <thread>
 #include <vector>
 
+#include "../inc/display_manager.h"
+
 class Marquee
 {
   public:
     /**
      * Creates a new marquee instance.
      *
-     * @param outWindow     The target curses window for output
      * @param refreshDelay  The delay between each animation frame in ms
      */
-    Marquee(WINDOW *outWindow);
+    Marquee(DisplayManager &dm);
 
     /** Begins the marquee animation. */
     void start();
@@ -56,6 +57,8 @@ class Marquee
     bool flag;
 
     std::thread animThread;
+
+    DisplayManager &dm;
 };
 
 #endif
