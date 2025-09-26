@@ -46,38 +46,35 @@ DisplayManager::DisplayManager ()
 
 void DisplayManager::refreshAll ()
 {
-    std::unique_lock<std::mutex> lock(this->queueMtx);
+    // Lock the display manager
+    std::lock_guard<std::mutex> lock(this->mutex);
 
     wrefresh(this->outputBorder);
     wrefresh(this->inputBorder);
     wrefresh(this->outputWindow);
     wrefresh(this->inputWindow);
-
-    lock.unlock();
 }
 
 void DisplayManager::showInputPrompt ()
 {
-    std::unique_lock<std::mutex> lock(this->queueMtx);
+    // Lock the display manager
+    std::lock_guard<std::mutex> lock(this->mutex);
 
     wattron(this->inputWindow, COLOR_PAIR(1));
     wprintw(this->inputWindow, " Command ");
     wattroff(this->inputWindow, COLOR_PAIR(1));
     wprintw(this->inputWindow, " > ");
-
-    lock.unlock();
 }
 
 void DisplayManager::showErrorPrompt ()
 {
-    std::unique_lock<std::mutex> lock(this->queueMtx);
+    // Lock the display manager
+    std::lock_guard<std::mutex> lock(this->mutex);
 
     wattron(inputWindow, COLOR_PAIR(2));
     wprintw(inputWindow, " Error   ");
     wattroff(inputWindow, COLOR_PAIR(2));
     wprintw(inputWindow, " Unknown command.\n");
-
-    lock.unlock();
 }
 
 int DisplayManager::getWindowWidth () { return getmaxx(this->outputWindow); }
@@ -85,15 +82,17 @@ int DisplayManager::getWindowWidth () { return getmaxx(this->outputWindow); }
 int DisplayManager::_mvwprintw (int y, int x, const char *format, ...)
 {
     int status;
-
-    std::unique_lock<std::mutex> lock(this->queueMtx);
-
     va_list varglist;
+
+    // Lock the display manager
+    std::lock_guard<std::mutex> lock(this->mutex);
+
+    // Fetch variadic arguments
     va_start(varglist, format);
+
+    // Move cursor and print to that position
     wmove(this->outputWindow, y, x);
     status = vw_printw(this->outputWindow, format, varglist);
-
-    lock.unlock();
 
     return status;
 }
@@ -109,7 +108,7 @@ int DisplayManager::_wgetnstr (char *buffer,
     nodelay(this->inputWindow, TRUE);
 
     // Lock and get a single character input
-    std::unique_lock<std::mutex> lock(this->queueMtx);
+    std::unique_lock<std::mutex> lock(this->mutex);
     ch = wgetch(this->inputWindow);
     lock.unlock();
 
@@ -118,7 +117,7 @@ int DisplayManager::_wgetnstr (char *buffer,
 
     // wgetch() will have returned ERR if there was no input
     if (ch == ERR) {
-        return -1;
+        return ERR;
     }
 
     // Save the current position of the cursor (needed so we can move backwards)
@@ -131,14 +130,16 @@ int DisplayManager::_wgetnstr (char *buffer,
             currentLength--;
             buffer[currentLength] = '\0';
 
-            // Adjust cursor in the input window
             lock.lock();
 
+            // Adjust cursor in the input window
             // Handle if the cursor went down a line to fit the whole command
             if (x > 0) {
+                // Go back to the left by one character
                 mvwaddch(this->inputWindow, y, x - 1, ' ');
                 wmove(this->inputWindow, y, x - 1);
             } else {
+                // Go back to the end of the previous line
                 mvwaddch(this->inputWindow, y - 1, this->getWindowWidth() - 1,
                          ' ');
                 wmove(this->inputWindow, y - 1, this->getWindowWidth() - 1);
@@ -147,7 +148,7 @@ int DisplayManager::_wgetnstr (char *buffer,
             lock.unlock();
         }
 
-        return 0;
+        return INPUT_READ_THROUGH;
     }
 
     // Handle newline or carriage return
@@ -162,7 +163,7 @@ int DisplayManager::_wgetnstr (char *buffer,
 
         lock.unlock();
 
-        return 1;
+        return INPUT_READ_SUBMIT;
     }
 
     // Handle regular characters
@@ -178,8 +179,8 @@ int DisplayManager::_wgetnstr (char *buffer,
 
         lock.unlock();
 
-        return 0;
+        return INPUT_READ_THROUGH;
     }
 
-    return -2; // Buffer full
+    return INPUT_READ_BUFFER_FULL;
 }

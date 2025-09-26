@@ -4,16 +4,16 @@
 #include "../inc/display_manager.h"
 #include "../inc/marquee.h"
 
-// Terminal dimensions
-int max_y, max_x;
-
 int main ()
 {
     initscr();            // Initialize the screen
     cbreak();             // Disable line buffering
     start_color();        // Allow for colors because colors are pretty
     keypad(stdscr, TRUE); // Enable special keys like KEY_RESIZE
-    noecho();
+    noecho();             // Block input echo (we need to do it manually)
+
+    // Terminal dimensions
+    int max_y, max_x;
 
     // Define color pairss
     init_pair(1, COLOR_BLACK, COLOR_CYAN);
@@ -26,34 +26,31 @@ int main ()
     Marquee marquee(dm);
 
     // =========================================================================
-
     // Main loop for fetching input
-    // curses requires a C-style char buffer to hold the thing
+
+    // C-style char buffer to hold user input
     char buffer[100] = "";
+
+    // Holds the current size of the input buffer
     size_t size = 0;
 
-    bool show_prompt = true;
+    int read;
+
+    dm.showInputPrompt();
 
     while (1) {
-        if (show_prompt) {
-            dm.showInputPrompt();
-        }
+        read = dm._wgetnstr(buffer, 100, size);
 
-        int read = dm._wgetnstr(buffer, 100, size);
-
-        if (read != 1) {
-            show_prompt = false;
-
+        if (read != INPUT_READ_SUBMIT) {
+            // Don't process the contents of the input buffer until user submits
             continue;
         }
-
-        show_prompt = true;
 
         // Convert the command input buffer into a C++ string
         std::string command(buffer);
 
         // Parse command
-        // TODO: Help and pause commands
+        // TODO: Help command
         if (command == "start_marquee") {
             // WARNING: This is done so that the thread can properly JOIN with
             // the main thread and die before we create a new thread
@@ -74,6 +71,9 @@ int main ()
         } else {
             dm.showErrorPrompt();
         }
+
+        // Show the prompt for the next input
+        dm.showInputPrompt();
     }
 
     // End curses environment

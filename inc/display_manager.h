@@ -7,6 +7,10 @@
 #include <mutex>
 #include <queue>
 
+#define INPUT_READ_THROUGH 0
+#define INPUT_READ_SUBMIT 1
+#define INPUT_READ_BUFFER_FULL -2
+
 /**
  * Class that manages program display, including the input and output windows.
  */
@@ -48,7 +52,9 @@ class DisplayManager
      * @param maxLength The maximum length of the user input
      * @param currentLength The current length of the buffer
      *
-     * @return ERR on failure or OK on success
+     * @return INPUT_READ_THROUGH for accepting normal characters,
+     * INPUT_READ_SUBMIT when user submits with a newline,
+     * INPUT_READ_BUFFER_FULL if buffer is full, and ERR if wgetch() call fails
      */
     int _wgetnstr(char *buf, size_t maxLength, size_t &currentLength);
 
@@ -57,7 +63,7 @@ class DisplayManager
 
     WINDOW *outputWindow, *inputWindow;
 
-    std::mutex queueMtx;
+    std::mutex mutex;
 };
 
 #endif

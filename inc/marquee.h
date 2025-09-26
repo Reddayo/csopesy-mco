@@ -23,9 +23,6 @@ class Marquee
     /** Begins the marquee animation. */
     void start();
 
-    /** Pauses the marquee animation. */
-    void pause();
-
     /** Stops (and clears) the marquee animation */
     void stop();
 
@@ -33,32 +30,30 @@ class Marquee
     void setRefreshDelay(int refreshDelay);
 
     /**
-     * Sets the text to display in the marquee. Forcibly stops the animation if
-     * it is currently playing. TODO: In this case, should it auto-start
-     * afterwards or does it have to wait for another start_marquee command?
+     * Sets the text to display in the marquee.
      *
      * @param text  The text to show in the animation
      */
     void setText(std::string text);
 
   private:
-    WINDOW *outWindow;
+    DisplayManager &dm;
 
-    int refreshDelay, screenWidth;
+    int refreshDelay;
 
-    bool running;
+    int screenWidth;
+
+    bool animationRunning;
+
+    bool animationInterrupted;
 
     std::vector<std::string> asciiText;
 
-    std::mutex mymutex;
+    std::mutex mutex;
 
-    std::condition_variable mycond;
-
-    bool flag;
+    std::condition_variable wakeUp;
 
     std::thread animThread;
-
-    DisplayManager &dm;
 };
 
 #endif

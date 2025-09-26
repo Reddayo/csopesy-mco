@@ -13,18 +13,8 @@ const int DEFAULT_REFRESH_DELAY = 100;
 Marquee::Marquee (DisplayManager &dm) : dm(dm)
 {
     this->refreshDelay = DEFAULT_REFRESH_DELAY;
-    this->running = false;
+    this->animationRunning = false;
     this->screenWidth = dm.getWindowWidth();
-}
-
-void Marquee::setRefreshDelay (int refreshDelay)
-{
-    {
-        std::lock_guard<std::mutex> lock(mymutex);
-        this->refreshDelay = refreshDelay;
-        flag = true;
-    }
-    mycond.notify_all();
 }
 
 void Marquee::setText (std::string text)
@@ -32,9 +22,20 @@ void Marquee::setText (std::string text)
     this->asciiText = convertToASCIIArt(text, this->screenWidth);
 }
 
+void Marquee::setRefreshDelay (int refreshDelay)
+{
+    std::lock_guard<std::mutex> lock(mutex);
+
+    this->refreshDelay = refreshDelay;
+    animationInterrupted = true;
+
+    // Force the thread to wake up
+    wakeUp.notify_all();
+}
+
 void Marquee::stop ()
 {
-    this->running = false;
+    this->animationRunning = false;
 
     if (this->animThread.joinable()) {
         this->animThread.join();
@@ -50,23 +51,25 @@ void Marquee::start ()
 
     const size_t rowCount = DEFAULT_FONT_HEIGHT;
 
-    this->running = true;
+    this->animationRunning = true;
 
-    // WARNING: Does not join the existing animThread before intantiating a new
-    // thread. Call Marquee::stop() first!
+    // Avoid orphaning the current animation thread, if it already exists
+    if (this->animThread.joinable()) {
+        this->animThread.join();
+    }
+
     this->animThread = std::thread([this] () {
         // Loop for generating the marquee
-        while (this->running) {
+        while (this->animationRunning) {
+            // Locks the marquee thread
+            std::unique_lock<std::mutex> lock(mutex);
 
-            std::unique_lock<std::mutex> lock(mymutex);
+            // Thread will sleep for refreshDelay or when interrupted
+            wakeUp.wait_for(lock, std::chrono::milliseconds(refreshDelay),
+                            [this] () { return animationInterrupted; });
 
-            /* Wait for either flag becomes true when setText gets called
-             *      or refreshDelay to count down to 0  */
-            mycond.wait_for(lock, std::chrono::milliseconds(refreshDelay),
-                            [this] () { return flag; });
-
-            // Reset the flag
-            flag = false;
+            // Always reset the animationInterrupted flag
+            animationInterrupted = false;
 
             for (size_t row = 0; row < rowCount; row++) {
                 // Cycle the ASCII art
