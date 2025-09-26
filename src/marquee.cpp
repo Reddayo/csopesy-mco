@@ -4,27 +4,17 @@
 #include <vector>
 
 #include "../inc/ascii_map.h"
+#include "../inc/display_manager.h"
 #include "../inc/marquee.h"
 
 const int DEFAULT_FONT_HEIGHT = 6;
 const int DEFAULT_REFRESH_DELAY = 100;
 
-Marquee::Marquee (WINDOW *outWindow)
+Marquee::Marquee (DisplayManager &dm) : dm(dm)
 {
-    this->outWindow = outWindow;
     this->refreshDelay = DEFAULT_REFRESH_DELAY;
-    this->running = false;
-    this->screenWidth = getmaxx(outWindow);
-}
-
-void Marquee::setRefreshDelay (int refreshDelay)
-{
-    {
-        std::lock_guard<std::mutex> lock(mymutex);
-        this->refreshDelay = refreshDelay;
-        flag = true;
-    }
-    mycond.notify_all();
+    this->animationRunning = false;
+    this->screenWidth = dm.getWindowWidth();
 }
 
 void Marquee::setText (std::string text)
@@ -41,57 +31,66 @@ void Marquee::setText (std::string text)
     mycond.notify_all();
 }
 
+void Marquee::setRefreshDelay (int refreshDelay)
+{
+    std::lock_guard<std::mutex> lock(mutex);
+
+    this->refreshDelay = refreshDelay;
+    animationInterrupted = true;
+
+    // Force the thread to wake up
+    wakeUp.notify_all();
+}
+
 void Marquee::stop ()
 {
-    this->running = false;
-    wclear(this->outWindow);
-    wrefresh(this->outWindow);
+    this->animationRunning = false;
+
+    if (this->animThread.joinable()) {
+        this->animThread.join();
+    }
 }
 
 void Marquee::start ()
 {
+    dm.clearOutputWindow();
+
     if (this->asciiText.empty()) {
         // TODO: Do something when ASCII art is empty
+        dm.showErrorPrompt("No marquee text set!");
         return;
     }
 
     const size_t rowCount = DEFAULT_FONT_HEIGHT;
 
-    // Each element is a row; each character is a column
-    // Initialized with whitespace to act as a blank canvas.
-    std::vector<std::string> display(rowCount,
-                                     std::string(this->screenWidth, ' '));
+    this->animationRunning = true;
 
-    size_t col = 0;
-
-    this->running = true;
-
-    // Loop for generating the marquee
-    while (this->running) {
-
-        std::unique_lock<std::mutex> lock(mymutex);
-
-        /* Wait for either flag becomes true when setText gets called
-           or refreshDelay to count down to 0  */
-        mycond.wait_for(lock, std::chrono::milliseconds(refreshDelay),
-                        [this] () { return flag; });
-
-        // reset the flag
-        flag = false;
-        
-        for (size_t row = 0; row < rowCount; row++) {
-            // Remove the leftmost character from this row
-            display[row].erase(0, 1);
-
-            // Add the next character from the ASCII art reference
-            display[row].push_back(asciiText[row][col]);
-
-            mvwprintw(this->outWindow, row, 0, "%s", display[row].c_str());
-        }
-
-        wrefresh(this->outWindow);
-
-        // Wrap once it reaches the end
-        col = (col + 1) % rowLen;
+    // Avoid orphaning the current animation thread, if it already exists
+    if (this->animThread.joinable()) {
+        this->animThread.join();
     }
+
+    this->animThread = std::thread([this] () {
+        // Loop for generating the marquee
+        while (this->animationRunning) {
+            // Locks the marquee thread
+            std::unique_lock<std::mutex> lock(mutex);
+
+            // Thread will sleep for refreshDelay or when interrupted
+            wakeUp.wait_for(lock, std::chrono::milliseconds(refreshDelay),
+                            [this] () { return animationInterrupted; });
+
+            // Always reset the animationInterrupted flag
+            animationInterrupted = false;
+
+            for (size_t row = 0; row < rowCount; row++) {
+                // Cycle the ASCII art
+                asciiText[row].push_back(asciiText[row][0]);
+                asciiText[row].erase(0, 1);
+
+                dm._mvwprintw(row, 0, "%.*s", this->screenWidth,
+                              asciiText[row].c_str());
+            }
+        }
+    });
 }

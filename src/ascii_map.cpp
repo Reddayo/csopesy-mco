@@ -543,6 +543,10 @@ std::vector<std::string> convertToASCIIArt (
     // Vector containing each row of the generated ASCII text art
     std::vector<std::string> displayText(DEFAULT_FONT_HEIGHT, "");
 
+    for (size_t row = 0; row < DEFAULT_FONT_HEIGHT; row++) {
+        displayText[row] += std::string(trailingWidth, ' ');
+    }
+
     for (char key : text) {
         // std::map<>.find() returns an iterator pointing to a key-value pair
         auto iterator = asciiArtMap.find(key);
@@ -559,11 +563,6 @@ std::vector<std::string> convertToASCIIArt (
                 displayText[row] += std::string(DEFAULT_SPACE_GAP, ' ');
             }
         }
-    }
-
-    // Add whitespace padding at the end of each row (used for marquee)
-    for (size_t row = 0; row < DEFAULT_FONT_HEIGHT; row++) {
-        displayText[row] += std::string(trailingWidth, ' ');
     }
 
     return displayText;
