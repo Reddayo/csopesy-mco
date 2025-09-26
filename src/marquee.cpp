@@ -19,16 +19,7 @@ Marquee::Marquee (DisplayManager &dm) : dm(dm)
 
 void Marquee::setText (std::string text)
 {
-    {
-        std::lock_guard<std::mutex> lock(mymutex);
-
-        this->asciiText = convertToASCIIArt(text, this->screenWidth);
-        this->rowLen = this->asciiText[0].size();
-        this->col = (int)rowLen - screenWidth;
-
-        flag = true;
-    }
-    mycond.notify_all();
+    this->asciiText = convertToASCIIArt(text, this->screenWidth);
 }
 
 void Marquee::setRefreshDelay (int refreshDelay)
