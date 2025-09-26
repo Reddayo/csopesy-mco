@@ -136,7 +136,7 @@ int DisplayManager::_wgetnstr (char *buffer,
     getyx(this->inputWindow, y, x);
 
     // Handle backspace key
-    if (ch == KEY_BACKSPACE || ch == 127) {
+    if (ch == KEY_BACKSPACE || ch == 127 || ch == 8) {
         if (currentLength > 0) {
             // Remove the last character from the buffer
             currentLength--;
