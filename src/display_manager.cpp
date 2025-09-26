@@ -66,7 +66,7 @@ void DisplayManager::showInputPrompt ()
     wprintw(this->inputWindow, " > ");
 }
 
-void DisplayManager::showErrorPrompt ()
+void DisplayManager::showErrorPrompt (std::string message)
 {
     // Lock the display manager
     std::lock_guard<std::mutex> lock(this->mutex);
@@ -74,10 +74,19 @@ void DisplayManager::showErrorPrompt ()
     wattron(inputWindow, COLOR_PAIR(2));
     wprintw(inputWindow, " Error   ");
     wattroff(inputWindow, COLOR_PAIR(2));
-    wprintw(inputWindow, " Unknown command.\n");
+    wprintw(inputWindow, " %s\n", message.c_str());
 }
 
 int DisplayManager::getWindowWidth () { return getmaxx(this->outputWindow); }
+
+void DisplayManager::clearOutputWindow ()
+{
+    // Lock the display manager
+    std::lock_guard<std::mutex> lock(this->mutex);
+
+    wclear(this->outputWindow);
+    wrefresh(this->outputWindow);
+}
 
 int DisplayManager::_mvwprintw (int y, int x, const char *format, ...)
 {
@@ -93,6 +102,9 @@ int DisplayManager::_mvwprintw (int y, int x, const char *format, ...)
     // Move cursor and print to that position
     wmove(this->outputWindow, y, x);
     status = vw_printw(this->outputWindow, format, varglist);
+
+    // Automatically refresh
+    wrefresh(this->outputWindow);
 
     return status;
 }

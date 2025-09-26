@@ -6,6 +6,7 @@
 #include <functional>
 #include <mutex>
 #include <queue>
+#include <string>
 
 #define INPUT_READ_THROUGH 0
 #define INPUT_READ_SUBMIT 1
@@ -25,11 +26,17 @@ class DisplayManager
     /** @return The windows' width */
     int getWindowWidth();
 
+    /** Clears the output window */
+    void clearOutputWindow();
+
     /** Prints an input prompt to the input window */
     void showInputPrompt();
 
-    /** Prints an error prompt in the input window */
-    void showErrorPrompt();
+    /**
+     * Prints an error prompt in the input window
+     * @param message The error message to display
+     */
+    void showErrorPrompt(std::string message);
 
     /**
      * Thread-safe wrapper function for curses' mvwprintw().

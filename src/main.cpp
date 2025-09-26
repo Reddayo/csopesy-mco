@@ -68,8 +68,24 @@ int main ()
         } else if (command == "refresh") {
             // TODO: Cleaner way to refresh windows
             dm.refreshAll();
+        } else if (command == "help") {
+            // Pause the animation, clear the output window, and show help.
+            marquee.stop();
+            dm.clearOutputWindow();
+            dm._mvwprintw(
+                0, 0, "%s",
+                "help           - displays the commands and its description\n"
+                "start_marquee  - starts the marquee animation\n"
+                "stop_marquee   - stops the marquee animation\n"
+                "set_text       - accepts a text input and displays it as a "
+                "marquee\n"
+                "set_speed      - sets the marquee animation refresh in "
+                "milliseconds\n"
+                "exit           - terminates the console\n"
+                "refresh        - refresh the windows");
+            // By this point, calling marquee.start() will resume the animation
         } else {
-            dm.showErrorPrompt();
+            dm.showErrorPrompt("Unknown command");
         }
 
         // Show the prompt for the next input

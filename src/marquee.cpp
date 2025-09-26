@@ -44,8 +44,11 @@ void Marquee::stop ()
 
 void Marquee::start ()
 {
+    dm.clearOutputWindow();
+
     if (this->asciiText.empty()) {
         // TODO: Do something when ASCII art is empty
+        dm.showErrorPrompt("No marquee text set!");
         return;
     }
 
@@ -79,8 +82,6 @@ void Marquee::start ()
                 dm._mvwprintw(row, 0, "%.*s", this->screenWidth,
                               asciiText[row].c_str());
             }
-
-            dm.refreshAll();
         }
     });
 }
