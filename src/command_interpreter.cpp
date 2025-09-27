@@ -87,10 +87,25 @@ CommandInterpreter::start(){
 
         auto it = commandMap.find(cmd);
         if (it != commandMap.end()) {
-            if (args.size() != it->second.paramCount) {
+            if (cmd == "set_text" && args.size() != it->second.paramCount) {
+                std::string full = "";
+                for (const std::string s : args) {
+                    full += ' ';
+                    full += s;
+                }
+                args[0] = full;
+
+                it->second.func(args);
+            } else if (args.size() != it->second.paramCount) {
                 dm.showErrorPrompt("Invalid number of parameters");
             } else {
-                it->second.func(args);
+                try {
+                    it->second.func(args);
+                } catch (const std::invalid_argument &e){
+                    dm.showErrorPrompt("Set_speed expects an integer value input");
+                } catch (const std::out_of_range &e) {
+                    dm.showErrorPrompt("Set_speed paramater is outside the range of an integer");
+                }  
             }
         } else {
             dm.showErrorPrompt("Unknown command");
