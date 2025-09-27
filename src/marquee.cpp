@@ -7,7 +7,7 @@
 #include "../inc/display_manager.h"
 #include "../inc/marquee.h"
 
-const int DEFAULT_FONT_HEIGHT = 6;
+const int DEFAULT_FONT_HEIGHT = 7;
 const int DEFAULT_REFRESH_DELAY = 100;
 
 Marquee::Marquee (DisplayManager &dm) : dm(dm)
