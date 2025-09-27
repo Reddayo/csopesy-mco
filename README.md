@@ -10,9 +10,41 @@
 
 ## Compilation
 
+### Linux
+
+This project uses a [curses library](https://en.wikipedia.org/wiki/Curses_(programming_library)) for its user interface. Ensure you have the ncurses library installed:
+
+**Red Hat/CentOS/Fedora**
+
+```
+sudo dnf install ncurses-devel
+```
+
+**Debian/Ubuntu**
+
+```
+sudo apt install libncurses5-dev libncursesw5-dev
+```
+
+**Arch**
+
+```
+sudo pacman -S ncurses
+```
+
+#### Compilation
+
+Compile all source files in the `/src` directory and add `-lncurses` to the command to link the ncurses library. The command will look something like this.
+
+```
+g++ -g src/**.cpp -lncurses -o bin/a.out
+```
+
 ### Windows
 
-This project uses a [curses library](https://en.wikipedia.org/wiki/Curses_(programming_library)) for its user interface. For Windows, we can use **PDCurses**, which is an implementation of curses that uses the same function calls as the popular **ncurses** for Unix systems. To compile using **MinGW**:
+For Windows, we can use **PDCurses**, which is an implementation of curses that uses the same function calls as the popular **ncurses** for Unix systems. To compile using **MinGW**:
+
+**Manual installation**
 
 1. [Download PDCurses 3.9](https://sourceforge.net/projects/pdcurses/files/pdcurses/3.9/PDCurses-3.9.zip/download) and extract contents.
 2. In the `/wincon` directory, run `make -f Makefile WIDE=Y DLL=Y`.
@@ -22,6 +54,8 @@ This project uses a [curses library](https://en.wikipedia.org/wiki/Curses_(progr
     3. Rename the `pdcurses.a` file you just copied to `libpdcurses.a`
     4. Go up one level from `/wincon` (i.e., the `PDCurses-3.9` folder). Copy `curses.h` and `panel.h` to `C:/msys64/mingw64/include`.
 
+#### Compilation
+    
 Compile all source files in the `/src` directory and add `-lpdcurses` to the command to link the PDCurses library. The command will look something like this.
 
 ```
@@ -34,7 +68,7 @@ If this does not work, explicitly include the `/include` and `lib` directories i
 g++ -g src\**.cpp -o bin\a.exe -IC:/msys64/mingw64/include -LC:/msys64/mingw64/lib -lpdcurses
 ```
 
-Alternatively, use the `run.bat` file.
+Alternatively, use the `run.bat` file. This will automatically run the program as well.
 
 ```
 run
