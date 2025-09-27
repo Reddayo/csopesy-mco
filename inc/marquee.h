@@ -16,7 +16,7 @@ class Marquee
     /**
      * Creates a new marquee instance.
      *
-     * @param refreshDelay  The delay between each animation frame in ms
+     * @param dm The DisplayManager handling the terminal windows
      */
     Marquee(DisplayManager &dm);
 

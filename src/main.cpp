@@ -1,10 +1,9 @@
 #include <curses.h>
 #include <string>
 
+#include "../inc/command_interpreter.h"
 #include "../inc/display_manager.h"
 #include "../inc/marquee.h"
-#include "../inc/command_interpreter.h"
-
 
 int main ()
 {
@@ -28,11 +27,60 @@ int main ()
     Marquee marquee(dm);
 
     // =========================================================================
- 
 
-    CommandInterpreter ci(dm, marquee);
+    CommandInterpreter ci(dm);
 
-    ci.start();
+    // start_marquee command. Argument list goes unused
+    ci.addCommand("start_marquee", // Name
+                  0,               // Parameter count
+                  false,           // Allow whitespace in argument
+                  [&marquee] (CommandArguments &) { marquee.start(); });
+
+    // stop_marquee command. Argument list goes unused
+    ci.addCommand("stop_marquee", 0, false,
+                  [&marquee] (CommandArguments &) { marquee.stop(); });
+
+    // refresh command. Argument list goes unused
+    ci.addCommand("refresh", 0, false,
+                  [&dm] (CommandArguments &) { dm.refreshAll(); });
+
+    // help command. Argument list goes unused
+    ci.addCommand("help", 0, false, [&dm, &marquee] (CommandArguments &) {
+        // Pause the animation, clear the output window, and show help.
+        marquee.stop();
+        dm.clearOutputWindow();
+        dm._mvwprintw(
+            0, 0, "%s",
+            "help           - displays the commands and its description\n"
+            "start_marquee  - starts the marquee animation\n"
+            "stop_marquee   - stops the marquee animation\n"
+            "set_text       - accepts a text input and displays it as a "
+            "marquee\n"
+            "set_speed      - sets the marquee animation refresh in "
+            "milliseconds\n"
+            "exit           - terminates the console\n"
+            "refresh        - refresh the windows");
+        // By this point, calling marquee.start() will resume the animation
+    });
+
+    // exit command. Argument list goes unused
+    ci.addCommand("exit", 0, false, [&ci, &marquee] (CommandArguments &) {
+        marquee.stop();
+        ci.exitInputs(); // Exits the command interpreter loop
+    });
+
+    // set_text command
+    ci.addCommand("set_text", 1, true, [&marquee] (CommandArguments &args) {
+        marquee.setText(args[0]);
+    });
+
+    // set_speed command
+    ci.addCommand("set_speed", 1, false, [&marquee] (CommandArguments &args) {
+        marquee.setRefreshDelay(std::stoi(args[0]));
+    });
+
+    // Start collecting inputs from the user
+    ci.startInputs();
 
     // End curses environment
     endwin();

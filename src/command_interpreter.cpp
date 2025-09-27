@@ -1,116 +1,103 @@
 #include <curses.h>
-#include <string>
-#include <unordered_map>
-#include <string>
-#include <vector>
 #include <functional>
 #include <sstream>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
-#include "../inc/ascii_map.h"
-#include "../inc/display_manager.h"
-#include "../inc/marquee.h"
 #include "../inc/command_interpreter.h"
+#include "../inc/display_manager.h"
 
-CommandInterpreter::CommandInterpreter(DisplayManager &dm, Marquee &marquee) : dm(dm), marquee(marquee){
-    auto startMarquee = [this](const std::vector<std::string>&){ this->marquee.start(); };
-    auto stopMarquee  = [this](const std::vector<std::string>&){ this->marquee.stop(); };
-    auto refreshCmd   = [this](const std::vector<std::string>&){ this->dm.refreshAll(); };
-    auto helpCmd      = [this](const std::vector<std::string>&){
-            // Pause the animation, clear the output window, and show help.
-            this->marquee.stop();
-            this->dm.clearOutputWindow();
-            this->dm._mvwprintw(
-                0, 0, "%s",
-                "help           - displays the commands and its description\n"
-                "start_marquee  - starts the marquee animation\n"
-                "stop_marquee   - stops the marquee animation\n"
-                "set_text       - accepts a text input and displays it as a "
-                "marquee\n"
-                "set_speed      - sets the marquee animation refresh in "
-                "milliseconds\n"
-                "exit           - terminates the console\n"
-                "refresh        - refresh the windows");
-            // By this point, calling marquee.start() will resume the animation
-    };
-    auto exitCmd      = [this](const std::vector<std::string>&){ 
-        this->marquee.stop(); 
-        this->running = false; 
-    };
-    auto setTextCmd   = [this](const std::vector<std::string>& args){ this->marquee.setText(args[0]); };
-    auto setSpeedCmd  = [this](const std::vector<std::string>& args){
-        this->marquee.setRefreshDelay(std::stoi(args[0]));
-    };
-    
-    this->commandMap = {
-        {"start_marquee", {0, startMarquee}},
-        {"stop_marquee",  {0, stopMarquee}},
-        {"refresh",       {0, refreshCmd}},
-        {"help",          {0, helpCmd}},
-        {"exit",          {0, exitCmd}},
-        {"set_text",      {1, setTextCmd}},
-        {"set_speed",     {1, setSpeedCmd}}
-    };
-}
+CommandInterpreter::CommandInterpreter(DisplayManager &dm) : dm(dm) {};
 
-void
-CommandInterpreter::start(){
-
-    // Main loop for fetching input
-
+void CommandInterpreter::startInputs ()
+{
     // C-style char buffer to hold user input
     char buffer[100] = "";
 
+    // Track the current size of the buffer
     size_t size = 0;
 
-    int read;
-    
-    dm.showInputPrompt();
+    // Show the command input prompt
+    this->dm.showInputPrompt();
 
+    // Used for tokenizing data from user input buffer
+    std::istringstream istream;
+    std::string commandName;
+    std::string commandArg;
 
-    running = true;
-    while (running) {
-        read = dm._wgetnstr(buffer, 100, size);
+    this->running = true;
 
-        if (read != INPUT_READ_SUBMIT) {
+    while (this->running) {
+        // Create command arguments vector
+        std::vector<std::string> commandArgs;
+
+        if (this->dm._wgetnstr(buffer, 100, size) != INPUT_READ_SUBMIT) {
             // Don't process the contents of the input buffer until user submits
             continue;
         }
 
-        std::string line(buffer);
-        std::istringstream iss(line);
-        std::string cmd;
-        std::vector<std::string> args;
+        // Convert input buffer into an istringstream, then extract first token
+        istream = std::istringstream(buffer);
+        istream >> commandName;
 
-        iss >> cmd;
-        std::string arg;
-        while (iss >> arg) args.push_back(arg);
+        // Match command with list of valid commands
+        auto commandData = commandMap.find(commandName);
+        if (commandData != commandMap.end()) {
+            // allowSpaces combines all arguments into one single argument
+            // containing whitespace
+            if (commandData->second.allowSpaces) {
+                // Discard leading whitespace and read the rest of the line
+                std::getline(istream >> std::ws, commandArg);
+                commandArgs.push_back(commandArg);
+            } else {
+                // Extract the remaining tokens from the istringstream into args
+                while (istream >> commandArg) {
+                    commandArgs.push_back(commandArg);
+                };
+            }
 
-        auto it = commandMap.find(cmd);
-        if (it != commandMap.end()) {
-            if (cmd == "set_text" && args.size() != it->second.paramCount) {
-                std::string full = "";
-                for (const std::string s : args) {
-                    full += ' ';
-                    full += s;
-                }
-                args[0] = full;
-
-                it->second.func(args);
-            } else if (args.size() != it->second.paramCount) {
-                dm.showErrorPrompt("Invalid number of parameters");
+            // Check if argument count matches
+            if (commandArgs.size() != commandData->second.paramCount) {
+                this->dm.showErrorPrompt("Invalid number of parameters");
             } else {
                 try {
-                    it->second.func(args);
-                } catch (const std::invalid_argument &e){
-                    dm.showErrorPrompt("Set_speed expects an integer value input");
+                    commandData->second.execute(commandArgs);
+                } catch (const std::invalid_argument &e) {
+                    this->dm.showErrorPrompt("Invalid argument(s) type");
                 } catch (const std::out_of_range &e) {
-                    dm.showErrorPrompt("Set_speed paramater is outside the range of an integer");
-                }  
+                    this->dm.showErrorPrompt("Argument(s) out of range");
+                }
             }
         } else {
-            dm.showErrorPrompt("Unknown command");
+            // Matching failed
+            this->dm.showErrorPrompt("Unknown command");
         }
 
-        dm.showInputPrompt();
+        this->dm.showInputPrompt();
     }
+}
+
+void CommandInterpreter::exitInputs () { this->running = false; }
+
+void CommandInterpreter::addCommand (
+    std::string name,
+    int paramCount,
+    bool allowSpaces,
+    std::function<void(CommandArguments &)> execute)
+{
+    // paramCount must be 1 if allowSpaces is true
+    if (paramCount != 1 && allowSpaces) {
+        throw std::invalid_argument(
+            "paramCount must be 1 when allowSpaces is true");
+    }
+
+    // Get command data from parameters
+    std::pair<std::string, Command> commandData(
+        name, Command({.paramCount = paramCount,
+                       .allowSpaces = allowSpaces,
+                       .execute = execute}));
+
+    // Add to command map
+    this->commandMap.insert(commandData);
 }

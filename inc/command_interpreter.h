@@ -3,28 +3,57 @@
 
 #include <curses.h>
 #include <string>
+#include <variant>
 
 #include "../inc/ascii_map.h"
 #include "../inc/display_manager.h"
 #include "../inc/marquee.h"
 
+// Define a more descriptive type alias for command argument vector
+using CommandArguments = const std::vector<std::string>;
 
 struct Command {
+    /**
+     * The number of parameters for this command. Ignored if allowSpaces is
+     * true.
+     */
     int paramCount;
-    std::function<void(const std::vector<std::string>&)> func;
+
+    /** Set to true to treat whitespaces as part of the argument. */
+    bool allowSpaces;
+
+    /** The function to call upon executing the command. */
+    std::function<void(CommandArguments)> execute;
 };
 
 class CommandInterpreter
 {
   public:
-    CommandInterpreter(DisplayManager &dm, Marquee &marquee);
-    void start();
+    /**
+     * Creates a new command interpreter instance.
+     *
+     * @param dm The DisplayManager handling the terminal windows
+     */
+    CommandInterpreter(DisplayManager &dm);
+
+    /** Begins the user input loop for this interpreter */
+    void startInputs();
+
+    /** Exits the user input loop for this interpreter */
+    void exitInputs();
+
+    /* Adds a new command to the interpreter */
+    void addCommand(std::string name, // Name of command
+                    int paramCount,   // Number of parameters
+                    bool allowSpaces, // Treat whitespaces as arg
+                    std::function<void(CommandArguments &)> execute);
+
   private:
-    Marquee &marquee;
     DisplayManager &dm;
+
     std::unordered_map<std::string, Command> commandMap;
+
     bool running;
-    
 };
 
 #endif

@@ -622,7 +622,7 @@ const std::map<char, std::vector<std::string>> asciiArtMap = {
      }},
     {'4',
      {
-	     "  _ _   ",
+         "  _ _   ",
          " | | |  ",
          " |_  _| ",
          "  _|_|_ ",
@@ -640,9 +640,9 @@ const std::map<char, std::vector<std::string>> asciiArtMap = {
          "\"`-0-0-'",
          "        ",
      }},
-        {'6',
+    {'6',
      {
-	     "    __  ",
+         "    __  ",
          "   / /  ",
          "  / _ \\ ",
          "  \\___/ ",
@@ -652,7 +652,7 @@ const std::map<char, std::vector<std::string>> asciiArtMap = {
      }},
     {'7',
      {
-	     "   ____ ",
+         "   ____ ",
          "  |__  |",
          "    / / ",
          "  _/_/_ ",
@@ -662,7 +662,7 @@ const std::map<char, std::vector<std::string>> asciiArtMap = {
      }},
     {'8',
      {
-	     "   ___  ",
+         "   ___  ",
          "  ( _ ) ",
          "  / _ \\ ",
          "  \\___/ ",
@@ -672,7 +672,7 @@ const std::map<char, std::vector<std::string>> asciiArtMap = {
      }},
     {'9',
      {
-	     "   ___  ",
+         "   ___  ",
          "  / _ \\ ",
          "  \\_, / ",
          "  _/_/_ ",
@@ -682,7 +682,7 @@ const std::map<char, std::vector<std::string>> asciiArtMap = {
      }},
     {'0',
      {
-	 "    __  ",
+         "    __  ",
          "   /  \\ ",
          "  | () |",
          "  _\\__/ ",
