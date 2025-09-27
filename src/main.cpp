@@ -52,9 +52,6 @@ int main ()
         // Parse command
         // TODO: Help command
         if (command == "start_marquee") {
-            // WARNING: This is done so that the thread can properly JOIN with
-            // the main thread and die before we create a new thread
-            marquee.stop();
             marquee.start();
         } else if (command == "stop_marquee") {
             marquee.stop();

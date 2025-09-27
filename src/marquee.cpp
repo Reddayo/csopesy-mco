@@ -20,6 +20,10 @@ Marquee::Marquee (DisplayManager &dm) : dm(dm)
 void Marquee::setText (std::string text)
 {
     this->asciiText = convertToASCIIArt(text, this->screenWidth);
+
+    // Force the thread to wake up
+    animationInterrupted = true;
+    wakeUp.notify_all();
 }
 
 void Marquee::setRefreshDelay (int refreshDelay)
@@ -27,15 +31,19 @@ void Marquee::setRefreshDelay (int refreshDelay)
     std::lock_guard<std::mutex> lock(mutex);
 
     this->refreshDelay = refreshDelay;
-    animationInterrupted = true;
 
     // Force the thread to wake up
+    animationInterrupted = true;
     wakeUp.notify_all();
 }
 
 void Marquee::stop ()
 {
     this->animationRunning = false;
+
+    // Force the thread to wake up
+    animationInterrupted = true;
+    wakeUp.notify_all();
 
     if (this->animThread.joinable()) {
         this->animThread.join();
@@ -44,13 +52,18 @@ void Marquee::stop ()
 
 void Marquee::start ()
 {
-    dm.clearOutputWindow();
-
     if (this->asciiText.empty()) {
         // TODO: Do something when ASCII art is empty
         dm.showErrorPrompt("No marquee text set!");
         return;
     }
+
+    if (this->animationRunning) {
+        dm.showErrorPrompt("Marquee animation already running!");
+        return;
+    }
+
+    dm.clearOutputWindow();
 
     const size_t rowCount = DEFAULT_FONT_HEIGHT;
 
