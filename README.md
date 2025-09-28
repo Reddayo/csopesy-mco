@@ -62,11 +62,12 @@ As an alternative to manually building PDCurses, you can install through MSYS2 l
 pacman -S mingw-w64-x86_64-pdcurses
 ```
 
-**However**, installing PDCurses through MSYS2 seems to result in the `curses.h` file *not* including the `endwin()` function for whatever reason. If you use this method of installation, **add the following to `main.cpp`**:
-
-```c++
-#include <pdcurses.h>
-```
+> [!WARNING]
+> Installing PDCurses through MSYS2 seems to result in the `curses.h` file *not* including the `endwin()` function for whatever reason. If you use this method of installation, **add the following to `main.cpp`**:
+>
+> ```c++
+> #include <pdcurses.h>
+> ```
     
 #### Compilation
     
