@@ -1,4 +1,5 @@
 #include <curses.h>
+#include <stdexcept>
 #include <string>
 
 #include "../inc/command_interpreter.h"
@@ -76,8 +77,24 @@ int main ()
 
     // set_speed command
     ci.addCommand("set_speed", 1, false, [&marquee] (CommandArguments &args) {
-        marquee.setRefreshDelay(std::stoi(args[0]));
+        int speed;
+
+        // Handle invalid argument type
+        try {
+            speed = std::stoi(args[0]);
+        } catch (const std::invalid_argument &e) {
+            throw std::invalid_argument("Argument must be numeric");
+        }
+
+        // Handle negative speed values
+        if (speed < 0) {
+            throw std::out_of_range("Value cannot be negative.");
+        }
+
+        marquee.setRefreshDelay(speed);
     });
+
+    // =========================================================================
 
     // Start collecting inputs from the user
     ci.startInputs();

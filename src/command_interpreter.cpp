@@ -1,6 +1,7 @@
 #include <curses.h>
 #include <functional>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -64,9 +65,9 @@ void CommandInterpreter::startInputs ()
                 try {
                     commandData->second.execute(commandArgs);
                 } catch (const std::invalid_argument &e) {
-                    this->dm.showErrorPrompt("Invalid argument(s) type");
+                    this->dm.showErrorPrompt(e.what());
                 } catch (const std::out_of_range &e) {
-                    this->dm.showErrorPrompt("Argument(s) out of range");
+                    this->dm.showErrorPrompt(e.what());
                 }
             }
         } else {
