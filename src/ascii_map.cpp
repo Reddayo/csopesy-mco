@@ -699,6 +699,14 @@ std::vector<std::string> convertToASCIIArt (
     if (text.empty())
         return {};
 
+    const std::vector<std::string> defaultArt = {"        ",
+                                                 "        ",
+                                                 "        ",
+                                                 " ______ ",
+                                                 "_|\"\"\"\"\"|",
+                                                 "\"`-0-0-'",
+                                                 "        "};
+
     // Vector containing each row of the generated ASCII text art
     std::vector<std::string> displayText(DEFAULT_FONT_HEIGHT, "");
 
@@ -716,10 +724,17 @@ std::vector<std::string> convertToASCIIArt (
             for (size_t row = 0; row < DEFAULT_FONT_HEIGHT; row++) {
                 displayText[row] += asciiArt[row];
             }
-            // If match not found for a character, just add a space
+            // If match not found for a character, just display the character
         } else {
             for (size_t row = 0; row < DEFAULT_FONT_HEIGHT; row++) {
-                displayText[row] += std::string(DEFAULT_SPACE_GAP, ' ');
+                if(row != 3) {
+                    displayText[row] += defaultArt[row];
+                }
+                else {
+                    displayText[row] += "  __";
+                    displayText[row] += key;
+                    displayText[row] += "__ ";
+                }
             }
         }
     }
