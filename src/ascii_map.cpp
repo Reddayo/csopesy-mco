@@ -692,20 +692,21 @@ const std::map<char, std::vector<std::string>> asciiArtMap = {
      }},
 };
 
+// Default ASCII art if no match found
+const std::vector<std::string> defaultArt = {"        ",      //
+                                             "        ",      //
+                                             "        ",      //
+                                             " ______ ",      //
+                                             "_|\"\"\"\"\"|", //
+                                             "\"`-0-0-'",     //
+                                             "        "};
+
 std::vector<std::string> convertToASCIIArt (
     const std::string &text,
     int trailingWidth = DEFAULT_SCREEN_WIDTH)
 {
     if (text.empty())
         return {};
-
-    const std::vector<std::string> defaultArt = {"        ",
-                                                 "        ",
-                                                 "        ",
-                                                 " ______ ",
-                                                 "_|\"\"\"\"\"|",
-                                                 "\"`-0-0-'",
-                                                 "        "};
 
     // Vector containing each row of the generated ASCII text art
     std::vector<std::string> displayText(DEFAULT_FONT_HEIGHT, "");
@@ -724,13 +725,13 @@ std::vector<std::string> convertToASCIIArt (
             for (size_t row = 0; row < DEFAULT_FONT_HEIGHT; row++) {
                 displayText[row] += asciiArt[row];
             }
-            // If match not found for a character, just display the character
+
         } else {
+            // If match not found for a character, just display the character
             for (size_t row = 0; row < DEFAULT_FONT_HEIGHT; row++) {
-                if(row != 3) {
+                if (row != 3) {
                     displayText[row] += defaultArt[row];
-                }
-                else {
+                } else {
                     displayText[row] += "  __";
                     displayText[row] += key;
                     displayText[row] += "__ ";
