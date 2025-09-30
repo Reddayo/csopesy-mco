@@ -8,9 +8,7 @@
 
 **SILVA**, Paulo Grane Gabriel Carcamo
 
-## Compilation
-
-### Linux
+## Linux users
 
 This project uses a [curses library](https://en.wikipedia.org/wiki/Curses_(programming_library)) for its user interface. Ensure you have the ncurses library installed (as a note, this project was tested on Fedora):
 
@@ -32,7 +30,7 @@ sudo apt install libncurses5-dev libncursesw5-dev
 sudo pacman -S ncurses
 ```
 
-#### Compilation
+### Compilation
 
 Use the `run.sh` script located at the root directory.
 
@@ -46,7 +44,7 @@ Alternatively, if you want to compile manually, compile all source files in the 
 g++ -g src/**.cpp -lncurses -o bin/a.out
 ```
 
-### Windows
+## Windows users
 
 For Windows, we can use **PDCurses**, which is an implementation of curses that uses the same function calls as the popular **ncurses** for Unix systems. Compiling using GCC on **MinGW64** is strongly recommended. If you do not have it, I suggest installing it through [MSYS2](https://www.msys2.org/), using the package [`mingw-w64-x86_64-gcc`](https://packages.msys2.org/packages/mingw-w64-x86_64-gcc)):
 
@@ -101,7 +99,7 @@ pacman -S mingw-w64-x86_64-pdcurses
 > #include <pdcurses.h>
 > ```
 
-#### Compilation
+### Compilation
 
 Use the `run.bat` file located at the root directory
 
