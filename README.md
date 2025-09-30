@@ -48,7 +48,17 @@ g++ -g src/**.cpp -lncurses -o bin/a.out
 
 ### Windows
 
-For Windows, we can use **PDCurses**, which is an implementation of curses that uses the same function calls as the popular **ncurses** for Unix systems. To compile using GCC on **MinGW64** (If you do not have it, I suggest installing it through [MSYS2](https://www.msys2.org/), using the package [`mingw-w64-x86_64-gcc`](https://packages.msys2.org/packages/mingw-w64-x86_64-gcc)):
+For Windows, we can use **PDCurses**, which is an implementation of curses that uses the same function calls as the popular **ncurses** for Unix systems. Compiling using GCC on **MinGW64** is strongly recommended. If you do not have it, I suggest installing it through [MSYS2](https://www.msys2.org/), using the package [`mingw-w64-x86_64-gcc`](https://packages.msys2.org/packages/mingw-w64-x86_64-gcc)):
+
+```
+pacman -S mingw-w64-x86_64-gcc
+```
+
+Ensure you also have access to `make`. Otherwise, you may also install it through MSYS2:
+
+```
+pacman -S mingw-w64-x86_64-make
+```
 
 **Option 1: Using the build script**
 
