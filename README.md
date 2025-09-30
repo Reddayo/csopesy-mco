@@ -55,7 +55,7 @@ pacman -S mingw-w64-x86_64-gcc
 Ensure you also have access to `make`. Otherwise, you may also install it through MSYS2:
 
 ```
-pacman -S mingw-w64-x86_64-make
+pacman -S base-devel
 ```
 
 **Option 1: Using the build script**
