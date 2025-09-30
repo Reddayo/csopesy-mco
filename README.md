@@ -34,7 +34,13 @@ sudo pacman -S ncurses
 
 #### Compilation
 
-Compile all source files in the `/src` directory and add `-lncurses` to the command to link the ncurses library. The command will look something like this.
+Use the `run.sh` script located at the root directory.
+
+```
+run.sh
+```
+
+Alternatively, if you want to compile manually, compile all source files in the `/src` directory and add `-lncurses` to the command to link the ncurses library. The command will look something like this.
 
 ```
 g++ -g src/**.cpp -lncurses -o bin/a.out
@@ -42,7 +48,7 @@ g++ -g src/**.cpp -lncurses -o bin/a.out
 
 ### Windows
 
-For Windows, we can use **PDCurses**, which is an implementation of curses that uses the same function calls as the popular **ncurses** for Unix systems. To compile using **MinGW64** (If you do not have it, I suggest installing it through [MSYS2](https://www.msys2.org/)):
+For Windows, we can use **PDCurses**, which is an implementation of curses that uses the same function calls as the popular **ncurses** for Unix systems. To compile using GCC on **MinGW64** (If you do not have it, I suggest installing it through [MSYS2](https://www.msys2.org/), using the package [`mingw-w64-x86_64-gcc`](https://packages.msys2.org/packages/mingw-w64-x86_64-gcc)):
 
 **Option 1: Using the build script**
 
@@ -65,7 +71,7 @@ The steps below are just what `build_curses.bat`, if you wish to do the steps ma
     4. Go up one level from `/wincon` (i.e., the `PDCurses-3.9` folder). Copy `curses.h` and `panel.h` to `C:/msys64/mingw64/include`.
 
 **Option 3: Installing PDCurses through MSYS2 and `pacman`**
-    
+ 
 As a last resort if all of the above fails, you can install PDCurses through MSYS2 like so:
 
 ```
@@ -84,10 +90,16 @@ pacman -S mingw-w64-x86_64-pdcurses
 > ```c++
 > #include <pdcurses.h>
 > ```
-    
+
 #### Compilation
-    
-Compile all source files in the `/src` directory and add `-lpdcurses` to the command to link the PDCurses library. The command will look something like this.
+
+Use the `run.bat` file located at the root directory
+
+```
+run
+```
+
+Alternatively, if you want to compile manually, compile all source files in the `/src` directory and add `-lpdcurses` to the command to link the PDCurses library. The command will look something like this.
 
 ```
 g++ -g src/**.cpp -o bin/a.exe -lpdcurses
@@ -97,12 +109,6 @@ If this does not work, explicitly include the `/include` and `lib` directories i
 
 ```
 g++ -g src\**.cpp -o bin\a.exe -IC:/msys64/mingw64/include -LC:/msys64/mingw64/lib -lpdcurses
-```
-
-Alternatively, use the `run.bat` file. This will automatically run the program as well.
-
-```
-run
 ```
 
 > [!WARNING]
