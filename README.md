@@ -12,7 +12,7 @@
 
 ### Linux
 
-This project uses a [curses library](https://en.wikipedia.org/wiki/Curses_(programming_library)) for its user interface. Ensure you have the ncurses library installed:
+This project uses a [curses library](https://en.wikipedia.org/wiki/Curses_(programming_library)) for its user interface. Ensure you have the ncurses library installed (as a note, this project was tested on Fedora):
 
 **Red Hat/CentOS/Fedora**
 
@@ -44,7 +44,17 @@ g++ -g src/**.cpp -lncurses -o bin/a.out
 
 For Windows, we can use **PDCurses**, which is an implementation of curses that uses the same function calls as the popular **ncurses** for Unix systems. To compile using **MinGW64** (If you do not have it, I suggest installing it through [MSYS2](https://www.msys2.org/)):
 
-**Manually building PDCurses**
+**Option 1: Using the build script**
+
+Included is a batch file (`build_curses.bat`) to build PDCurses for you (hopefully).
+
+1. [Download PDCurses 3.9](https://sourceforge.net/projects/pdcurses/files/pdcurses/3.9/PDCurses-3.9.zip/download) and extract contents.
+2. Copy `build_pdcurses.bat` to the `PDCurses-3.9` directory (for reference, this should be the same directory as `README.md`) and execute it from there.
+3. Supply the script with paths for your MinGW64 installation, or simply use the default values.
+
+**Option 2: Manually building PDCurses**
+
+The steps below are just what `build_curses.bat`, if you wish to do the steps manually for whatever reason.
 
 1. [Download PDCurses 3.9](https://sourceforge.net/projects/pdcurses/files/pdcurses/3.9/PDCurses-3.9.zip/download) and extract contents.
 2. In the `/wincon` directory, run `make -f Makefile WIDE=Y DLL=Y`.
@@ -54,16 +64,22 @@ For Windows, we can use **PDCurses**, which is an implementation of curses that 
     3. Rename the `pdcurses.a` file you just copied to `libpdcurses.a`
     4. Go up one level from `/wincon` (i.e., the `PDCurses-3.9` folder). Copy `curses.h` and `panel.h` to `C:/msys64/mingw64/include`.
 
-**Installing PDCurses through MSYS2 and `pacman`**
+**Option 3: Installing PDCurses through MSYS2 and `pacman`**
     
-As an alternative to manually building PDCurses, you can install through MSYS2 like so:
+As a last resort if all of the above fails, you can install PDCurses through MSYS2 like so:
 
 ```
 pacman -S mingw-w64-x86_64-pdcurses
 ```
 
 > [!WARNING]
-> Installing PDCurses through MSYS2 seems to result in the `curses.h` file *not* including the `endwin()` function for whatever reason. If you use this method of installation, **add the following to `main.cpp`**:
+> Installing PDCurses through MSYS2 will require that all instances of
+>
+> ```c++
+> #include <curses.h>
+> ```
+>
+> be replaced with
 >
 > ```c++
 > #include <pdcurses.h>
@@ -88,4 +104,6 @@ Alternatively, use the `run.bat` file. This will automatically run the program a
 ```
 run
 ```
-> ***Warning***: Do ***not*** use the C/C++ extension and the built-in console for VSCode. It does not play nicely with curses.
+
+> [!WARNING]
+> Do ***not*** use the C/C++ extension and the built-in console for VSCode. It does not play nicely with curses.
