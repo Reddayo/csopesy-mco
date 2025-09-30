@@ -25,12 +25,12 @@ void CommandInterpreter::startInputs ()
     // Used for tokenizing data from user input buffer
     std::istringstream istream;
     std::string commandName;
-    std::string commandArg;
 
     this->running = true;
 
     while (this->running) {
         // Create command arguments vector
+        std::string commandArg;
         std::vector<std::string> commandArgs;
 
         if (this->dm._wgetnstr(buffer, 100, size) != INPUT_READ_SUBMIT) {

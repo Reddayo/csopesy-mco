@@ -84,6 +84,8 @@ int main ()
             speed = std::stoi(args[0]);
         } catch (const std::invalid_argument &e) {
             throw std::invalid_argument("Argument must be numeric");
+        } catch (const std::out_of_range &e) {
+            throw std::out_of_range("Argument out of range");
         }
 
         // Handle negative speed values
