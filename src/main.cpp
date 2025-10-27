@@ -1,10 +1,11 @@
 #include <curses.h>
-#include <stdexcept>
+#include <map>
 #include <string>
 
 #include "../inc/command_interpreter.h"
+#include "../inc/config.h"
 #include "../inc/display_manager.h"
-#include "../inc/marquee.h"
+#include "../inc/os.h"
 
 int main ()
 {
@@ -14,7 +15,7 @@ int main ()
     keypad(stdscr, TRUE); // Enable special keys like KEY_RESIZE
     noecho();             // Block input echo (we need to do it manually)
 
-    // Define color pairss
+    // Define color pairs
     init_pair(1, COLOR_BLACK, COLOR_BLUE);
     init_pair(2, COLOR_BLACK, COLOR_RED);
     init_pair(3, COLOR_BLUE, COLOR_BLACK);
@@ -22,79 +23,24 @@ int main ()
     // Initialize display manager
     DisplayManager dm = DisplayManager();
 
-    // Initialize the marquee animation
-    Marquee marquee(dm);
-
     // Show title screen
     dm.showTitleScreen();
 
     // =========================================================================
 
+    Config config("config.txt");
+
+    OS os(dm, config);
+
+    // =========================================================================
+
     CommandInterpreter ci(dm);
 
-    // start_marquee command. Argument list goes unused
-    ci.addCommand("start_marquee", // Name
-                  0,               // Parameter count
-                  false,           // Allow whitespace in argument
-                  [&marquee] (CommandArguments &) { marquee.start(); });
-
-    // stop_marquee command. Argument list goes unused
-    ci.addCommand("stop_marquee", 0, false,
-                  [&marquee] (CommandArguments &) { marquee.stop(); });
-
-    // refresh command. Argument list goes unused
-    ci.addCommand("refresh", 0, false,
-                  [&dm] (CommandArguments &) { dm.refreshAll(); });
-
     // help command. Argument list goes unused
-    ci.addCommand("help", 0, false, [&dm, &marquee] (CommandArguments &) {
+    ci.addCommand("help", 0, false, [&dm] (CommandArguments &) {
         // Pause the animation, clear the output window, and show help.
-        marquee.stop();
         dm.clearOutputWindow();
-        dm._mvwprintw(
-            0, 0, "%s",
-            "help           - displays the commands and its description\n"
-            "start_marquee  - starts the marquee animation\n"
-            "stop_marquee   - stops the marquee animation\n"
-            "set_text       - accepts a text input and displays it as a "
-            "marquee\n"
-            "set_speed      - sets the marquee animation refresh in "
-            "milliseconds\n"
-            "exit           - terminates the console\n"
-            "refresh        - refresh the windows");
-        // By this point, calling marquee.start() will resume the animation
-    });
-
-    // exit command. Argument list goes unused
-    ci.addCommand("exit", 0, false, [&ci, &marquee] (CommandArguments &) {
-        marquee.stop();
-        ci.exitInputs(); // Exits the command interpreter loop
-    });
-
-    // set_text command
-    ci.addCommand("set_text", 1, true, [&marquee] (CommandArguments &args) {
-        marquee.setText(args[0]);
-    });
-
-    // set_speed command
-    ci.addCommand("set_speed", 1, false, [&marquee] (CommandArguments &args) {
-        int speed;
-
-        // Handle invalid argument type
-        try {
-            speed = std::stoi(args[0]);
-        } catch (const std::invalid_argument &e) {
-            throw std::invalid_argument("Argument must be numeric");
-        } catch (const std::out_of_range &e) {
-            throw std::out_of_range("Argument out of range");
-        }
-
-        // Handle negative speed values
-        if (speed < 0) {
-            throw std::out_of_range("Value cannot be negative.");
-        }
-
-        marquee.setRefreshDelay(speed);
+        dm._mvwprintw(0, 0, "%s", "You called for help, but nobody came");
     });
 
     // =========================================================================

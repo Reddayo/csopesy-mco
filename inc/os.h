@@ -1,22 +1,32 @@
 #ifndef OS_H
 #define OS_H
 
+#include "config.h"
+#include "display_manager.h"
 #include "scheduler.h"
 
 class OS
 {
   public:
-    OS(int numCores,                       // Number of cores to create
-       enum SchedulingAlgorithm algorithm, // Scheduling algorithm to use
-       int timeQuantumRR,                  // Time quantum for RR
-       int batchProcessFreq,               // Generate processes every n cycles
-       int minIns,                         // Minimum # of instructions
-       int maxIns,                         // Maximum # of instructions
-       int delay                           // Delay after instruction execution
-    );
+    OS(DisplayManager &dm, Config &config);
 
     /** OS main loop */
     void run();
+
+    void incrementCycles();
+
+    void resetCycles();
+
+  private:
+    int cycle;
+
+    // Scheduler scheduler;
+
+    Config &config;
+
+    DisplayManager &dm;
+
+    Core cores[];
 };
 
 #endif

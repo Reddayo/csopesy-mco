@@ -3,7 +3,6 @@
 
 #include <curses.h>
 #include <string>
-#include <variant>
 
 #include "../inc/ascii_map.h"
 #include "../inc/display_manager.h"

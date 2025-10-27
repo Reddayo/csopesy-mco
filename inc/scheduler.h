@@ -12,7 +12,7 @@ enum SchedulingAlgorithm { FCFS, RR };
 class Scheduler
 {
   public:
-    Scheduler();
+    Scheduler(enum SchedulingAlgorithm algorithm);
 
     /**
      * Pops a process from the ready queue and executes it, depending on the
@@ -23,6 +23,9 @@ class Scheduler
     void setQuantum(int timeQuantum);
 
     int getQuantum();
+
+    /** Adds a process to the ready queue */
+    void addProcess(Process process);
 
   private:
     /** Scheduling algorithm */
