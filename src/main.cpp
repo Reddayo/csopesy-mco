@@ -14,18 +14,19 @@ int main ()
     keypad(stdscr, TRUE); // Enable special keys like KEY_RESIZE
     noecho();             // Block input echo (we need to do it manually)
 
-    // Terminal dimensions
-    int max_y, max_x;
-
     // Define color pairss
-    init_pair(1, COLOR_BLACK, COLOR_CYAN);
+    init_pair(1, COLOR_BLACK, COLOR_BLUE);
     init_pair(2, COLOR_BLACK, COLOR_RED);
+    init_pair(3, COLOR_BLUE, COLOR_BLACK);
 
     // Initialize display manager
     DisplayManager dm = DisplayManager();
 
     // Initialize the marquee animation
     Marquee marquee(dm);
+
+    // Show title screen
+    dm.showTitleScreen();
 
     // =========================================================================
 

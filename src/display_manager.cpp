@@ -9,6 +9,26 @@
  */
 const int INPUT_WINDOW_HEIGHT = 10;
 
+const std::vector<std::string> titleScreenArt = {
+    "  _   _                        _  ___  ___  ",
+    " | |_(@)___ __ _ _ _ __ _ __ _(@)/ _ \\/ __| ",
+    " | / | |_-</ _` | '_/ _` / _` | | (_) \\__ \\ ",
+    " |_\\_|_|__/\\__,_|_| \\__,_\\__, |_|\\___/|___/ ",
+    "                         |___/              ",
+    "                                            ",
+    "    o_,.-'~'-.,__,.-'~'-.,__,.-'~'-.,_o     ",
+    "                                            ",
+    "       - CSOPESY MCO: OS Emulator -         ",
+    "                                            ",
+    "        CESAR, Jusper Angelo Manuel         ",
+    "        LLOVIT, Benn Erico Bernardo         ",
+    "     MARQUESES, Lorenz Bernard Baduria      ",
+    "    SILVA, Paulo Grane Gabriel Carcamo      ",
+    "                                            ",
+    "    o_,.-'~'-.,__,.-'~'-.,__,.-'~'-.,_o     ",
+    "                                            ",
+    "    Type \"help\" for a list of commands.      "};
+
 DisplayManager::DisplayManager ()
 {
     int max_x, max_y;
@@ -77,7 +97,32 @@ void DisplayManager::showErrorPrompt (std::string message)
     wprintw(inputWindow, " %s\n", message.c_str());
 }
 
+void DisplayManager::showTitleScreen ()
+{
+    int x_start = this->getWindowWidth() / 2 - 22;
+    int y_start = this->getOutputWindowHeight() / 2 - 9;
+    int y_index = 0;
+
+    // Switch to blue color
+    wattron(this->outputWindow, COLOR_PAIR(3));
+
+    for (std::string row : titleScreenArt) {
+        this->_mvwprintw(y_start + y_index, x_start, "%s", row.c_str());
+
+        // Switch to normal color after printing the logo
+        if (y_index > 4)
+            wattroff(this->outputWindow, COLOR_PAIR(3));
+
+        y_index++;
+    }
+}
+
 int DisplayManager::getWindowWidth () { return getmaxx(this->outputWindow); }
+
+int DisplayManager::getOutputWindowHeight ()
+{
+    return getmaxy(this->outputWindow);
+}
 
 void DisplayManager::clearOutputWindow ()
 {

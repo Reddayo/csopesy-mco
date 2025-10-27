@@ -26,6 +26,9 @@ class DisplayManager
     /** @return The windows' width */
     int getWindowWidth();
 
+    /** @return The output window's height */
+    int getOutputWindowHeight();
+
     /** Clears the output window */
     void clearOutputWindow();
 
@@ -37,6 +40,9 @@ class DisplayManager
      * @param message The error message to display
      */
     void showErrorPrompt(std::string message);
+
+    /** Exits to/Shows the title screen **/
+    void showTitleScreen();
 
     /**
      * Thread-safe wrapper function for curses' mvwprintw().
