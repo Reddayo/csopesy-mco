@@ -4,6 +4,9 @@
 #include <any>
 #include <queue>
 #include <vector>
+#include <unordered_map>
+#include <string>
+#include <cstdint>
 
 enum InstructionID { PRINT, DECLARE, ADD, SUBTRACT, SLEEP, FOR };
 
@@ -46,8 +49,15 @@ class Process
 
     void _FOR(std::vector<std::any> args);
 
+    void _ADD(std::vector<std::any> &args);
+
     /** Creates a random set of instructions */
-    void randomizeInstructions();
+    void randomizeInstructions(int instruction_count);
+
+    /** Create a random instruction */
+    Instruction createInstruction(int depth = 0);
+
+    std::string generateVariableName(int uniqueness = 0);
 
     /** Process ID */
     int id;
@@ -63,6 +73,10 @@ class Process
 
     /** List of instructions to execute */
     std::queue<Instruction> instructions;
+
+    /** List of variables, will not be released until process ends */
+    std::unordered_map<std::string, uint16_t> variables;
+ 
 };
 
 #endif
