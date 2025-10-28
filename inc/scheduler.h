@@ -25,7 +25,9 @@ class Scheduler
     int getQuantum();
 
     /** Adds a process to the ready queue */
-    void addProcess(Process &process);
+    void addProcess(Process process);
+
+    bool isQueueEmpty();
 
   private:
     /** Scheduling algorithm */

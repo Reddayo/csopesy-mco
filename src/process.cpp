@@ -3,7 +3,7 @@
 #include "../inc/process.h"
 
 // ARE YOU RE@DY!! I'M L@DY!! HAJIMEYOU YAREBA DEKIRU KITTO ZETTAI WATASHI #1
-Process::Process (int instruction_count) : state(READY)
+Process::Process (uint32_t instruction_count) : state(READY)
 {
     randomizeInstructions(instruction_count);
 }

@@ -28,7 +28,7 @@ class Process
 {
   public:
     /** Creates a new Process. Must call randomizeInstructions() */
-    Process(int instruction_count);
+    Process(uint32_t instruction_count);
 
     /** Pops an instruction and execute it (read ID and use a switch-case) */
     void execute();

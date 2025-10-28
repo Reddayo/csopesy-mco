@@ -13,7 +13,7 @@ void Scheduler::dispatch (Core &core)
     //}
 }
 
-void Scheduler::addProcess (Process &process)
+void Scheduler::addProcess (Process process)
 {
 
     /** adds a process to readyqueue */

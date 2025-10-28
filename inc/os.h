@@ -20,13 +20,13 @@ class OS
   private:
     int cycle;
 
-    // Scheduler scheduler;
+    Scheduler scheduler;
 
     Config &config;
 
     DisplayManager &dm;
 
-    Core cores[];
+    std::vector<Core> cores;
 };
 
 #endif

@@ -17,6 +17,8 @@ class Core
     /** Calls this->process.execute() to execute one instruction */
     void execute();
 
+    bool isRunning();
+
   private:
     /** Whether this core is currently running */
     bool running;
