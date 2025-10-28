@@ -6,120 +6,72 @@
 #include "process.h"
 
 
-void
-Process::incrementCycles(){
-    /** Increment the cycle count.... is this it fr? */
-    cycles++;
+Process::Process ()
+{
+    /** followed @Red's implementation of randomizeInstructions() */
+    randomizeInstructions(rand() % 10 + 1);
+
+    /** ...is this fr */
+    this->id = id++;
+    this->state = READY;
+
+    this->sleep_ticks = 0;
 }
 
-void
-Process::_ADD(std::vector<std::any>& args){
-    
-  
-    /** _ADD var1, var2/value, var3/value
-     *  all are uint16
-     */
+bool
+Process::execute() { 
+    //if (sleepticks > 0) return false;
 
-   auto getArgValue = [&](const std::any& a) -> uint16_t {
+    Instruction instr = instruction.front();
+    instruction.pop();
+
+    switch (instr.id) {
+        case PRINT:
+            _PRINT(instr.args);
+            break;
+        case DECLARE:
+            _DECLARE(instr.args);
+            break;
+        case ADD:
+            _ADD(instr.args);
+            break;
+        case SUBTRACT:
+            _SUBTRACT(instr.args);
+            break;
+        case SLEEP:
+            _SLEEP(instr.args);
+            break;
+        case FOR:
+            _FOR(instr.args);
+            break;
+    }
+    return false;
+ }
+
+void 
+Process::_DECLARE (std::vector<std::any>& args){
+
+    /** _DECLARE var, value
+    *   all are uint16
+    */
+    auto getArgValue = [&] (const std::any &a) -> uint16_t {
         if (a.type() == typeid(std::string)) {
-            return variables[std::any_cast<const std::string&>(a)];
+            return variables[std::any_cast<const std::string &>(a)];
         } else {
             return std::any_cast<uint16_t>(a);
         }
     };
 
-    variables[std::any_cast<const std::string&>(args[0])] = (uint16_t) (getArgValue(args[1]) + getArgValue(args[2]));
-
+    variables[std::any_cast<const std::string &>(args[0])] = (uint16_t) (getArgValue(args[1])
 }
 
-/** Count is randomly assigned by the scheduler*/
 void 
-Process::randomizeInstructions(int instruction_count){
+Process::_SLEEP (int x) {
 
-    /** PRINT -   msg = "Hello World from {process_name}" // The “msg” can print 1 variable, “var.” E.g. PRINT (“Value from: ” +x)
-     *  DECLARE - var1, default value = 0
-     *  ADD     - var1, var2/uint16, var3/uint16, variables are declared 0 if they aren't declared beforehand
-     *  SUB     - var1, var2/uint16, var3/uint16
-     *  SLEEP   - uint8
-     *  FOR     - [instructions], repeats n times
-    */
-     for(int i = 0; i < instruction_count; i++){
-        instructions.push(createInstruction());
-     }
+    /** _SLEEP x
+     *   uint8
+     */
+    this->state = WAITING;
 
-}
-
-/** Uniqueness is not enforced by default*/
-std::string 
-Process::generateVariableName(int uniqueness = 0){
-    
-    std::string name;
-
-    do {
-        name = std::string(1, 'a' + (rand() % 26)) + std::to_string(rand() % 1000);
-    } while (uniqueness == 1 && variables.count(name)); 
-
-    return name;
-}
-
-Instruction 
-Process::createInstruction(int depth = 0){
-
-    Instruction instruction;
-    /** If this is the 3rd loop, randomly pick a non for instruction */
-    instruction.id = static_cast<InstructionID>(rand() % (depth > 0 && depth < 3 ? 5 : 6));
-
-    switch (instruction.id) {
-
-        /* TODO: Fix once print function is done */
-        case PRINT: {
-            instruction.args.push_back(std::string("Hello world from " + std::to_string(id) + "!"));
-            break;
-        }
-        /* Declare, declares a unique variable... I'm assuming*/
-        case DECLARE: {
-            std::string var = generateVariableName(1);
-            variables[var] = 0;
-            instruction.args.push_back(var);
-        }
-        /** TODO: Is add different to subtract? 
-         * ADD said all variables that hasn't been declared should be declared as 0. 
-         * But SUB doesn't say that
-         */
-        case ADD:
-        case SUBTRACT: {
-            /** Var1 is always a destination variable*/
-            std::string var1 = generateVariableName();
-            if (!variables.count(var1)) variables[var1] = 0; 
-            /** Var2 and var3 can be either  uint16 value or a variable*/
-            auto createSource = [&]() -> std::any {
-                if (rand() % 2 == 0) {
-                    return (uint16_t) (rand() % 65536);
-                } else {
-                    std::string name = generateVariableName();
-                    if (!variables.count(name)) variables[name] = 0;
-                    return name;
-                }
-            };
-
-            std::any var2 = createSource();
-            std::any var3 = createSource();
-
-            instruction.args = {var1, var2, var3};
-            break;
-        }
-
-        case SLEEP: {
-            instruction.args.push_back(rand() % 256); // uint8
-            break;
-        }
-
-        case FOR: {
-            int n = rand() % 256 + 1; // So it doesn't repeat 0 times. No specified repeat times
-            instruction.args = {createInstruction(depth + 1), n};
-            break;
-        }
-    }
-
-    return instruction;
+    this.sleep_ticks = x;
 }
