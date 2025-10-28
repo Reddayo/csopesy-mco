@@ -12,7 +12,7 @@ enum SchedulingAlgorithm { FCFS, RR };
 class Scheduler
 {
   public:
-    Scheduler(enum SchedulingAlgorithm algorithm);
+    Scheduler(enum SchedulingAlgorithm scheduler_type, int quantum);
 
     /**
      * Pops a process from the ready queue and executes it, depending on the

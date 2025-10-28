@@ -12,8 +12,8 @@ enum InstructionID { PRINT, DECLARE, ADD, SUBTRACT, SLEEP, FOR };
 
 enum ProcessState {
     // NEW,
-    READY, // Process is in ready queue
-    // WAITING,
+    READY,     // Process is in ready queue
+    WAITING,
     RUNNING,   // Process is in a running core
     TERMINATED // Process has terminated
 };
@@ -99,6 +99,8 @@ class Process
 
     /** Number of cycles the process has been in a busy-waiting state */
     int waitingTime;
+
+    int sleepTicks;
 
     /** List of instructions to execute */
     std::queue<Instruction> instructions;

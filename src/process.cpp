@@ -89,3 +89,33 @@ Instruction Process::createInstruction (int depth)
 
     return instruction;
 }
+
+void Process::execute ()
+{
+    if (this->sleepTicks > 0)
+        return;
+
+    Instruction instr = this->instructions.front();
+    this->instructions.pop();
+
+    switch (instr.id) {
+    case PRINT:
+        _PRINT(instr.args);
+        break;
+    case DECLARE:
+        _DECLARE(instr.args);
+        break;
+    case ADD:
+        _ADD(instr.args);
+        break;
+    case SUBTRACT:
+        _SUBTRACT(instr.args);
+        break;
+    case SLEEP:
+        _SLEEP(instr.args);
+        break;
+    case FOR:
+        _FOR(instr.args);
+        break;
+    }
+}
