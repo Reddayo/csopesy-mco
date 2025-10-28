@@ -36,6 +36,16 @@ class Process
     /** Increments the cycle count for this process */
     void incrementCycles();
 
+    // Getter
+    /** Returns ID */
+    int getId();
+
+    /** Returns number of finished cycles */
+    int getNumFinCycles();
+
+    /** Returns number of cycles */
+    int getNumCycles();
+
   private:
     void _PRINT(std::vector<std::any> args);
 

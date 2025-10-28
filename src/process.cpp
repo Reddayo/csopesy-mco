@@ -5,6 +5,23 @@
 #include "../inc/process.h"
 #include "process.h"
 
+int
+Process::getId(){
+    /** Return ID */
+    return this->id;
+}
+
+int
+Process::getNumFinCycles(){
+    /** Return number of finished cycles */
+    return this->cycles;
+}
+
+int
+Process::getNumCycles(){
+    /** Return number of cycles */
+    return this->cycles + this->instructions.size();
+}
 
 void
 Process::incrementCycles(){

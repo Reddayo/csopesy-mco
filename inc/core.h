@@ -17,7 +17,16 @@ class Core
     /** Calls this->process.execute() to execute one instruction */
     void execute();
 
+    /** Returns ID */
+    int getId();
+
+    /** Returns bool running */
+    bool isRunning();
+
   private:
+    /** ID of the core */
+    int id;
+
     /** Whether this core is currently running */
     bool running;
 
