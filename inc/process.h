@@ -37,17 +37,17 @@ class Process
     void incrementCycles();
 
   private:
-    void _PRINT(std::vector<std::any> args);
+    void _PRINT(std::vector<std::any> &args);
 
-    void _DECLARE(std::vector<std::any> args);
+    void _DECLARE(std::vector<std::any> &args);
 
-    void _ADD(std::vector<std::any> args);
+    void _ADD(std::vector<std::any> &args);
 
-    void _SUBTRACT(std::vector<std::any> args);
+    void _SUBTRACT(std::vector<std::any> &args);
 
-    void _SLEEP(std::vector<std::any> args);
+    void _SLEEP(std::vector<std::any> &args);
 
-    void _FOR(std::vector<std::any> args);
+    void _FOR(std::vector<std::any> &args);
 
     void _ADD(std::vector<std::any> &args);
 
