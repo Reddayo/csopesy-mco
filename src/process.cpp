@@ -7,7 +7,7 @@
 
 Process::Process() {
     /** followed @Red's implementation of randomizeInstructions() */
-    randomizeInstructions(rand() % 10);
+    randomizeInstructions(rand() % 10 + 1);
 
     /** ...is this fr */
     this->id = id++;
