@@ -47,7 +47,7 @@ class Process
     void _FOR(std::vector<std::any> args);
 
     /** Creates a random set of instructions */
-    void randomizeInstructions();
+    void randomizeInstructions(int instruction_count);
 
     /** Process ID */
     int id;
