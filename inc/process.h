@@ -2,11 +2,11 @@
 #define PROCESS_H
 
 #include <any>
-#include <queue>
-#include <vector>
-#include <unordered_map>
-#include <string>
 #include <cstdint>
+#include <queue>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 enum InstructionID { PRINT, DECLARE, ADD, SUBTRACT, SLEEP, FOR };
 
@@ -27,7 +27,7 @@ struct Instruction {
 class Process
 {
   public:
-    /** Must call randomizeInstructions() */
+    /** Creates a new Process. Must call randomizeInstructions() */
     Process();
 
     /** Pops an instruction and execute it (read ID and use a switch-case) */
@@ -62,7 +62,7 @@ class Process
     /** Process ID */
     int id;
 
-    /** Initialized to READY */
+    /** Process state. Initialized to READY */
     enum ProcessState state;
 
     /** Number of cycles the process has executed */
@@ -76,7 +76,6 @@ class Process
 
     /** List of variables, will not be released until process ends */
     std::unordered_map<std::string, uint16_t> variables;
- 
 };
 
 #endif
