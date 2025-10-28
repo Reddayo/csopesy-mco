@@ -2,31 +2,43 @@
 
 #include "../inc/process.h"
 
+// Empty process constructor
+Process::Process () : id(-1), state(NEW) {}
+
 // ARE YOU RE@DY!! I'M L@DY!! HAJIMEYOU YAREBA DEKIRU KITTO ZETTAI WATASHI #1
-Process::Process (uint32_t instruction_count) : state(READY)
+Process::Process (int id, uint32_t instruction_count) : id(id), state(READY)
 {
     randomizeInstructions(instruction_count);
 }
+
+void Process::incrementCycles () { elapsedCycles++; }
+
 int Process::getId ()
 {
     /** Return ID */
     return this->id;
 }
 
-int Process::getNumFinCycles ()
+uint32_t Process::getElapsedCycles ()
 {
     /** Return number of finished cycles */
-    return this->cycles;
+    return this->elapsedCycles;
 }
 
-int Process::getNumCycles ()
+// TODO: Deal with instruction size logic here
+uint32_t Process::getNumCycles ()
 {
     /** Return number of cycles */
-    return this->cycles + this->instructions.size();
+    return this->elapsedCycles + this->instructions.size();
 }
 
-void Process::incrementCycles () { cycles++; }
+// TODO: Data type
+uint16_t Process::getSleepTicks () { return this->sleepTicks; }
 
+void Process::decrementSleepTicks () { this->sleepTicks--; }
+
+// TODO: Depending on how sir responds, this might be replaced with a
+// randomizeCommands + assembleCommands or something to that effect
 void Process::randomizeInstructions (int instruction_count)
 {
     // NOTE: Count is randomly assigned by the scheduler
@@ -105,34 +117,4 @@ Instruction Process::createInstruction (int depth)
     }
 
     return instruction;
-}
-
-void Process::execute ()
-{
-    if (this->sleepTicks > 0)
-        return;
-
-    Instruction instr = this->instructions.front();
-    this->instructions.pop();
-
-    switch (instr.id) {
-    case PRINT:
-        _PRINT(instr.args);
-        break;
-    case DECLARE:
-        _DECLARE(instr.args);
-        break;
-    case ADD:
-        _ADD(instr.args);
-        break;
-    case SUBTRACT:
-        _SUBTRACT(instr.args);
-        break;
-    case SLEEP:
-        _SLEEP(instr.args);
-        break;
-    case FOR:
-        _FOR(instr.args);
-        break;
-    }
 }

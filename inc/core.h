@@ -6,9 +6,9 @@
 class Core
 {
   public:
-    Core();
+    Core(int id);
 
-    /** Returns the process on this core */
+    /** @return The process on this core */
     Process &getProcess();
 
     /** Sets the process running on this core */
@@ -17,11 +17,14 @@ class Core
     /** Calls this->process.execute() to execute one instruction */
     void execute();
 
-    /** Returns ID */
+    /** @return The core's ID */
     int getId();
 
-    /** Returns bool running */
+    /** @return True if core is set to a running state */
     bool isRunning();
+
+    /** Sets running state */
+    void setRunning(bool running);
 
   private:
     /** ID of the core */
@@ -31,7 +34,7 @@ class Core
     bool running;
 
     /** The process currently executing on this core */
-    Process &process;
+    Process process;
 };
 
 #endif

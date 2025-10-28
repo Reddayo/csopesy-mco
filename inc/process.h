@@ -11,9 +11,9 @@
 enum InstructionID { PRINT, DECLARE, ADD, SUBTRACT, SLEEP, FOR };
 
 enum ProcessState {
-    // NEW,
+    NEW,       // Mostly unused, except for "empty" Process
     READY,     // Process is in ready queue
-    WAITING,
+    WAITING,   // Process is in a waiting state (busy-waiting)
     RUNNING,   // Process is in a running core
     TERMINATED // Process has terminated
 };
@@ -27,8 +27,14 @@ struct Instruction {
 class Process
 {
   public:
+    /**
+     * Default constructor for a Process. Used to create an "empty" Process
+     * with which a Core can be initialized
+     */
+    Process();
+
     /** Creates a new Process. Must call randomizeInstructions() */
-    Process(uint32_t instruction_count);
+    Process(int id, uint32_t instruction_count);
 
     /** Pops an instruction and execute it (read ID and use a switch-case) */
     void execute();
@@ -36,17 +42,33 @@ class Process
     /** Increments the cycle count for this process */
     void incrementCycles();
 
-    // Getter
-    /** Returns ID */
+    /** @return ID */
     int getId();
 
-    /** Returns number of finished cycles */
-    int getNumFinCycles();
+    /** @return Number of finished cycles */
+    uint32_t getElapsedCycles();
 
-    /** Returns number of cycles */
-    int getNumCycles();
+    /** @return Number of cycles */
+    uint32_t getNumCycles();
+
+    /** @return Number of cycles this process has been sleeping for */
+    uint16_t getSleepTicks();
+
+    /** Decrement sleep timer */
+    void decrementSleepTicks();
 
   private:
+    /**
+     * Helper that extracts an value of type uint16_t from an argument of type
+     * std::any, either through direct conversion or by fetching a uint16_t
+     * value from a variable in the process.
+     *
+     * @param arg The argument value
+     *
+     * @return A value of type uint16_t representing the argument
+     */
+    uint16_t getArgValueUINT16(const std::any &arg);
+
     void _PRINT(std::vector<std::any> &args);
 
     void _DECLARE(std::vector<std::any> &args);
@@ -87,17 +109,6 @@ class Process
      */
     std::string generateVariableName(bool uniqueness = false);
 
-    /**
-     * Helper that extracts an value of type uint16_t from an argument of type
-     * std::any, either through direct conversion or by fetching a uint16_t
-     * value from a variable in the process.
-     *
-     * @param arg The argument value
-     *
-     * @return A value of type uint16_t representing the argument
-     */
-    uint16_t getArgValueUINT16(const std::any &arg);
-
     /** Process ID */
     int id;
 
@@ -105,12 +116,12 @@ class Process
     enum ProcessState state;
 
     /** Number of cycles the process has executed */
-    int cycles;
+    uint32_t elapsedCycles;
 
     /** Number of cycles the process has been in a busy-waiting state */
-    int waitingTime;
+    uint32_t waitingTime;
 
-    int sleepTicks;
+    uint16_t sleepTicks;
 
     /** List of instructions to execute */
     std::queue<Instruction> instructions;

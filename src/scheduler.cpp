@@ -1,27 +1,22 @@
 #include "../inc/scheduler.h"
+#include <cstdint>
 
-/** Not Done.. idk if this is right */
+Scheduler::Scheduler (enum SchedulingAlgorithm scheduler_type, uint32_t quantum)
+    : algorithm(scheduler_type), timeQuantumRR(quantum)
+{
+    // Additional logic here, unsure what though
+}
+
 void Scheduler::dispatch (Core &core)
 {
-    /** If core is available, pop a process, or is this handled by the os */
-    // if(!core.isRunning() && !readyQueue.empty()){
     Process process = readyQueue.front();
     readyQueue.pop();
+
     core.setProcess(process);
-    // core.running = true;
-    //}
 }
 
-void Scheduler::addProcess (Process process)
-{
+uint32_t Scheduler::getQuantum () { return this->timeQuantumRR; }
 
-    /** adds a process to readyqueue */
-    readyQueue.push(process);
-}
+void Scheduler::addProcess (Process process) { readyQueue.push(process); }
 
-Scheduler::Scheduler (enum SchedulingAlgorithm scheduler_type, int quantum)
-{
-    /* Not sure what else is needed in scheduler */
-    this->algorithm = scheduler_type;
-    this->timeQuantumRR = quantum;
-}
+bool Scheduler::isQueueEmpty () { return this->readyQueue.empty(); }

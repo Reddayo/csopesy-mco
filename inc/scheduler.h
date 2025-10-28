@@ -12,17 +12,18 @@ enum SchedulingAlgorithm { FCFS, RR };
 class Scheduler
 {
   public:
-    Scheduler(enum SchedulingAlgorithm scheduler_type, int quantum);
+    Scheduler(enum SchedulingAlgorithm scheduler_type, uint32_t quantum);
 
     /**
-     * Pops a process from the ready queue and executes it, depending on the
-     * scheduling algorithm
+     * Pops a process from the ready queue, then dispatches it to a core.
+     *
+     * @param core  The core that will be assigned the process
      */
     void dispatch(Core &core);
 
-    void setQuantum(int timeQuantum);
+    // void setQuantum(int timeQuantum);
 
-    int getQuantum();
+    uint32_t getQuantum();
 
     /** Adds a process to the ready queue */
     void addProcess(Process process);
@@ -37,7 +38,7 @@ class Scheduler
     std::queue<Process> readyQueue;
 
     /** Time quantum for RR algorithm, ignored in FCFS */
-    int timeQuantumRR;
+    uint32_t timeQuantumRR;
 };
 
 #endif

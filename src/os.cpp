@@ -5,9 +5,10 @@
 // WARNING: None of this works yet
 
 OS::OS(DisplayManager &dm, Config &config)
-    : dm(dm),                                     // Display manager
-      config(config),                             // Config values
-      scheduler(Scheduler(config.getScheduler())) // Scheduler
+    : dm(dm),                                         // Display manager
+      config(config),                                 // Config values
+      scheduler(Scheduler(config.getScheduler(),
+                          config.getQuantumCycles())) // Scheduler
 {};
 
 void OS::run ()
@@ -16,11 +17,13 @@ void OS::run ()
     this->resetCycles();
 
     int batchProcessFreq = this->config.getBatchProcessFreq();
+    int processId = 0;
 
     while (true) {
         // Create a new process and add it to the scheduler's ready queue
         if (cycle % batchProcessFreq == 0) {
-            this->scheduler.addProcess(Process(this->config.getMaxIns()));
+            this->scheduler.addProcess(Process(0, this->config.getMaxIns()));
+            processId++;
         }
 
         // Pre-empt processes if RR algorithm
@@ -45,6 +48,10 @@ void OS::run ()
     }
 }
 
+void OS::incrementCycles () { this->cycle++; }
+
+void OS::resetCycles () { this->cycle = 0; }
+
 void OS::ls ()
 {
     std::string status_string;
@@ -54,25 +61,26 @@ void OS::ls ()
 
     // Running cores
     std::list<int> runningCoreIds;
-    for(int i = 0; i < nCores; i++) {
-        if(cores[i].isRunning())
+    for (int i = 0; i < nCores; i++) {
+        if (cores[i].isRunning())
             runningCoreIds.push_back(cores[i].getId());
     }
 
     // Number of running cores
     int nRunningCores = runningCoreIds.size();
-    
+
     // CPU utilization
-    float cpuUtil = nRunningCores / nCores * 100;
+    float cpuUtil = nRunningCores * 100.0 / nCores;
 
     // Status string
-    status_string = "CPU utilization: " + std::to_string(cpuUtil) + "\%\n" +
-                    "Cores used: " + std::to_string(nRunningCores) + "\n" +
-                    "Cores available: " + std::to_string(nCores - nRunningCores) + "\n\n";
-    
+    status_string =
+        "CPU utilization: " + std::to_string(cpuUtil) + "\%\n" +
+        "Cores used: " + std::to_string(nRunningCores) + "\n" +
+        "Cores available: " + std::to_string(nCores - nRunningCores) + "\n\n";
+
     // Running processes
     status_string += "Running processes:\n";
-    for(int i : runningCoreIds) {
+    for (int i : runningCoreIds) {
         // Process name is same as ID .....I think
         status_string += "process ";
         status_string += std::to_string(cores[i].getProcess().getId());
@@ -85,7 +93,8 @@ void OS::ls ()
         // Progress
         status_string += std::to_string(cores[i].getProcess().getNumCycles());
         status_string += " / ";
-        status_string += std::to_string(cores[i].getProcess().getNumFinCycles());
+        status_string +=
+            std::to_string(cores[i].getProcess().getElapsedCycles());
 
         status_string += "\n";
     }
@@ -94,7 +103,7 @@ void OS::ls ()
     status_string += "\n";
     status_string += "Finished processes:\n";
 
-    for(std::pair<int, int> finishedProcess : this->finishedProcesses) {
+    for (std::pair<int, int> finishedProcess : this->finishedProcesses) {
         // Process name
         status_string += "process ";
         status_string += std::to_string(finishedProcess.first);
@@ -111,5 +120,5 @@ void OS::ls ()
     }
 
     this->dm.clearOutputWindow();
-    this->dm._mvwprintw(0, 0, "%s", status_string);
+    this->dm._mvwprintw(0, 0, "%s", status_string.c_str());
 }
