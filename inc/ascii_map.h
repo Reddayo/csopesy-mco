@@ -13,7 +13,7 @@
  * @param trailingWidth     The width of the trailing whitespace string to
  *                          append to each row
  *
- * @returns The vector of row strings for the ASCII text art.
+ * @return The vector of row strings for the ASCII text art.
  */
 std::vector<std::string> convertToASCIIArt(const std::string &text,
                                            int trailingWidth);

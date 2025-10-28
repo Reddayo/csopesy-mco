@@ -1,134 +1,70 @@
 #include <cstdint>
-#include <iostream>
-#include <random>
 
 #include "../inc/process.h"
 
-Process::Process ()
+// ARE YOU RE@DY!! I'M L@DY!! HAJIMEYOU YAREBA DEKIRU KITTO ZETTAI WATASHI #1
+Process::Process (int instruction_count) : state(READY)
 {
-    /** followed @Red's implementation of randomizeInstructions() */
-    randomizeInstructions(rand() % 10 + 1);
-
-    /** ...is this fr */
-    this->id = id++;
-    this->state = READY;
+    randomizeInstructions(instruction_count);
 }
 
-void Process::_SUBTRACT (std::vector<std::any> &args)
-{
+void Process::incrementCycles () { cycles++; }
 
-    /** _SUBTRACT var1, var2/value, var3/value
-     *  all are uint16
-     */
-
-    auto getArgValue = [&] (const std::any &a) -> uint16_t {
-        if (a.type() == typeid(std::string)) {
-            return variables[std::any_cast<const std::string &>(a)];
-        } else {
-            return std::any_cast<uint16_t>(a);
-        }
-    };
-
-    variables[std::any_cast<const std::string &>(args[0])] =
-        (uint16_t)(getArgValue(args[1]) - getArgValue(args[2]));
-}
-
-void Process::incrementCycles ()
-{
-    /** Increment the cycle count.... is this it fr? */
-    cycles++;
-}
-
-void Process::_ADD (std::vector<std::any> &args)
-{
-
-    /** _ADD var1, var2/value, var3/value
-     *  all are uint16
-     */
-
-    auto getArgValue = [&] (const std::any &a) -> uint16_t {
-        if (a.type() == typeid(std::string)) {
-            return variables[std::any_cast<const std::string &>(a)];
-        } else {
-            return std::any_cast<uint16_t>(a);
-        }
-    };
-
-    variables[std::any_cast<const std::string &>(args[0])] =
-        (uint16_t)(getArgValue(args[1]) + getArgValue(args[2]));
-}
-
-/** Count is randomly assigned by the scheduler*/
 void Process::randomizeInstructions (int instruction_count)
 {
-
-    /** PRINT -   msg = "Hello World from {process_name}" // The “msg” can print
-     * 1 variable, “var.” E.g. PRINT (“Value from: ” +x) DECLARE - var1, default
-     * value = 0 ADD     - var1, var2/uint16, var3/uint16, variables are
-     * declared 0 if they aren't declared beforehand SUB     - var1,
-     * var2/uint16, var3/uint16 SLEEP   - uint8 FOR     - [instructions],
-     * repeats n times
-     */
+    // NOTE: Count is randomly assigned by the scheduler
     for (int i = 0; i < instruction_count; i++) {
-        instructions.push(createInstruction());
+        this->instructions.push(createInstruction());
     }
 }
 
-/** Uniqueness is not enforced by default*/
-std::string Process::generateVariableName (int uniqueness)
+std::string Process::generateVariableName (bool uniqueness)
 {
-
+    // WARNING: Uniqueness is not enforced by default
     std::string name;
 
     do {
         name =
             std::string(1, 'a' + (rand() % 26)) + std::to_string(rand() % 1000);
-    } while (uniqueness == 1 && variables.count(name));
+    }
+    // Randomly generate names until you get a unique one
+    while (uniqueness == true && variables.count(name));
 
     return name;
 }
 
 Instruction Process::createInstruction (int depth)
 {
-
     Instruction instruction;
-    /** If this is the 3rd loop, randomly pick a non for instruction */
+
+    // Avoid generating a FOR instruction beyond depth = 3
     instruction.id =
         static_cast<InstructionID>(rand() % (depth > 0 && depth < 3 ? 5 : 6));
 
     switch (instruction.id) {
 
-    /* TODO: Fix once print function is done */
     case PRINT: {
-        instruction.args.push_back(
-            std::string("Hello world from " + std::to_string(id) + "!"));
         break;
     }
-    /* Declare, declares a unique variable... I'm assuming*/
+
     case DECLARE: {
         std::string var = generateVariableName(1);
-        variables[var] = 0;
         instruction.args.push_back(var);
+        break;
     }
-    /** TODO: Is add different to subtract?
-     * ADD said all variables that hasn't been declared should be declared as 0.
-     * But SUB doesn't say that
-     */
+
     case ADD:
     case SUBTRACT: {
-        /** Var1 is always a destination variable*/
+        // First argument is always a destination variable
         std::string var1 = generateVariableName();
-        if (!variables.count(var1))
-            variables[var1] = 0;
-        /** Var2 and var3 can be either  uint16 value or a variable*/
+
+        // Other arguments can be a random variable or a random uint16_t value
+        // TODO: Move to actual implementation of instructions instead of here
         auto createSource = [&] () -> std::any {
             if (rand() % 2 == 0) {
                 return (uint16_t)(rand() % 65536);
             } else {
-                std::string name = generateVariableName();
-                if (!variables.count(name))
-                    variables[name] = 0;
-                return name;
+                return generateVariableName();
             }
         };
 
@@ -145,8 +81,7 @@ Instruction Process::createInstruction (int depth)
     }
 
     case FOR: {
-        int n = rand() % 256 +
-                1; // So it doesn't repeat 0 times. No specified repeat times
+        int n = rand() % 256 + 1; // Random argument in range [1, 256]
         instruction.args = {createInstruction(depth + 1), n};
         break;
     }

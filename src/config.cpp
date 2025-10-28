@@ -6,7 +6,7 @@
 
 // Setters
 
-void Config::setNumCPU (unsigned long int numCPU)
+void Config::setNumCPU (uint32_t numCPU)
 {
     if (numCPU < 1 || numCPU > 128)
         throw std::runtime_error("Number of cores must be within [1, 128]");
@@ -25,7 +25,7 @@ void Config::setScheduler (std::string scheduler)
     }
 }
 
-void Config::setQuantumCycles (unsigned long int quantumCycles)
+void Config::setQuantumCycles (uint32_t quantumCycles)
 {
     if (quantumCycles == 0)
         throw std::runtime_error("Time quantum must be positive");
@@ -33,7 +33,7 @@ void Config::setQuantumCycles (unsigned long int quantumCycles)
     this->quantumCycles = quantumCycles;
 }
 
-void Config::setBatchProcessFreq (unsigned long int batchProcessFreq)
+void Config::setBatchProcessFreq (uint32_t batchProcessFreq)
 {
     if (batchProcessFreq == 0)
         throw std::runtime_error("Batch process frequency must be positive");
@@ -41,7 +41,7 @@ void Config::setBatchProcessFreq (unsigned long int batchProcessFreq)
     this->batchProcessFreq = batchProcessFreq;
 }
 
-void Config::setMinIns (unsigned long int minIns)
+void Config::setMinIns (uint32_t minIns)
 {
     if (minIns == 0)
         throw std::runtime_error("Minimum instructions must be positive");
@@ -49,7 +49,7 @@ void Config::setMinIns (unsigned long int minIns)
     this->minIns = minIns;
 }
 
-void Config::setMaxIns (unsigned long int maxIns)
+void Config::setMaxIns (uint32_t maxIns)
 {
     if (maxIns == 0)
         throw std::runtime_error("Maximum instructions must be positive");
@@ -57,29 +57,26 @@ void Config::setMaxIns (unsigned long int maxIns)
     this->maxIns = maxIns;
 }
 
-void Config::setDelayPerExec (unsigned long int delaysPerExec)
+void Config::setDelayPerExec (uint32_t delaysPerExec)
 {
     this->delaysPerExec = delaysPerExec;
 }
 
 // Getters
 
-unsigned long int Config::getNumCPU () { return this->numCPU; }
+uint32_t Config::getNumCPU () { return this->numCPU; }
 
 enum SchedulingAlgorithm Config::getScheduler () { return this->scheduler; }
 
-unsigned long int Config::getQuantumCycles () { return this->quantumCycles; }
+uint32_t Config::getQuantumCycles () { return this->quantumCycles; }
 
-unsigned long int Config::getBatchProcessFreq ()
-{
-    return this->batchProcessFreq;
-}
+uint32_t Config::getBatchProcessFreq () { return this->batchProcessFreq; }
 
-unsigned long int Config::getMinIns () { return this->minIns; }
+uint32_t Config::getMinIns () { return this->minIns; }
 
-unsigned long int Config::getMaxIns () { return this->maxIns; }
+uint32_t Config::getMaxIns () { return this->maxIns; }
 
-unsigned long int Config::getDelaysPerExec () { return this->delaysPerExec; }
+uint32_t Config::getDelaysPerExec () { return this->delaysPerExec; }
 
 // Constructor
 

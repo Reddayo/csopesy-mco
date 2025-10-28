@@ -28,7 +28,7 @@ class Process
 {
   public:
     /** Creates a new Process. Must call randomizeInstructions() */
-    Process();
+    Process(int instruction_count);
 
     /** Pops an instruction and execute it (read ID and use a switch-case) */
     void execute();
@@ -49,15 +49,44 @@ class Process
 
     void _FOR(std::vector<std::any> &args);
 
-    void _ADD(std::vector<std::any> &args);
-
-    /** Creates a random set of instructions */
+    /**
+     * Creates a random set of instructions
+     *
+     * @param instruction_count The number of instructions to generate
+     */
     void randomizeInstructions(int instruction_count);
 
-    /** Create a random instruction */
+    /**
+     * Create a single random instruction.
+     *
+     * @param depth Begins at zero by default. Used to limit the depth of the
+     *              FOR instruction
+     *
+     * @return The newly-created instruction
+     */
     Instruction createInstruction(int depth = 0);
 
-    std::string generateVariableName(int uniqueness = 0);
+    /**
+     * Generates a random variable name composed of one letter followed by a
+     * numeric value from 0 to 999, e.g. "x123"
+     *
+     * @param uniqueness  Whether the variable name should be unique within the
+     *                    process
+     *
+     * @return The generated variable name
+     */
+    std::string generateVariableName(bool uniqueness = false);
+
+    /**
+     * Helper that extracts an value of type uint16_t from an argument of type
+     * std::any, either through direct conversion or by fetching a uint16_t
+     * value from a variable in the process.
+     *
+     * @param arg The argument value
+     *
+     * @return A value of type uint16_t representing the argument
+     */
+    uint16_t getArgValueUINT16(const std::any &arg);
 
     /** Process ID */
     int id;

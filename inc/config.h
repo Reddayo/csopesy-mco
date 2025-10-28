@@ -14,50 +14,50 @@ class Config
 
     // Setters
 
-    void setNumCPU(unsigned long int numCPU);
+    void setNumCPU(uint32_t numCPU);
 
     void setScheduler(std::string scheduler);
 
-    void setQuantumCycles(unsigned long int quantumCycles);
+    void setQuantumCycles(uint32_t quantumCycles);
 
-    void setBatchProcessFreq(unsigned long int batchProcessFreq);
+    void setBatchProcessFreq(uint32_t batchProcessFreq);
 
-    void setMinIns(unsigned long int minIns);
+    void setMinIns(uint32_t minIns);
 
-    void setMaxIns(unsigned long int maxIns);
+    void setMaxIns(uint32_t maxIns);
 
-    void setDelayPerExec(unsigned long int delaysPerExec);
+    void setDelayPerExec(uint32_t delaysPerExec);
 
     // Getters
 
-    unsigned long int getNumCPU();
+    uint32_t getNumCPU();
 
     SchedulingAlgorithm getScheduler();
 
-    unsigned long int getQuantumCycles();
+    uint32_t getQuantumCycles();
 
-    unsigned long int getBatchProcessFreq();
+    uint32_t getBatchProcessFreq();
 
-    unsigned long int getMinIns();
+    uint32_t getMinIns();
 
-    unsigned long int getMaxIns();
+    uint32_t getMaxIns();
 
-    unsigned long int getDelaysPerExec();
+    uint32_t getDelaysPerExec();
 
   private:
-    unsigned long int numCPU;
+    uint32_t numCPU;
 
     SchedulingAlgorithm scheduler;
 
-    unsigned long int quantumCycles;
+    uint32_t quantumCycles;
 
-    unsigned long int batchProcessFreq;
+    uint32_t batchProcessFreq;
 
-    unsigned long int minIns;
+    uint32_t minIns;
 
-    unsigned long int maxIns;
+    uint32_t maxIns;
 
-    unsigned long int delaysPerExec;
+    uint32_t delaysPerExec;
 };
 
 #endif
