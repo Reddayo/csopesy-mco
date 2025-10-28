@@ -1,8 +1,9 @@
 #include "../inc/process.h"
 
+// TODO: If no instructions left in queue, set status to TERMINATED
 void Process::execute ()
 {
-    if (this->sleepTicks > 0)
+    if (this->elapsedWaitingCycles > 0)
         return;
 
     Instruction instr = this->instructions.front();
@@ -60,5 +61,5 @@ void Process::_SUBTRACT (std::vector<std::any> &args)
 void Process::_SLEEP (std::vector<std::any> &args)
 {
     this->state = WAITING;
-    this->sleepTicks = getArgValueUINT16(args[1]);
+    this->elapsedWaitingCycles = getArgValueUINT16(args[1]);
 }

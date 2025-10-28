@@ -11,31 +11,56 @@ Process::Process (int id, uint32_t instruction_count) : id(id), state(READY)
     randomizeInstructions(instruction_count);
 }
 
-void Process::incrementCycles () { elapsedCycles++; }
+int Process::getId () { return this->id; }
 
-int Process::getId ()
-{
-    /** Return ID */
-    return this->id;
-}
+void Process::setState (enum ProcessState state) { this->state = state; }
 
-uint32_t Process::getElapsedCycles ()
-{
-    /** Return number of finished cycles */
-    return this->elapsedCycles;
-}
+enum ProcessState Process::getState () { return this->state; }
 
 // TODO: Deal with instruction size logic here
-uint32_t Process::getNumCycles ()
+uint32_t Process::getTotalCycles ()
 {
     /** Return number of cycles */
     return this->elapsedCycles + this->instructions.size();
 }
 
-// TODO: Data type
-uint16_t Process::getSleepTicks () { return this->sleepTicks; }
+// Elapsed cycles
 
-void Process::decrementSleepTicks () { this->sleepTicks--; }
+uint32_t Process::getElapsedCycles () { return this->elapsedCycles; }
+
+void Process::incrementElapsedCycles () { elapsedCycles++; }
+
+// Busy-waiting cycles
+
+uint32_t Process::getRemainingBusyWaitingCycles ()
+{
+    return this->elapsedBusyWaitingCycles;
+}
+
+void Process::setBusyWaitingCycles (uint32_t value)
+{
+    this->elapsedBusyWaitingCycles = value;
+}
+
+void Process::decrementBusyWaitingCycles ()
+{
+    this->elapsedBusyWaitingCycles--;
+}
+
+// Waiting cycles
+
+// TODO: Data type
+uint16_t Process::getRemainingWaitingCycles ()
+{
+    return this->elapsedWaitingCycles;
+}
+
+void Process::setWaitingCycles (uint16_t value)
+{
+    this->elapsedWaitingCycles = value;
+}
+
+void Process::decrementWaitingCycles () { this->elapsedWaitingCycles--; }
 
 // TODO: Depending on how sir responds, this might be replaced with a
 // randomizeCommands + assembleCommands or something to that effect
@@ -45,21 +70,6 @@ void Process::randomizeInstructions (int instruction_count)
     for (int i = 0; i < instruction_count; i++) {
         this->instructions.push(createInstruction());
     }
-}
-
-std::string Process::generateVariableName (bool uniqueness)
-{
-    // WARNING: Uniqueness is not enforced by default
-    std::string name;
-
-    do {
-        name =
-            std::string(1, 'a' + (rand() % 26)) + std::to_string(rand() % 1000);
-    }
-    // Randomly generate names until you get a unique one
-    while (uniqueness == true && variables.count(name));
-
-    return name;
 }
 
 Instruction Process::createInstruction (int depth)
@@ -117,4 +127,19 @@ Instruction Process::createInstruction (int depth)
     }
 
     return instruction;
+}
+
+std::string Process::generateVariableName (bool uniqueness)
+{
+    // WARNING: Uniqueness is not enforced by default
+    std::string name;
+
+    do {
+        name =
+            std::string(1, 'a' + (rand() % 26)) + std::to_string(rand() % 1000);
+    }
+    // Randomly generate names until you get a unique one
+    while (uniqueness == true && variables.count(name));
+
+    return name;
 }

@@ -1,6 +1,8 @@
+#include <list>
+#include <thread>
+
 #include "../inc/os.h"
 #include "../inc/scheduler.h"
-#include <list>
 
 // WARNING: None of this works yet
 
@@ -13,26 +15,30 @@ OS::OS(DisplayManager &dm, Config &config)
 
 void OS::run ()
 {
+    int processId = 0;
 
     this->resetCycles();
 
-    int batchProcessFreq = this->config.getBatchProcessFreq();
-    int processId = 0;
-
     while (true) {
-        // Create a new process and add it to the scheduler's ready queue
-        if (cycle % batchProcessFreq == 0) {
+        // Create a new process and add it to the scheduler's ready queue every
+        // n cycles (dictated by batch-process-freq)
+        if (this->cycle % this->config.getBatchProcessFreq() == 0) {
             this->scheduler.addProcess(Process(0, this->config.getMaxIns()));
             processId++;
         }
 
-        // Pre-empt processes if RR algorithm
+        // TODO: Pre-empt processes if RR algorithm
+        // Pre-empting means setting status to WAITING and then setting
+        // core.running to false
 
         // Dispatch processes to any available cores
         if (!this->scheduler.isQueueEmpty()) {
             for (Core core : this->cores) {
                 if (!core.isRunning()) {
                     this->scheduler.dispatch(core);
+
+                    // When a core gets a process, its state becomes RUNNING
+                    core.setRunning(true);
                 }
             }
         }
@@ -40,11 +46,46 @@ void OS::run ()
         // Execute each core's process in a separate thread
         for (Core core : this->cores) {
             if (core.isRunning()) {
-                // TODO: Create a new thread here
-                core.getProcess().execute();
+                std::thread thread = std::thread([this, &core] () {
+                    Process process = core.getProcess();
+
+                    // Check if process is running first
+                    if (process.getState() == RUNNING) {
+                        // If process is NOT in a busy waiting state...
+                        if (process.getRemainingBusyWaitingCycles() == 0) {
+                            process.execute();
+
+                            // When process terminates, core stops running
+                            if (process.getState() == TERMINATED) {
+                                // TODO: Moved to terminated processes
+                                core.setRunning(false);
+                            }
+
+                            process.setBusyWaitingCycles(
+                                this->config.getDelaysPerExec());
+                        } else {
+                            process.decrementBusyWaitingCycles();
+                        }
+
+                        // Either way, increment elapsed cycles
+                        process.incrementElapsedCycles();
+                    }
+                });
+
+                // We will loop through the threads queue later
+                this->threads.push(thread);
             }
         }
-        // TODO: Join threads here
+
+        // Join all execution threads
+        while (!this->threads.empty()) {
+            std::thread &thread = this->threads.front();
+            thread.join();
+            this->threads.pop();
+        }
+
+        // Proceed to next cycle
+        this->cycle++;
     }
 }
 
@@ -91,7 +132,7 @@ void OS::ls ()
 
         status_string += "     ";
         // Progress
-        status_string += std::to_string(cores[i].getProcess().getNumCycles());
+        status_string += std::to_string(cores[i].getProcess().getTotalCycles());
         status_string += " / ";
         status_string +=
             std::to_string(cores[i].getProcess().getElapsedCycles());

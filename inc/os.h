@@ -1,10 +1,12 @@
 #ifndef OS_H
 #define OS_H
 
+#include <list>
+#include <thread>
+
 #include "config.h"
 #include "display_manager.h"
 #include "scheduler.h"
-#include <list>
 
 class OS
 {
@@ -32,6 +34,8 @@ class OS
     std::vector<Core> cores;
 
     std::list<std::pair<int, int>> finishedProcesses;
+
+    std::queue<std::thread> threads;
 
     // :wheelchair:
     // first int is ID, second int is num of cycles

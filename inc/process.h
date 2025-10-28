@@ -13,8 +13,8 @@ enum InstructionID { PRINT, DECLARE, ADD, SUBTRACT, SLEEP, FOR };
 enum ProcessState {
     NEW,       // Mostly unused, except for "empty" Process
     READY,     // Process is in ready queue
-    WAITING,   // Process is in a waiting state (busy-waiting)
-    RUNNING,   // Process is in a running core
+    WAITING,   // Process is in a waiting state (SLEEP instruction)
+    RUNNING,   // Process is in a running core (executing or busy-waiting)
     TERMINATED // Process has terminated
 };
 
@@ -39,23 +39,49 @@ class Process
     /** Pops an instruction and execute it (read ID and use a switch-case) */
     void execute();
 
-    /** Increments the cycle count for this process */
-    void incrementCycles();
-
-    /** @return ID */
+    /** @return The process ID */
     int getId();
+
+    /** Sets the process state */
+    void setState(enum ProcessState state);
+
+    /** @return The process sate */
+    enum ProcessState getState();
+
+    /** @return Total number of cycles to finish the program */
+    uint32_t getTotalCycles();
+
+    // Elapsed cycles
+    // These methods have to do with the # of cycles that have elapsed since the
+    // process was created
 
     /** @return Number of finished cycles */
     uint32_t getElapsedCycles();
 
-    /** @return Number of cycles */
-    uint32_t getNumCycles();
+    /** Increments the cycle count for this process */
+    void incrementElapsedCycles();
 
-    /** @return Number of cycles this process has been sleeping for */
-    uint16_t getSleepTicks();
+    // Busy-waiting cycles
+    // These methods have to do with the # of cycles that a process has been in
+    // a busy-waiting state, functioning as a delay timer (delay-per-exec)
+    // NOTE: Process will have a state of RUNNING even in a busy-waiting state.
 
-    /** Decrement sleep timer */
-    void decrementSleepTicks();
+    uint32_t getRemainingBusyWaitingCycles();
+
+    void setBusyWaitingCycles(uint32_t value);
+
+    void decrementBusyWaitingCycles();
+
+    // Sleep cycles
+    // These methods have to do with the # of cycles that a process has been in
+    // a waiting state after a SLEEP instruction
+
+    /** @return Number of cycles this process has been waiting (SLEEP) */
+    uint16_t getRemainingWaitingCycles();
+
+    void setWaitingCycles(uint16_t value);
+
+    void decrementWaitingCycles();
 
   private:
     /**
@@ -68,6 +94,9 @@ class Process
      * @return A value of type uint16_t representing the argument
      */
     uint16_t getArgValueUINT16(const std::any &arg);
+
+    // Instruction methods
+    // Implementations are in process_instructions.cpp
 
     void _PRINT(std::vector<std::any> &args);
 
@@ -115,13 +144,14 @@ class Process
     /** Process state. Initialized to READY */
     enum ProcessState state;
 
-    /** Number of cycles the process has executed */
+    /** Number of cycles the process has been running, */
     uint32_t elapsedCycles;
 
     /** Number of cycles the process has been in a busy-waiting state */
-    uint32_t waitingTime;
+    uint32_t elapsedBusyWaitingCycles;
 
-    uint16_t sleepTicks;
+    /** Number of cycles the process has been in a waiting state (SLEEP) */
+    uint16_t elapsedWaitingCycles;
 
     /** List of instructions to execute */
     std::queue<Instruction> instructions;
