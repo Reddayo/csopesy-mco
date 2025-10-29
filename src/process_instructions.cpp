@@ -45,7 +45,9 @@ uint16_t Process::getArgValueUINT16 (std::any &arg)
 };
 
 // TODO: This
-void Process::_PRINT (std::vector<std::any> &args) {}
+void Process::_PRINT (std::vector<std::any> &args) {
+    print_stream << std::any_cast<std::string>(args.at(0));
+}
 
 void Process::_DECLARE (std::vector<std::any> &args)
 {

@@ -7,6 +7,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <sstream>
 
 #include "display_manager.h"
 
@@ -166,6 +167,8 @@ class Process
 
     /** List of variables, will not be released until process ends */
     std::unordered_map<std::string, uint16_t> variables;
+
+    std::stringstream print_stream;
 };
 
 #endif
