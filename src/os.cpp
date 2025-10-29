@@ -218,7 +218,7 @@ void OS::ls ()
         status_string += "\n";
     }
 
-    this->dm.clearOutputWindow();
+    // this->dm.clearOutputWindow();
     this->dm._mvwprintw(0, 0, "%s", status_string.c_str());
 }
 
@@ -229,10 +229,10 @@ void OS::setGenerateDummyProcesses (bool value)
 
 void OS::exit ()
 {
-    // Lock the mutex first
-    std::lock_guard<std::mutex> lock(this->mutex);
-
     this->running = false;
+
+    // Lock the mutex
+    std::lock_guard<std::mutex> lock(this->mutex);
 
     if (this->thread.joinable()) {
         this->thread.join();
