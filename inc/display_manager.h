@@ -32,6 +32,9 @@ class DisplayManager
     /** Clears the output window */
     void clearOutputWindow();
 
+    /** Clears the input window */
+    void clearInputWindow();
+
     /** Prints an input prompt to the input window */
     void showInputPrompt();
 

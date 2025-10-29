@@ -133,6 +133,15 @@ void DisplayManager::clearOutputWindow ()
     wrefresh(this->outputWindow);
 }
 
+void DisplayManager::clearInputWindow ()
+{
+    // Lock the display manager
+    std::lock_guard<std::mutex> lock(this->mutex);
+
+    wclear(this->inputWindow);
+    wrefresh(this->inputWindow);
+}
+
 int DisplayManager::_mvwprintw (int y, int x, const char *format, ...)
 {
     int status;

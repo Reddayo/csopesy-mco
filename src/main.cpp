@@ -35,37 +35,70 @@ int main ()
 
     // =========================================================================
 
-    CommandInterpreter ci(dm);
+    CommandInterpreter ci_process(dm);
+
+    CommandInterpreter ci_main(dm);
+
+    // Main command interpreter
 
     // help command. Argument list goes unused
-    ci.addCommand("help", 0, false, [&dm] (CommandArguments &) {
+    ci_main.addCommand("help", 0, false, [&dm] (CommandArguments &) {
         // Pause the animation, clear the output window, and show help.
         dm.clearOutputWindow();
         dm._mvwprintw(0, 0, "%s", "You called for help, but nobody came");
     });
 
-    ci.addCommand("initialize", 0, false,
-                  [&os] (CommandArguments &) { os.run(); });
+    ci_main.addCommand("initialize", 0, false,
+                       [&os] (CommandArguments &) { os.run(); });
 
-    ci.addCommand("ls", 0, false, [&os] (CommandArguments &) { os.ls(); });
+    ci_main.addCommand("ls", 0, false, [&os] (CommandArguments &) { os.ls(); });
 
-    ci.addCommand("scheduler-start", 0, false, [&os] (CommandArguments &) {
+    ci_main.addCommand("scheduler-start", 0, false, [&os] (CommandArguments &) {
         os.setGenerateDummyProcesses(true);
     });
 
-    ci.addCommand("scheduler-stop", 0, false, [&os] (CommandArguments &) {
+    ci_main.addCommand("scheduler-stop", 0, false, [&os] (CommandArguments &) {
         os.setGenerateDummyProcesses(false);
     });
 
-    ci.addCommand("exit", 0, false, [&os, &ci] (CommandArguments &) {
+    ci_main.addCommand("exit", 0, false, [&os, &ci_main] (CommandArguments &) {
         os.exit();
-        ci.exitInputs();
+        ci_main.exitInputs();
     });
+
+    // TODO
+    ci_main.addCommand(
+        // Switch to process screen
+        "screen", 0, false,
+        [&os, &dm, &ci_main, &ci_process] (CommandArguments &) {
+            dm.clearInputWindow();
+            dm.clearOutputWindow();
+
+            // TODO: Do nothing idk
+
+            ci_main.exitInputs();
+            ci_process.startInputs();
+        });
+
+    // Process command interpreter
+
+    ci_process.addCommand(
+        // Switch to main menu screen
+        "exit", 0, false,
+        [&os, &dm, &ci_main, &ci_process] (CommandArguments &) {
+            dm.clearInputWindow();
+            dm.clearOutputWindow();
+
+            dm.showTitleScreen();
+
+            ci_process.exitInputs();
+            ci_main.startInputs();
+        });
 
     // =========================================================================
 
     // Start collecting inputs from the user
-    ci.startInputs();
+    ci_main.startInputs();
 
     // End curses environment
     endwin();
