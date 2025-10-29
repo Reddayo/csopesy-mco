@@ -24,6 +24,13 @@ class OS
 
     void setGenerateDummyProcesses(bool value);
 
+    /**
+     * Disables the running state so that the main thread can gracefully exit at
+     * the end of the current clock cycle, which then joins with the calling
+     * thread to allow for exiting the program.
+     */
+    void exit();
+
   private:
     int cycle;
 
@@ -42,6 +49,8 @@ class OS
     std::thread thread;
 
     bool generateDummyProcesses = false;
+
+    bool running = false;
 
     // :wheelchair:
     // first int is ID, second int is num of cycles

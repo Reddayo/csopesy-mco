@@ -57,6 +57,11 @@ int main ()
         os.setGenerateDummyProcesses(false);
     });
 
+    ci.addCommand("exit", 0, false, [&os, &ci] (CommandArguments &) {
+        os.exit();
+        ci.exitInputs();
+    });
+
     // =========================================================================
 
     // Start collecting inputs from the user

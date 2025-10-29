@@ -18,12 +18,14 @@ OS::OS (DisplayManager &dm, Config &config)
 
 void OS::run ()
 {
+    this->running = true;
+
     this->thread = std::thread([this] () {
         int processId = 0;
 
         this->resetCycles();
 
-        while (true) {
+        while (this->running) {
 
             // Create a new process and add it to the scheduler's ready queue
             // every n cycles (dictated by batch-process-freq)
@@ -195,4 +197,10 @@ void OS::ls ()
 void OS::setGenerateDummyProcesses (bool value)
 {
     this->generateDummyProcesses = value;
+}
+
+void OS::exit ()
+{
+    this->running = false;
+    this->thread.join();
 }
