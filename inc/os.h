@@ -2,6 +2,7 @@
 #define OS_H
 
 #include <list>
+#include <mutex>
 #include <thread>
 
 #include "config.h"
@@ -51,6 +52,8 @@ class OS
     bool generateDummyProcesses = false;
 
     bool running = false;
+
+    std::mutex mutex;
 
     // :wheelchair:
     // first int is ID, second int is num of cycles

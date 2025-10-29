@@ -1,4 +1,5 @@
 #include <list>
+#include <mutex>
 #include <thread>
 
 #include "../inc/core.h"
@@ -26,6 +27,7 @@ void OS::run ()
         this->resetCycles();
 
         while (this->running) {
+            std::lock_guard<std::mutex> lock(this->mutex);
 
             // Create a new process and add it to the scheduler's ready queue
             // every n cycles (dictated by batch-process-freq)
@@ -146,6 +148,10 @@ void OS::resetCycles () { this->cycle = 0; }
 // TODO: Cleanup
 void OS::ls ()
 {
+    // Lock the mutex first to avoid segfaults when accessing a pre-empted
+    // process (which would be a null pointer)
+    std::lock_guard<std::mutex> lock(this->mutex);
+
     std::string status_string;
 
     // Number of cores
@@ -223,6 +229,9 @@ void OS::setGenerateDummyProcesses (bool value)
 
 void OS::exit ()
 {
+    // Lock the mutex first
+    std::lock_guard<std::mutex> lock(this->mutex);
+
     this->running = false;
 
     if (this->thread.joinable()) {
