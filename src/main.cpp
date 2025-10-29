@@ -49,6 +49,14 @@ int main ()
 
     ci.addCommand("ls", 0, false, [&os] (CommandArguments &) { os.ls(); });
 
+    ci.addCommand("scheduler-start", 0, false, [&os] (CommandArguments &) {
+        os.setGenerateDummyProcesses(true);
+    });
+
+    ci.addCommand("scheduler-stop", 0, false, [&os] (CommandArguments &) {
+        os.setGenerateDummyProcesses(false);
+    });
+
     // =========================================================================
 
     // Start collecting inputs from the user

@@ -27,13 +27,14 @@ void OS::run ()
 
             // Create a new process and add it to the scheduler's ready queue
             // every n cycles (dictated by batch-process-freq)
-            if (this->cycle % this->config.getBatchProcessFreq() == 0 &&
-                // Maximum 500 processes
-                processId < 500) {
+            if (this->generateDummyProcesses &&
+                this->cycle % this->config.getBatchProcessFreq() == 0) {
 
                 // Create a new process and wrap it in a unique pointer
-                std::unique_ptr<Process> process(
-                    new Process(processId, this->config.getMaxIns()));
+                std::unique_ptr<Process> process(new Process(
+                    processId, this->config.getMinIns() +
+                                   rand() % (this->config.getMaxIns() -
+                                             this->config.getMinIns() + 1)));
 
                 // Transfer ownership of the unique pointer to the scheduler
                 // queue This calls std::move() internally
@@ -189,4 +190,9 @@ void OS::ls ()
 
     this->dm.clearOutputWindow();
     this->dm._mvwprintw(0, 0, "%s", status_string.c_str());
+}
+
+void OS::setGenerateDummyProcesses (bool value)
+{
+    this->generateDummyProcesses = value;
 }

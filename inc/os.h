@@ -22,6 +22,8 @@ class OS
 
     void ls();
 
+    void setGenerateDummyProcesses(bool value);
+
   private:
     int cycle;
 
@@ -38,6 +40,8 @@ class OS
     std::queue<std::thread> threads;
 
     std::thread thread;
+
+    bool generateDummyProcesses = false;
 
     // :wheelchair:
     // first int is ID, second int is num of cycles

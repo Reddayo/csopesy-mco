@@ -5,9 +5,6 @@
 // TODO: If no instructions left in queue, set status to TERMINATED
 void Process::execute (DisplayManager &dm)
 {
-    if (this->elapsedWaitingCycles > 0)
-        return;
-
     Instruction instr = instructions[this->programCounter];
 
     switch (instr.id) {

@@ -9,7 +9,8 @@ Process::~Process ()
 }
 
 // ARE YOU RE@DY!! I'M L@DY!! HAJIMEYOU YAREBA DEKIRU KITTO ZETTAI WATASHI #1
-Process::Process (int id, uint32_t instruction_count) : id(id), state(READY)
+Process::Process (int id, uint32_t instruction_count)
+    : id(id), state(READY), programCounter(0)
 {
     randomizeInstructions(instruction_count);
 }
