@@ -60,10 +60,14 @@ class Process
     /** Increments the cycle count for this Process */
     void incrementElapsedCycles();
 
+    /** Resets elapsed cycles */
+    void resetElapsedCycles();
+
     // Busy-waiting cycles
-    // These methods have to do with the # of cycles that a process has been in
-    // a busy-waiting state, functioning as a delay timer (delay-per-exec)
-    // NOTE: Process will have a state of RUNNING even in a busy-waiting state.
+    // These methods have to do with the # of cycles that a process has been
+    // in a busy-waiting state, functioning as a delay timer
+    // (delay-per-exec) NOTE: Process will have a state of RUNNING even in a
+    // busy-waiting state.
 
     uint32_t getRemainingBusyWaitingCycles();
 
@@ -145,7 +149,7 @@ class Process
     /** Process state. Initialized to READY */
     enum ProcessState state;
 
-    /** Number of cycles the process has been running, */
+    /** Number of cycles the process has been running, reset by pre-emption */
     uint32_t elapsedCycles = 0;
 
     /** Number of cycles the process has been in a busy-waiting state */

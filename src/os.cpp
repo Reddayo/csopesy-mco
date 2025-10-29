@@ -44,9 +44,31 @@ void OS::run ()
                 processId++;
             }
 
-            // TODO: Pre-empt processes if RR algorithm
-            // Pre-empting means setting status to WAITING and then setting
-            // core.running to false
+            // Pre-empt processes if RR algorithm
+            if (this->config.getScheduler() == RR) {
+                for (Core &core : this->cores) {
+                    if (core.isRunning()) {
+                        // Get a reference to the unique pointer owned by the
+                        // core. Ownership is not relinquished until we know it
+                        // must be pre-empted.
+                        std::unique_ptr<Process> &process = core.getProcess();
+
+                        // TODO: Better way than resetting elapsed cycles?
+                        if (process->getElapsedCycles() ==
+                            this->config.getQuantumCycles()) {
+
+                            process->resetElapsedCycles();
+
+                            core.setRunning(false);
+                            process->setState(READY);
+
+                            // Relinquishes ownership of pointer to the ready
+                            // queue
+                            this->scheduler.addProcess(process);
+                        }
+                    }
+                }
+            }
 
             // Dispatch processes to any available cores
             for (Core &core : this->cores) {

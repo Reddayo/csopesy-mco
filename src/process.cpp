@@ -34,6 +34,8 @@ uint32_t Process::getElapsedCycles () { return this->elapsedCycles; }
 
 void Process::incrementElapsedCycles () { elapsedCycles++; }
 
+void Process::resetElapsedCycles () { this->elapsedCycles = 0; }
+
 // Busy-waiting cycles
 
 uint32_t Process::getRemainingBusyWaitingCycles ()
