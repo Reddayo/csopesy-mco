@@ -1,13 +1,14 @@
 #ifndef PROCESS_H
 #define PROCESS_H
 
-#include "display_manager.h"
 #include <any>
 #include <cstdint>
 #include <queue>
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+#include "display_manager.h"
 
 enum InstructionID { PRINT, DECLARE, ADD, SUBTRACT, SLEEP, FOR };
 
@@ -28,12 +29,6 @@ struct Instruction {
 class Process
 {
   public:
-    /**
-     * Default constructor for a Process. Used to create an "empty" Process
-     * with which a Core can be initialized
-     */
-    Process();
-
     /** Creates a new Process. Must call randomizeInstructions() */
     Process(int id, uint32_t instruction_count);
 

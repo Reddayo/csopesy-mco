@@ -1,10 +1,16 @@
+#include <memory>
+
 #include "../inc/core.h"
 
 Core::Core (int id) : id(id), running(false) {}
 
-Process &Core::getProcess () { return this->process; };
+std::unique_ptr<Process> &Core::getProcess () { return this->process; };
 
-void Core::setProcess (Process &process) { this->process = process; }
+// TODO: Can handle setting process status here?
+void Core::setProcess (std::unique_ptr<Process> &process)
+{
+    this->process = std::move(process);
+}
 
 // TODO: Remove?
 void Core::execute () {}

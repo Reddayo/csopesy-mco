@@ -1,6 +1,5 @@
 #include "../inc/process.h"
 #include <cstdint>
-#include <iostream>
 
 Process::~Process ()
 {
@@ -9,12 +8,8 @@ Process::~Process ()
     this->variables.clear();
 }
 
-Process::Process () : id(-1) {}
-
 // ARE YOU RE@DY!! I'M L@DY!! HAJIMEYOU YAREBA DEKIRU KITTO ZETTAI WATASHI #1
-Process::Process (int id, uint32_t instruction_count)
-    : id(id), state(READY), programCounter(0), elapsedBusyWaitingCycles(0),
-      elapsedWaitingCycles(0), elapsedCycles(0)
+Process::Process (int id, uint32_t instruction_count) : id(id), state(READY)
 {
     randomizeInstructions(instruction_count);
 }

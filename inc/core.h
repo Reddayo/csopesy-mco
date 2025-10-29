@@ -1,6 +1,8 @@
 #ifndef CORE_H
 #define CORE_H
 
+#include <memory>
+
 #include "process.h"
 
 class Core
@@ -8,11 +10,20 @@ class Core
   public:
     Core(int id);
 
-    /** @return The process on this core */
-    Process &getProcess();
+    /**
+     * @return A reference to the unique pointer to the Process owned by this
+     * core. WARNING: This effectively creates an alias to the unique pointer,
+     * making it potentially thread-unasfe
+     */
+    std::unique_ptr<Process> &getProcess();
 
-    /** Sets the process running on this core */
-    void setProcess(Process &process);
+    /**
+     * Sets the process running on this core. Accepts a reference to a unique
+     * pointer to a Process and claims ownership of that pointer.
+     *
+     * @param process A reference to a unique pointer to a Process
+     */
+    void setProcess(std::unique_ptr<Process> &process);
 
     /** Calls this->process.execute() to execute one instruction */
     void execute();
@@ -33,8 +44,8 @@ class Core
     /** Whether this core is currently running */
     bool running;
 
-    /** The process currently executing on this core */
-    Process process;
+    /** A unique pointer to the Process currently executing on this core */
+    std::unique_ptr<Process> process;
 };
 
 #endif

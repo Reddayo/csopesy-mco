@@ -30,9 +30,13 @@ void OS::run ()
             if (this->cycle % this->config.getBatchProcessFreq() == 0 &&
                 // Maximum 500 processes
                 processId < 500) {
-                // TODO: Create Process on heap with new operator maybe?
-                Process process = Process(processId, this->config.getMaxIns());
 
+                // Create a new process and wrap it in a unique pointer
+                std::unique_ptr<Process> process(
+                    new Process(processId, this->config.getMaxIns()));
+
+                // Transfer ownership of the unique pointer to the scheduler
+                // queue This calls std::move() internally
                 this->scheduler.addProcess(process);
                 processId++;
             }
@@ -48,6 +52,7 @@ void OS::run ()
                         this->scheduler.dispatch(core);
 
                         // When a core gets a process, its state becomes RUNNING
+                        // TODO: Handle this within dispatch()?
                         core.setRunning(true);
                     }
                 }
@@ -56,31 +61,37 @@ void OS::run ()
             // Execute each core's process in a separate thread
             for (Core &core : this->cores) {
                 if (core.isRunning()) {
+                    // Create new thread
                     std::thread thread = std::thread([this, &core] () {
-                        Process &process = core.getProcess();
+                        // Get a reference to the unique pointer owned by the
+                        // Core. Does NOT relinquish ownership.
+                        std::unique_ptr<Process> &process = core.getProcess();
 
                         // Check if process is running first
-                        if (process.getState() == RUNNING) {
+                        if (process->getState() == RUNNING) {
 
                             // If process is NOT in a busy waiting state...
-                            if (process.getRemainingBusyWaitingCycles() == 0) {
-                                process.execute(dm);
+                            if (process->getRemainingBusyWaitingCycles() == 0) {
+                                process->execute(dm);
 
                                 // When process terminates, core stops running
-                                if (process.getState() == TERMINATED) {
+                                if (process->getState() == TERMINATED) {
                                     // TODO: Move to terminated processes?
                                     core.setRunning(false);
+                                    // Destroy the Process
+                                    process.reset();
                                 } else {
-                                    // Otherwise, delay execution
-                                    process.setBusyWaitingCycles(
+                                    // If process hasn't terminated yet, set a
+                                    // busy-waiting timer until next instruction
+                                    process->setBusyWaitingCycles(
                                         this->config.getDelaysPerExec());
-                                    process.incrementElapsedCycles();
+                                    process->incrementElapsedCycles();
                                 }
 
                             } else {
                                 // Delay execution until busy-waiting timer out
-                                process.decrementBusyWaitingCycles();
-                                process.incrementElapsedCycles();
+                                process->decrementBusyWaitingCycles();
+                                process->incrementElapsedCycles();
                             }
                         }
                     });
@@ -107,6 +118,7 @@ void OS::incrementCycles () { this->cycle++; }
 
 void OS::resetCycles () { this->cycle = 0; }
 
+// TODO: Cleanup
 void OS::ls ()
 {
     std::string status_string;
@@ -138,7 +150,7 @@ void OS::ls ()
     for (int i : runningCoreIds) {
         // Process name is same as ID .....I think
         status_string += "process ";
-        status_string += std::to_string(cores[i].getProcess().getId());
+        status_string += std::to_string(cores[i].getProcess()->getId());
 
         // Core name is same as ID ............I think
         status_string += "      Core ";
@@ -147,9 +159,10 @@ void OS::ls ()
         status_string += "     ";
         // Progress
         status_string +=
-            std::to_string(cores[i].getProcess().getProgramCounter());
+            std::to_string(cores[i].getProcess()->getProgramCounter());
         status_string += " / ";
-        status_string += std::to_string(cores[i].getProcess().getTotalCycles());
+        status_string +=
+            std::to_string(cores[i].getProcess()->getTotalCycles());
 
         status_string += "\n";
     }
