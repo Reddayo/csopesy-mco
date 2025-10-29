@@ -202,5 +202,8 @@ void OS::setGenerateDummyProcesses (bool value)
 void OS::exit ()
 {
     this->running = false;
-    this->thread.join();
+
+    if (this->thread.joinable()) {
+        this->thread.join();
+    }
 }
