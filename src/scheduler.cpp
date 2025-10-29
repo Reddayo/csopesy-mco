@@ -10,9 +10,9 @@ Scheduler::Scheduler (enum SchedulingAlgorithm scheduler_type, uint32_t quantum)
 void Scheduler::dispatch (Core &core)
 {
     Process process = readyQueue.front();
-    readyQueue.pop();
-
+    process.setState(RUNNING);
     core.setProcess(process);
+    readyQueue.pop();
 }
 
 uint32_t Scheduler::getQuantum () { return this->timeQuantumRR; }

@@ -37,6 +37,8 @@ class OS
 
     std::queue<std::thread> threads;
 
+    std::thread thread;
+
     // :wheelchair:
     // first int is ID, second int is num of cycles
     // that's right, i'll dig a hole, and then i'll bury myself in it, and then

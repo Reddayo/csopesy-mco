@@ -1,92 +1,106 @@
 #include <list>
 #include <thread>
 
+#include "../inc/core.h"
 #include "../inc/os.h"
 #include "../inc/scheduler.h"
 
-// WARNING: None of this works yet
-
-OS::OS(DisplayManager &dm, Config &config)
+OS::OS (DisplayManager &dm, Config &config)
     : dm(dm),                                         // Display manager
       config(config),                                 // Config values
       scheduler(Scheduler(config.getScheduler(),
                           config.getQuantumCycles())) // Scheduler
-{};
+{
+    for (int i = 0; i < config.getNumCPU(); i++) {
+        this->cores.push_back(Core(i));
+    }
+};
 
 void OS::run ()
 {
-    int processId = 0;
+    this->thread = std::thread([this] () {
+        int processId = 0;
 
-    this->resetCycles();
+        this->resetCycles();
 
-    while (true) {
-        // Create a new process and add it to the scheduler's ready queue every
-        // n cycles (dictated by batch-process-freq)
-        if (this->cycle % this->config.getBatchProcessFreq() == 0) {
-            this->scheduler.addProcess(Process(0, this->config.getMaxIns()));
-            processId++;
-        }
+        while (true) {
 
-        // TODO: Pre-empt processes if RR algorithm
-        // Pre-empting means setting status to WAITING and then setting
-        // core.running to false
+            // Create a new process and add it to the scheduler's ready queue
+            // every n cycles (dictated by batch-process-freq)
+            if (this->cycle % this->config.getBatchProcessFreq() == 0 &&
+                // Maximum 500 processes
+                processId < 500) {
+                // TODO: Create Process on heap with new operator maybe?
+                Process process = Process(processId, this->config.getMaxIns());
 
-        // Dispatch processes to any available cores
-        if (!this->scheduler.isQueueEmpty()) {
-            for (Core core : this->cores) {
-                if (!core.isRunning()) {
-                    this->scheduler.dispatch(core);
+                this->scheduler.addProcess(process);
+                processId++;
+            }
 
-                    // When a core gets a process, its state becomes RUNNING
-                    core.setRunning(true);
+            // TODO: Pre-empt processes if RR algorithm
+            // Pre-empting means setting status to WAITING and then setting
+            // core.running to false
+
+            // Dispatch processes to any available cores
+            for (Core &core : this->cores) {
+                if (!(this->scheduler.isQueueEmpty())) {
+                    if (!core.isRunning()) {
+                        this->scheduler.dispatch(core);
+
+                        // When a core gets a process, its state becomes RUNNING
+                        core.setRunning(true);
+                    }
                 }
             }
-        }
 
-        // Execute each core's process in a separate thread
-        for (Core core : this->cores) {
-            if (core.isRunning()) {
-                std::thread thread = std::thread([this, &core] () {
-                    Process process = core.getProcess();
+            // Execute each core's process in a separate thread
+            for (Core &core : this->cores) {
+                if (core.isRunning()) {
+                    std::thread thread = std::thread([this, &core] () {
+                        Process &process = core.getProcess();
 
-                    // Check if process is running first
-                    if (process.getState() == RUNNING) {
-                        // If process is NOT in a busy waiting state...
-                        if (process.getRemainingBusyWaitingCycles() == 0) {
-                            process.execute();
+                        // Check if process is running first
+                        if (process.getState() == RUNNING) {
 
-                            // When process terminates, core stops running
-                            if (process.getState() == TERMINATED) {
-                                // TODO: Moved to terminated processes
-                                core.setRunning(false);
+                            // If process is NOT in a busy waiting state...
+                            if (process.getRemainingBusyWaitingCycles() == 0) {
+                                process.execute(dm);
+
+                                // When process terminates, core stops running
+                                if (process.getState() == TERMINATED) {
+                                    // TODO: Move to terminated processes?
+                                    core.setRunning(false);
+                                } else {
+                                    // Otherwise, delay execution
+                                    process.setBusyWaitingCycles(
+                                        this->config.getDelaysPerExec());
+                                    process.incrementElapsedCycles();
+                                }
+
+                            } else {
+                                // Delay execution until busy-waiting timer out
+                                process.decrementBusyWaitingCycles();
+                                process.incrementElapsedCycles();
                             }
-
-                            process.setBusyWaitingCycles(
-                                this->config.getDelaysPerExec());
-                        } else {
-                            process.decrementBusyWaitingCycles();
                         }
+                    });
 
-                        // Either way, increment elapsed cycles
-                        process.incrementElapsedCycles();
-                    }
-                });
-
-                // We will loop through the threads queue later
-                this->threads.push(thread);
+                    // We will loop through the threads queue later
+                    this->threads.push(std::move(thread));
+                }
             }
-        }
 
-        // Join all execution threads
-        while (!this->threads.empty()) {
-            std::thread &thread = this->threads.front();
-            thread.join();
-            this->threads.pop();
-        }
+            // Join all execution threads
+            while (!this->threads.empty()) {
+                std::thread &thread = this->threads.front();
+                thread.join();
+                this->threads.pop();
+            }
 
-        // Proceed to next cycle
-        this->cycle++;
-    }
+            // Proceed to next cycle
+            this->cycle++;
+        }
+    });
 }
 
 void OS::incrementCycles () { this->cycle++; }
@@ -132,10 +146,10 @@ void OS::ls ()
 
         status_string += "     ";
         // Progress
-        status_string += std::to_string(cores[i].getProcess().getTotalCycles());
-        status_string += " / ";
         status_string +=
-            std::to_string(cores[i].getProcess().getElapsedCycles());
+            std::to_string(cores[i].getProcess().getProgramCounter());
+        status_string += " / ";
+        status_string += std::to_string(cores[i].getProcess().getTotalCycles());
 
         status_string += "\n";
     }

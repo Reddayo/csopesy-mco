@@ -1,6 +1,7 @@
 #include <curses.h>
 #include <map>
 #include <string>
+#include <thread>
 
 #include "../inc/command_interpreter.h"
 #include "../inc/config.h"
@@ -42,6 +43,11 @@ int main ()
         dm.clearOutputWindow();
         dm._mvwprintw(0, 0, "%s", "You called for help, but nobody came");
     });
+
+    ci.addCommand("initialize", 0, false,
+                  [&os] (CommandArguments &) { os.run(); });
+
+    ci.addCommand("ls", 0, false, [&os] (CommandArguments &) { os.ls(); });
 
     // =========================================================================
 

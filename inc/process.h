@@ -1,6 +1,7 @@
 #ifndef PROCESS_H
 #define PROCESS_H
 
+#include "display_manager.h"
 #include <any>
 #include <cstdint>
 #include <queue>
@@ -36,8 +37,11 @@ class Process
     /** Creates a new Process. Must call randomizeInstructions() */
     Process(int id, uint32_t instruction_count);
 
+    /** Destructor for a Process */
+    ~Process();
+
     /** Pops an instruction and execute it (read ID and use a switch-case) */
-    void execute();
+    void execute(DisplayManager &dm);
 
     /** @return The process ID */
     int getId();
@@ -58,7 +62,7 @@ class Process
     /** @return Number of finished cycles */
     uint32_t getElapsedCycles();
 
-    /** Increments the cycle count for this process */
+    /** Increments the cycle count for this Process */
     void incrementElapsedCycles();
 
     // Busy-waiting cycles
@@ -83,6 +87,8 @@ class Process
 
     void decrementWaitingCycles();
 
+    uint32_t getProgramCounter();
+
   private:
     /**
      * Helper that extracts an value of type uint16_t from an argument of type
@@ -93,7 +99,7 @@ class Process
      *
      * @return A value of type uint16_t representing the argument
      */
-    uint16_t getArgValueUINT16(const std::any &arg);
+    uint16_t getArgValueUINT16(std::any &arg);
 
     // Instruction methods
     // Implementations are in process_instructions.cpp
@@ -145,16 +151,19 @@ class Process
     enum ProcessState state;
 
     /** Number of cycles the process has been running, */
-    uint32_t elapsedCycles;
+    uint32_t elapsedCycles = 0;
 
     /** Number of cycles the process has been in a busy-waiting state */
-    uint32_t elapsedBusyWaitingCycles;
+    uint32_t elapsedBusyWaitingCycles = 0;
 
     /** Number of cycles the process has been in a waiting state (SLEEP) */
-    uint16_t elapsedWaitingCycles;
+    uint16_t elapsedWaitingCycles = 0;
+
+    /** Program counter */
+    int programCounter = 0;
 
     /** List of instructions to execute */
-    std::queue<Instruction> instructions;
+    std::vector<Instruction> instructions;
 
     /** List of variables, will not be released until process ends */
     std::unordered_map<std::string, uint16_t> variables;

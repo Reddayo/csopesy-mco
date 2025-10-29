@@ -1,12 +1,20 @@
-#include <cstdint>
-
 #include "../inc/process.h"
+#include <cstdint>
+#include <iostream>
 
-// Empty process constructor
-Process::Process () : id(-1), state(NEW) {}
+Process::~Process ()
+{
+    for (Instruction inst : this->instructions) inst.args.clear();
+    this->instructions.clear();
+    this->variables.clear();
+}
+
+Process::Process () : id(-1) {}
 
 // ARE YOU RE@DY!! I'M L@DY!! HAJIMEYOU YAREBA DEKIRU KITTO ZETTAI WATASHI #1
-Process::Process (int id, uint32_t instruction_count) : id(id), state(READY)
+Process::Process (int id, uint32_t instruction_count)
+    : id(id), state(READY), programCounter(0), elapsedBusyWaitingCycles(0),
+      elapsedWaitingCycles(0), elapsedCycles(0)
 {
     randomizeInstructions(instruction_count);
 }
@@ -21,7 +29,7 @@ enum ProcessState Process::getState () { return this->state; }
 uint32_t Process::getTotalCycles ()
 {
     /** Return number of cycles */
-    return this->elapsedCycles + this->instructions.size();
+    return this->instructions.size();
 }
 
 // Elapsed cycles
@@ -62,13 +70,15 @@ void Process::setWaitingCycles (uint16_t value)
 
 void Process::decrementWaitingCycles () { this->elapsedWaitingCycles--; }
 
+uint32_t Process::getProgramCounter () { return this->programCounter; }
+
 // TODO: Depending on how sir responds, this might be replaced with a
 // randomizeCommands + assembleCommands or something to that effect
 void Process::randomizeInstructions (int instruction_count)
 {
     // NOTE: Count is randomly assigned by the scheduler
     for (int i = 0; i < instruction_count; i++) {
-        this->instructions.push(createInstruction());
+        this->instructions.push_back(createInstruction());
     }
 }
 
@@ -77,8 +87,10 @@ Instruction Process::createInstruction (int depth)
     Instruction instruction;
 
     // Avoid generating a FOR instruction beyond depth = 3
+    // ...when we finish fixing it, for now it avoids FOR completely
     instruction.id =
-        static_cast<InstructionID>(rand() % (depth > 0 && depth < 3 ? 5 : 6));
+        static_cast<InstructionID>(rand() % (depth > 0 && depth < 3 ? 5 : 5));
+    //                     TODO: Set this to 6 to enable FOR instructions ^
 
     switch (instruction.id) {
 
@@ -89,6 +101,10 @@ Instruction Process::createInstruction (int depth)
     case DECLARE: {
         std::string var = generateVariableName(1);
         instruction.args.push_back(var);
+
+        uint16_t val = rand() % 65536;
+        instruction.args.push_back(val);
+
         break;
     }
 
@@ -99,7 +115,7 @@ Instruction Process::createInstruction (int depth)
 
         // Other arguments can be a random variable or a random uint16_t value
         // TODO: Move to actual implementation of instructions instead of here
-        auto createSource = [&] () -> std::any {
+        auto createSource = [this] () -> std::any {
             if (rand() % 2 == 0) {
                 return (uint16_t)(rand() % 65536);
             } else {
