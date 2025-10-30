@@ -1,9 +1,9 @@
+#include <ctime>
 #include <list>
 #include <mutex>
-#include <thread>
-#include <ctime>
-#include <string>
 #include <string.h>
+#include <string>
+#include <thread>
 
 #include "../inc/core.h"
 #include "../inc/os.h"
@@ -38,10 +38,11 @@ void OS::run ()
                 this->cycle % this->config.getBatchProcessFreq() == 0) {
 
                 // Create a new process and wrap it in a unique pointer
-                std::unique_ptr<Process> process(new Process(
-                    std::to_string(processAutoName), this->config.getMinIns() +
-                                   rand() % (this->config.getMaxIns() -
-                                             this->config.getMinIns() + 1)));
+                std::unique_ptr<Process> process(
+                    new Process(std::to_string(processAutoName),
+                                this->config.getMinIns() +
+                                    rand() % (this->config.getMaxIns() -
+                                              this->config.getMinIns() + 1)));
 
                 // Transfer ownership of the unique pointer to the scheduler
                 // queue This calls std::move() internally
@@ -186,10 +187,10 @@ void OS::ls ()
         status_string += "process ";
         status_string += cores[i].getProcess()->getName();
 
-        // Time 
+        // Time
         status_string += "  (";
         std::time_t now = cores[i].getProcess()->getStartTime();
-        char* dt = ctime(&now);
+        char *dt = ctime(&now);
         dt[strcspn(dt, "\n")] = '\0';
         status_string += dt;
         status_string += ")";
@@ -229,7 +230,8 @@ void OS::ls ()
         status_string += "\n";
     }
 
-    this->dm.clearOutputWindow(); // returned this since part of menu is not removed
+    this->dm
+        .clearOutputWindow(); // returned this since part of menu is not removed
     this->dm._mvwprintw(0, 0, "%s", status_string.c_str());
 }
 
@@ -237,7 +239,7 @@ void OS::screenR (std::string processName)
 {
     std::lock_guard<std::mutex> lock(this->mutex);
 
-    //:wheelchair:
+    //: wheelchair:
     // Number of cores
     int nCores = this->cores.size();
 
@@ -265,7 +267,6 @@ void OS::screenS (std::string processName)
 {
     std::lock_guard<std::mutex> lock(this->mutex);
     // create and then just going to call screenR if process exists
-    
 }
 
 void OS::setGenerateDummyProcesses (bool value)

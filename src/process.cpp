@@ -1,14 +1,9 @@
 #include "../inc/process.h"
 #include <cstdint>
-#include <string>
-<<<<<<< HEAD
 #include <ctime>
-    == == ==
-    =
+#include <string>
 
->>>>>>> print
-
-        Process::~Process()
+Process::~Process ()
 {
     for (Instruction inst : this->instructions) inst.args.clear();
     this->instructions.clear();

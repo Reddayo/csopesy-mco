@@ -87,24 +87,22 @@ int main ()
             // War crimes ahead
             bool valid = true;
 
-            if(args[0] == "-ls")
+            if (args[0] == "-ls")
                 os.ls();
-            else if(args[0].substr(0, 3) == "-s ") {
+            else if (args[0].substr(0, 3) == "-s ") {
                 dm.clearInputWindow();
                 dm.clearOutputWindow();
                 dm._mvwprintw(0, 0, "%s", "-s works");
-            }
-            else if(args[0].substr(0, 3) == "-r ") {
+            } else if (args[0].substr(0, 3) == "-r ") {
                 dm.clearInputWindow();
                 dm.clearOutputWindow();
                 dm._mvwprintw(0, 0, "%s", "-r works");
-            }
-            else {
+            } else {
                 dm.showErrorPrompt("Invalid command");
                 valid = false;
             }
 
-            if(valid) {
+            if (valid) {
                 ci_main.exitInputs();
                 ci_process.startInputs();
             }

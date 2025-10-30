@@ -3,13 +3,12 @@
 
 #include <list>
 #include <mutex>
-#include <thread>
 #include <string>
+#include <thread>
 
 #include "config.h"
 #include "display_manager.h"
 #include "scheduler.h"
-
 
 class OS
 {
