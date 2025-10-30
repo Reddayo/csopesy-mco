@@ -1,7 +1,8 @@
-#include "../inc/process.h"
 #include <cstdint>
 #include <ctime>
 #include <string>
+
+#include "../inc/process.h"
 
 Process::~Process ()
 {
@@ -29,14 +30,14 @@ void Process::setState (enum ProcessState state) { this->state = state; }
 
 enum ProcessState Process::getState () { return this->state; }
 
+uint32_t Process::getProgramCounter () { return this->programCounter; }
+
 // TODO: Deal with instruction size logic here
 uint32_t Process::getTotalCycles ()
 {
     /** Return number of cycles */
     return this->instructions.size();
 }
-
-std::vector<Instruction> Process::getInstructions() { return this->instructions; }
 
 // Elapsed cycles
 
@@ -78,7 +79,20 @@ void Process::setWaitingCycles (uint16_t value)
 
 void Process::decrementWaitingCycles () { this->elapsedWaitingCycles--; }
 
-uint32_t Process::getProgramCounter () { return this->programCounter; }
+std::string Process::getStateAsString ()
+{
+    std::stringstream ss;
+
+    ss << "Process name: " << this->name << "\n";
+    ss << "Process ID: " << this->id << "\n\n";
+    ss << "Current instruction line: " << this->programCounter << "\n";
+    ss << "Total instructions: " << this->instructions.size() << "\n\n";
+    ss << "Logs:\n" << this->print_stream.str();
+
+    return ss.str();
+}
+
+void Process::setLastCoreID (uint32_t core) { this->core = core; }
 
 // TODO: Depending on how sir responds, this might be replaced with a
 // randomizeCommands + assembleCommands or something to that effect
@@ -88,80 +102,6 @@ void Process::randomizeInstructions (int instruction_count)
     for (int i = 0; i < instruction_count; i++) {
         this->instructions.push_back(createInstruction());
     }
-}
-
-Instruction Process::createInstruction (int depth)
-{
-    Instruction instruction;
-
-    // Avoid generating a FOR instruction beyond depth = 3
-    // ...when we finish fixing it, for now it avoids FOR completely
-    instruction.id =
-        static_cast<InstructionID>(rand() % (depth > 0 && depth < 3 ? 5 : 5));
-    //                     TODO: Set this to 6 to enable FOR instructions ^
-
-    switch (instruction.id) {
-
-    case PRINT: {
-        instruction.args.push_back("Hello world from process" +
-                                   std::to_string(this->id) + "!");
-        break;
-    }
-
-    case DECLARE: {
-        std::string var = generateVariableName(1);
-        instruction.args.push_back(var);
-
-        uint16_t val = rand() % 65536;
-        instruction.args.push_back(val);
-
-        break;
-    }
-
-    case ADD:
-    case SUBTRACT: {
-        // First argument is always a destination variable
-        std::string var1 = generateVariableName();
-
-        // Other arguments can be a random variable or a random uint16_t value
-        // TODO: Move to actual implementation of instructions instead of here
-        auto createSource = [this] () -> std::any {
-            if (rand() % 2 == 0) {
-                return (uint16_t)(rand() % 65536);
-            } else {
-                return generateVariableName();
-            }
-        };
-
-        std::any var2 = createSource();
-        std::any var3 = createSource();
-
-        instruction.args = {var1, var2, var3};
-        break;
-    }
-
-    case SLEEP: {
-        instruction.args.push_back(rand() % 256); // uint8
-        break;
-    }
-
-    case FOR: {
-        int n = rand() % 256 + 1; // Random argument in range [1, 256]
-        //  TODO: FOR takes in` a set of instruction, so query create n times
-        /*
-            std::vector<Instruction> instructions;
-            int random_lines = rand() % 256 + 1;
-            for (int i = 0; i < random_lines; i++){
-                instructions.push_back(createInstruction(rand() % 2 == 0 ? depth
-           + 1 : 0));
-            }
-        */
-        instruction.args = {createInstruction(depth + 1), n};
-        break;
-    }
-    }
-
-    return instruction;
 }
 
 std::string Process::generateVariableName (bool uniqueness)

@@ -49,14 +49,14 @@ class Process
     /** @return The process start time */
     std::time_t getStartTime();
 
-    /** @return The vector of instructions */
-    std::vector<Instruction> getInstructions();
-
     /** Sets the process state */
     void setState(enum ProcessState state);
 
     /** @return The process sate */
     enum ProcessState getState();
+
+    /** @return the value of the program counter */
+    uint32_t getProgramCounter();
 
     /** @return Total number of cycles to finish the program */
     uint32_t getTotalCycles();
@@ -97,7 +97,10 @@ class Process
 
     void decrementWaitingCycles();
 
-    uint32_t getProgramCounter();
+    /** @return A string summary of the process' state, including logs */
+    std::string getStateAsString();
+
+    void setLastCoreID(uint32_t core);
 
   private:
     /**
@@ -185,6 +188,9 @@ class Process
     std::unordered_map<std::string, uint16_t> variables;
 
     std::stringstream print_stream;
+
+    /** The most recent core ID this process was assigned to. Defaults to 0 */
+    uint32_t core;
 };
 
 #endif

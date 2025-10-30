@@ -11,6 +11,7 @@ void Scheduler::dispatch (Core &core)
 {
     std::unique_ptr<Process> &process = readyQueue.front();
     process->setState(RUNNING);
+    process->setLastCoreID(core.getId());
 
     // Ownership of unique pointer is transferred to Core
     core.setProcess(process);

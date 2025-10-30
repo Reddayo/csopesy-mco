@@ -83,11 +83,11 @@ int main ()
                     else if (args[0].substr(0, 3) == "-s ") {
                         dm.clearInputWindow();
                         dm.clearOutputWindow();
-                        os.screenS("help");
+                        os.screenS(args[0].substr(3));
                     } else if (args[0].substr(0, 3) == "-r ") {
                         dm.clearInputWindow();
                         dm.clearOutputWindow();
-                        os.screenR("help");
+                        os.screenR(args[0].substr(3));
                     } else {
                         dm.showErrorPrompt("Invalid command");
                         valid = false;

@@ -1,7 +1,7 @@
 #include <ctime>
+#include <iomanip>
 #include <list>
 #include <mutex>
-#include <string.h>
 #include <string>
 #include <thread>
 
@@ -10,280 +10,125 @@
 #include "../inc/scheduler.h"
 
 OS::OS (DisplayManager &dm, Config &config)
-    : dm(dm),                                         // Display manager
-      config(config),                                 // Config values
-      scheduler(Scheduler(config.getScheduler(),
-                          config.getQuantumCycles())) // Scheduler
+    : dm(dm),                                    // Display manager
+      config(config),                            // Config values
+      scheduler(Scheduler(config.getScheduler(), // Scheduler
+                          config.getQuantumCycles()))
 {
     for (int i = 0; i < config.getNumCPU(); i++) {
         this->cores.push_back(Core(i));
     }
 };
 
-void OS::run ()
-{
-    this->running = true;
-
-    this->thread = std::thread([this] () {
-        int processAutoId = 0;
-
-        this->resetCycles();
-
-        while (this->running) {
-            std::lock_guard<std::mutex> lock(this->mutex);
-
-            // Create a new process and add it to the scheduler's ready queue
-            // every n cycles (dictated by batch-process-freq)
-            if (this->generateDummyProcesses &&
-                this->cycle % this->config.getBatchProcessFreq() == 0) {
-
-                // Create a new process and wrap it in a unique pointer
-                std::unique_ptr<Process> process(
-                    new Process(processAutoId, std::to_string(processAutoId),
-                                this->config.getMinIns() +
-                                    rand() % (this->config.getMaxIns() -
-                                              this->config.getMinIns() + 1)));
-
-                // Transfer ownership of the unique pointer to the scheduler
-                // queue This calls std::move() internally
-                this->scheduler.addProcess(process);
-                processAutoId++;
-            }
-
-            // Pre-empt processes if RR algorithm
-            if (this->config.getScheduler() == RR) {
-                for (Core &core : this->cores) {
-                    if (core.isRunning()) {
-                        // Get a reference to the unique pointer owned by the
-                        // core. Ownership is not relinquished until we know it
-                        // must be pre-empted.
-                        std::unique_ptr<Process> &process = core.getProcess();
-
-                        // TODO: Better way than resetting elapsed cycles?
-                        if (process->getElapsedCycles() ==
-                            this->config.getQuantumCycles()) {
-
-                            process->resetElapsedCycles();
-
-                            core.setRunning(false);
-                            process->setState(READY);
-
-                            // Relinquishes ownership of pointer to the ready
-                            // queue
-                            this->scheduler.addProcess(process);
-                        }
-                    }
-                }
-            }
-
-            // Dispatch processes to any available cores
-            for (Core &core : this->cores) {
-                if (!(this->scheduler.isQueueEmpty())) {
-                    if (!core.isRunning()) {
-                        this->scheduler.dispatch(core);
-
-                        // When a core gets a process, its state becomes RUNNING
-                        // TODO: Handle this within dispatch()?
-                        core.setRunning(true);
-                    }
-                }
-            }
-
-            // Execute each core's process in a separate thread
-            for (Core &core : this->cores) {
-                if (core.isRunning()) {
-                    // Create new thread
-                    std::thread thread = std::thread([this, &core] () {
-                        // Get a reference to the unique pointer owned by the
-                        // Core. Does NOT relinquish ownership.
-                        std::unique_ptr<Process> &process = core.getProcess();
-
-                        // Check if process is running first
-                        if (process->getState() == RUNNING) {
-
-                            // If process is NOT in a busy waiting state...
-                            if (process->getRemainingBusyWaitingCycles() == 0) {
-                                process->execute(dm);
-
-                                // When process terminates, core stops running
-                                if (process->getState() == TERMINATED) {
-                                    // TODO: Move to terminated processes?
-                                    core.setRunning(false);
-
-                                    this->finishedProcesses.push_back(
-                                        std::pair<int, int>(
-                                            process->getId(),
-                                            process->getProgramCounter()));
-
-                                    // Destroy the Process
-                                    process.reset();
-                                } else {
-                                    // If process hasn't terminated yet, set a
-                                    // busy-waiting timer until next instruction
-                                    process->setBusyWaitingCycles(
-                                        this->config.getDelaysPerExec());
-                                    process->incrementElapsedCycles();
-                                }
-
-                            } else {
-                                // Delay execution until busy-waiting timer out
-                                process->decrementBusyWaitingCycles();
-                                process->incrementElapsedCycles();
-                            }
-                        }
-                    });
-
-                    // We will loop through the threads queue later
-                    this->threads.push(std::move(thread));
-                }
-            }
-
-            // Join all execution threads
-            while (!this->threads.empty()) {
-                std::thread &thread = this->threads.front();
-                thread.join();
-                this->threads.pop();
-            }
-
-            // Proceed to next cycle
-            this->cycle++;
-        }
-    });
-}
-
 void OS::incrementCycles () { this->cycle++; }
 
 void OS::resetCycles () { this->cycle = 0; }
 
-// TODO: Cleanup
 void OS::ls ()
 {
     // Lock the mutex first to avoid segfaults when accessing a pre-empted
     // process (which would be a null pointer)
     std::lock_guard<std::mutex> lock(this->mutex);
 
-    std::string status_string;
+    // Set up a string stream to print to
+    std::stringstream ss;
 
     // Number of cores
     int nCores = this->cores.size();
 
-    // Running cores
+    // Calculate number of running cores
     std::list<int> runningCoreIds;
     for (int i = 0; i < nCores; i++) {
         if (cores[i].isRunning())
             runningCoreIds.push_back(cores[i].getId());
     }
-
-    // Number of running cores
     int nRunningCores = runningCoreIds.size();
 
     // CPU utilization
     float cpuUtil = nRunningCores * 100.0 / nCores;
 
-    // Status string
-    status_string =
-        "CPU utilization: " + std::to_string(cpuUtil) + "\%\n" +
-        "Cores used: " + std::to_string(nRunningCores) + "\n" +
-        "Cores available: " + std::to_string(nCores - nRunningCores) + "\n\n";
+    // Print system information to the stream
+    ss << "CPU utilization: " << cpuUtil << "\%\n"
+       << "Cores used: " << nRunningCores << "\n"
+       << "Cores available: " << nCores - nRunningCores << "\n\n";
+
+    // TODO: Clean up alignment with std::left and std::setw in this section
 
     // Running processes
-    status_string += "Running processes:\n";
+    ss << "Running processes:\n";
     for (int i : runningCoreIds) {
         // Process has a name
-        status_string += "process ";
-        status_string += cores[i].getProcess()->getName();
+        ss << std::left << std::setw(10) << cores[i].getProcess()->getName();
 
-        // Time
-        status_string += "  (";
+        // Formatted process start time
         std::time_t now = cores[i].getProcess()->getStartTime();
-        char *dt = ctime(&now);
-        dt[strcspn(dt, "\n")] = '\0';
-        status_string += dt;
-        status_string += ")";
+        ss << std::put_time(std::localtime(&now), " (%m/%d/%Y %H:%M:%S)");
 
-        // Core name is same as ID ............I think
-        status_string += "      Core ";
-        status_string += std::to_string(cores[i].getId());
+        // Core ID
+        ss << " Core: " << std::setw(5) << std::to_string(cores[i].getId())
+           << "     ";
 
-        status_string += "     ";
         // Progress
-        status_string +=
-            std::to_string(cores[i].getProcess()->getProgramCounter());
-        status_string += " / ";
-        status_string +=
-            std::to_string(cores[i].getProcess()->getTotalCycles());
-
-        status_string += "\n";
+        ss << std::right << std::setw(10)
+           << cores[i].getProcess()->getProgramCounter() << " / "
+           << cores[i].getProcess()->getTotalCycles() << "\n";
     }
 
+    // TODO: Use process name instead of ID
     // Finished processes
-    status_string += "\n";
-    status_string += "Finished processes:\n";
-
+    ss << "\nFinished processes:\n";
     for (std::pair<int, int> finishedProcess : this->finishedProcesses) {
         // Process name
-        status_string += "process ";
-        status_string += std::to_string(finishedProcess.first);
-
-        // Finished
-        status_string += "      FINISHED     ";
+        ss << "Process " << finishedProcess.first << "      FINISHED     ";
 
         // Progress
-        status_string += std::to_string(finishedProcess.second);
-        status_string += " / ";
-        status_string += std::to_string(finishedProcess.second);
-
-        status_string += "\n";
+        ss << finishedProcess.second << " / " << finishedProcess.second << "\n";
     }
 
-    this->dm
-        .clearOutputWindow(); // returned this since part of menu is not removed
-    this->dm._mvwprintw(0, 0, "%s", status_string.c_str());
+    this->dm.clearOutputWindow();
+    this->dm._mvwprintw(0, 0, "%s", ss.str().c_str());
 }
 
 void OS::screenR (std::string processName)
 {
+    // Lock mutex
     std::lock_guard<std::mutex> lock(this->mutex);
-    //: wheelchair:
-    // Number of cores
-    int nCores = this->cores.size();
 
-    // Running cores
-    std::list<int> runningCoreIds;
-    for (int i = 0; i < nCores; i++) {
-        if (cores[i].isRunning())
-            runningCoreIds.push_back(cores[i].getId());
-    }
+    // Flag for if the process was found
+    // bool found = false;
 
-    std::string screen_string;
-    int coreId;
+    this->dm.clearOutputWindow();
 
-    for (int i : runningCoreIds) {
-        if (cores[i].getProcess()->getName() == processName) {
-            coreId = i;
+    for (Core &core : this->cores) {
+        if (core.isRunning() && core.getProcess()->getName() == processName) {
+            std::string processState = core.getProcess()->getStateAsString();
+            this->dm._mvwprintw(0, 0, "%s", processState.c_str());
+
+            // found = true;
+            break;
         }
     }
 
-    screen_string += "Process name: ";
-
-    screen_string += cores[coreId].getProcess()->getName();
-
-    screen_string += "\nID: ";
-    screen_string += std::to_string(cores[coreId].getProcess()->getId());
-
-    this->dm.clearOutputWindow();
-    this->dm._mvwprintw(0, 0, "%s", screen_string.c_str());
+    // TODO: Search in the ready queue. Big problem because std::queue cannot be
+    // iterated over, and we can't easily make a copy of it because we'd have to
+    // call std::move() on each std::unique_ptr in the queue
 }
 
 void OS::screenS (std::string processName)
 {
+    // Lock mutex before creating a new process
+    std::unique_lock<std::mutex> lock(this->mutex);
+
+    // TODO: Use a global counter for process IDs
     std::unique_ptr<Process> process(new Process(
         10, processName,
         this->config.getMinIns() + rand() % (this->config.getMaxIns() -
                                              this->config.getMinIns() + 1)));
 
+    // Print the process state to the output window.
+    this->dm._mvwprintw(0, 0, "%s", process->getStateAsString().c_str());
+
     this->scheduler.addProcess(process);
-    screenR(processName);
 }
 
 void OS::setGenerateDummyProcesses (bool value)
@@ -295,7 +140,7 @@ void OS::exit ()
 {
     this->running = false;
 
-    // Lock the mutex
+    // Lock the mutex. TODO: I don't think this is actl needed
     std::lock_guard<std::mutex> lock(this->mutex);
 
     if (this->thread.joinable()) {
