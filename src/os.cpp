@@ -109,6 +109,12 @@ void OS::run ()
                                 if (process->getState() == TERMINATED) {
                                     // TODO: Move to terminated processes?
                                     core.setRunning(false);
+
+                                    this->finishedProcesses.push_back(
+                                        std::pair<int, int>(
+                                            process->getId(),
+                                            process->getProgramCounter()));
+
                                     // Destroy the Process
                                     process.reset();
                                 } else {
@@ -237,6 +243,7 @@ void OS::ls ()
 
 void OS::screenR (std::string processName)
 {
+    std::lock_guard<std::mutex> lock(this->mutex);
     //: wheelchair:
     // Number of cores
     int nCores = this->cores.size();
@@ -252,57 +259,28 @@ void OS::screenR (std::string processName)
     int coreId;
 
     for (int i : runningCoreIds) {
-        if(cores[i].getProcess()->getName() == processName) {
+        if (cores[i].getProcess()->getName() == processName) {
             coreId = i;
         }
     }
 
-
     screen_string += "Process name: ";
-    /*
+
     screen_string += cores[coreId].getProcess()->getName();
 
     screen_string += "\nID: ";
     screen_string += std::to_string(cores[coreId].getProcess()->getId());
 
-    for(int i = 0; i < cores[coreId].getProcess()->getProgramCounter(); i++) {
-        screen_string += "\n";
-        switch (cores[coreId].getProcess()->getInstructions()[i].id) {
-            case PRINT:
-                screen_string += "PRINT";
-                break;
-            case DECLARE:
-                screen_string += "DECLARE";
-                break;
-            case ADD:
-                screen_string += "ADD";
-                break;
-            case SUBTRACT:
-                screen_string += "SUBTRACT";
-                break;
-            case SLEEP:
-                screen_string += "SLEEP";
-                break;
-            case FOR:
-                screen_string += "FOR";
-                break;
-            default:
-                break;
-        }
-    }
-
-    */
     this->dm.clearOutputWindow();
-    this->dm._mvwprintw(0, 0, "%s", "help");
+    this->dm._mvwprintw(0, 0, "%s", screen_string.c_str());
 }
 
 void OS::screenS (std::string processName)
 {
-    std::unique_ptr<Process> process(
-                    new Process(10, processName,
-                                this->config.getMinIns() +
-                                    rand() % (this->config.getMaxIns() -
-                                              this->config.getMinIns() + 1)));
+    std::unique_ptr<Process> process(new Process(
+        10, processName,
+        this->config.getMinIns() + rand() % (this->config.getMaxIns() -
+                                             this->config.getMinIns() + 1)));
 
     this->scheduler.addProcess(process);
     screenR(processName);
