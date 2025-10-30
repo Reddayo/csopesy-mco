@@ -1,21 +1,29 @@
 #include "../inc/process.h"
 #include <cstdint>
+#include <string>
+#include <ctime>
 
 Process::~Process ()
 {
     for (Instruction inst : this->instructions) inst.args.clear();
     this->instructions.clear();
     this->variables.clear();
+    this->startTime = std::time(0);
 }
 
 // ARE YOU RE@DY!! I'M L@DY!! HAJIMEYOU YAREBA DEKIRU KITTO ZETTAI WATASHI #1
-Process::Process (int id, uint32_t instruction_count)
-    : id(id), state(READY), programCounter(0)
+Process::Process (std::string name, uint32_t instruction_count)
+    : name(name), state(READY), programCounter(0)
 {
     randomizeInstructions(instruction_count);
+    this->startTime = std::time(0);
 }
 
-int Process::getId () { return this->id; }
+std::string Process::getName () { return this->name; }
+
+int Process::getId() { return this->id; }
+
+std::time_t Process::getStartTime () { return this->startTime; }
 
 void Process::setState (enum ProcessState state) { this->state = state; }
 
@@ -146,14 +154,14 @@ Instruction Process::createInstruction (int depth)
 std::string Process::generateVariableName (bool uniqueness)
 {
     // WARNING: Uniqueness is not enforced by default
-    std::string name;
+    std::string varName;
 
     do {
-        name =
+        varName =
             std::string(1, 'a' + (rand() % 26)) + std::to_string(rand() % 1000);
     }
     // Randomly generate names until you get a unique one
-    while (uniqueness == true && variables.count(name));
+    while (uniqueness == true && variables.count(varName));
 
-    return name;
+    return varName;
 }

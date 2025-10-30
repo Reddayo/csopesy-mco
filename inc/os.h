@@ -4,10 +4,12 @@
 #include <list>
 #include <mutex>
 #include <thread>
+#include <string>
 
 #include "config.h"
 #include "display_manager.h"
 #include "scheduler.h"
+
 
 class OS
 {
@@ -22,6 +24,10 @@ class OS
     void resetCycles();
 
     void ls();
+
+    void screenR(std::string processName);
+
+    void screenS(std::string processName);
 
     void setGenerateDummyProcesses(bool value);
 

@@ -8,6 +8,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <ctime>
 
 #include "display_manager.h"
 
@@ -31,7 +32,7 @@ class Process
 {
   public:
     /** Creates a new Process. Must call randomizeInstructions() */
-    Process(int id, uint32_t instruction_count);
+    Process(std::string name, uint32_t instruction_count);
 
     /** Destructor for a Process */
     ~Process();
@@ -39,8 +40,14 @@ class Process
     /** Pops an instruction and execute it (read ID and use a switch-case) */
     void execute(DisplayManager &dm);
 
-    /** @return The process ID */
+    /** @return The process name */
+    std::string getName();
+
+    /** @return The process id */
     int getId();
+
+    /** @return The process start time */
+    std::time_t getStartTime();
 
     /** Sets the process state */
     void setState(enum ProcessState state);
@@ -144,8 +151,14 @@ class Process
      */
     std::string generateVariableName(bool uniqueness = false);
 
+    /** Process name */
+    std::string name;
+
     /** Process ID */
     int id;
+
+    /** Process time of creation */
+    std::time_t startTime;
 
     /** Process state. Initialized to READY */
     enum ProcessState state;
