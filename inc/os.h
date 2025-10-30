@@ -30,6 +30,9 @@ class OS
 
     void setGenerateDummyProcesses(bool value);
 
+    /** @return True if the OS is running */
+    bool isRunning();
+
     /**
      * Disables the running state so that the main thread can gracefully exit at
      * the end of the current clock cycle, which then joins with the calling

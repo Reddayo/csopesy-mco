@@ -136,6 +136,8 @@ void OS::setGenerateDummyProcesses (bool value)
     this->generateDummyProcesses = value;
 }
 
+bool OS::isRunning () { return this->running; }
+
 void OS::exit ()
 {
     this->running = false;

@@ -42,68 +42,88 @@ int main ()
     // Main command interpreter
 
     // help command. Argument list goes unused
-    ci_main.addCommand("help", 0, false, [&dm] (CommandArguments &) {
-        // Pause the animation, clear the output window, and show help.
-        dm.clearOutputWindow();
-        dm._mvwprintw(0, 0, "%s", "You called for help, but nobody came");
-    });
-
     ci_main.addCommand(
-        "initialize", 0, false,
-        [&os, &dm, &ci_main, &ci_process] (CommandArguments &) {
-            os.run();
+        "help", 0, false, //
+        [&dm] (CommandArguments &) {
+            dm.clearOutputWindow();
+            dm._mvwprintw(0, 0, "%s", "You called for help, but nobody came");
+        });
 
-            // Enable access to the following commands only once initialized
+    // Initialize OS. Must be called before anything else
+    ci_main.addCommand(
+        "initialize", 0, false, //
+        [&os, &dm, &ci_main, &ci_process] (CommandArguments &) { os.run(); });
 
-            ci_main.addCommand("scheduler-start", 0, false,
-                               [&os] (CommandArguments &) {
-                                   os.setGenerateDummyProcesses(true);
-                               });
+    // Start randomly generating dummy processes
+    ci_main.addCommand(
+        "scheduler-start", 0, false, //
+        [&os, &dm] (CommandArguments &) {
+            if (!os.isRunning())
+                dm.showErrorPrompt(
+                    "OS is not initialized. Use command \"initialize\" first.");
+            else
+                os.setGenerateDummyProcesses(true);
+        });
 
-            ci_main.addCommand("scheduler-stop", 0, false,
-                               [&os] (CommandArguments &) {
-                                   os.setGenerateDummyProcesses(false);
-                               });
+    // Stop randomly generating dummy processes
+    ci_main.addCommand(
+        "scheduler-stop", 0, false, //
+        [&os, &dm] (CommandArguments &) {
+            if (!os.isRunning())
+                dm.showErrorPrompt(
+                    "OS is not initialized. Use command \"initialize\" first.");
+            else
+                os.setGenerateDummyProcesses(false);
+        });
 
-            ci_main.addCommand("exit", 0, false,
-                               [&os, &ci_main] (CommandArguments &) {
-                                   os.exit();
-                                   ci_main.exitInputs();
-                               });
+    // Exit the PROGRAM
+    ci_main.addCommand(   //
+        "exit", 0, false, //
+        [&os, &dm, &ci_main] (CommandArguments &) {
+            os.exit();
+            ci_main.exitInputs();
+        });
 
-            ci_main.addCommand(
-                // Switch to process screen
-                "screen", 1, true,
-                [&os, &dm, &ci_main, &ci_process] (CommandArguments &args) {
-                    // War crimes ahead
-                    bool valid = true;
+    // screen command
+    // screen -s and -r will cause a switch to process screen, but not -ls
+    ci_main.addCommand(
+        "screen", 1, true,
+        [&os, &dm, &ci_main, &ci_process] (CommandArguments &args) {
+            if (!os.isRunning()) {
+                dm.showErrorPrompt(
+                    "OS is not initialized. Use command \"initialize\" first.");
+                // Early return if OS is not running yet
+                return;
+            }
 
-                    if (args[0] == "-ls")
-                        os.ls();
-                    else if (args[0].substr(0, 3) == "-s ") {
-                        dm.clearInputWindow();
-                        dm.clearOutputWindow();
-                        os.screenS(args[0].substr(3));
-                    } else if (args[0].substr(0, 3) == "-r ") {
-                        dm.clearInputWindow();
-                        dm.clearOutputWindow();
-                        os.screenR(args[0].substr(3));
-                    } else {
-                        dm.showErrorPrompt("Invalid command");
-                        valid = false;
-                    }
+            // screen -ls
+            if (args[0] == "-ls") {
+                os.ls();
+                return;
+            } // screen -s process_name
+            else if (args[0].substr(0, 3) == "-s ") {
+                dm.clearInputWindow();
+                dm.clearOutputWindow();
+                os.screenS(args[0].substr(3));
+            } // screen -r process_name
+            else if (args[0].substr(0, 3) == "-r ") {
+                dm.clearInputWindow();
+                dm.clearOutputWindow();
+                os.screenR(args[0].substr(3));
+            } else {
+                dm.showErrorPrompt("Invalid command");
+                return;
+            }
 
-                    if (valid) {
-                        ci_main.exitInputs();
-                        ci_process.startInputs();
-                    }
-                });
+            // Pass control to process command interpreter
+            ci_main.exitInputs();
+            ci_process.startInputs();
         });
 
     // Process command interpreter
 
+    // Exit to MAIN SCREEN
     ci_process.addCommand(
-        // Switch to main menu screen
         "exit", 0, false,
         [&os, &dm, &ci_main, &ci_process] (CommandArguments &) {
             dm.clearInputWindow();
@@ -114,6 +134,8 @@ int main ()
             ci_process.exitInputs();
             ci_main.startInputs();
         });
+
+    // TODO: process-smi
 
     // =========================================================================
 
