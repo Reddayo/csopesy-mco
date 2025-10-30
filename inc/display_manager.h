@@ -79,6 +79,17 @@ class DisplayManager
 
     WINDOW *outputWindow, *inputWindow;
 
+    /** Scrolls the output window up by n lines */
+    void scrollUp(int n);
+
+    /** Scrolls the output window down by n lines */
+    void scrollDown(int n);
+
+    int padTop;          // Current top line visible
+    int currentRow;      // Current print row
+
+    void refreshPad();
+
     std::mutex mutex;
 };
 

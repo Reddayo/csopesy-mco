@@ -1,5 +1,7 @@
+#define NCURSES_MOUSE_VERSION 2
 #include <curses.h>
 #include <mutex>
+#include <algorithm>
 
 #include "../inc/display_manager.h"
 
@@ -8,6 +10,16 @@
  * terminal is allocated for the output window.
  */
 const int INPUT_WINDOW_HEIGHT = 10;
+const int PAD_HEIGHT = 1000;
+const int PAD_WIDTH = COLS;
+
+/* probably better to have something like this
+struct Screen {
+    WINDOW* pad;
+    int padTop;
+    int currentRow;
+};
+*/
 
 const std::vector<std::string> titleScreenArt = {
     "  _   _                        _  ___  ___  ",
@@ -47,8 +59,10 @@ DisplayManager::DisplayManager ()
     box(inputBorder, 0, 0);
 
     // Content windows are created as subwindows of the border windows
-    this->outputWindow =
-        subwin(outputBorder, max_y - INPUT_WINDOW_HEIGHT - 2, max_x - 2, 1, 1);
+    this->outputWindow = newpad(PAD_HEIGHT, max_x - 2);
+    this->padTop = 0;
+    this->currentRow = 0;
+
     this->inputWindow = subwin(inputBorder, INPUT_WINDOW_HEIGHT - 2, max_x - 2,
                                max_y - INPUT_WINDOW_HEIGHT + 1, 1);
 
@@ -62,6 +76,39 @@ DisplayManager::DisplayManager ()
     // Enable scrolling for input window
     scrollok(inputWindow, true);
     idlok(inputWindow, true);
+    scrollok(outputWindow, TRUE);
+    idlok(outputWindow, TRUE);
+
+    mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, nullptr);
+    keypad(this->inputWindow, true);
+}
+
+void DisplayManager::scrollUp(int n)
+{
+    std::lock_guard<std::mutex> lock(this->mutex);
+    if (this->padTop > 0)
+        this->padTop -= n;
+    this->refreshPad();
+}
+
+void DisplayManager::scrollDown(int n)
+{
+    std::lock_guard<std::mutex> lock(this->mutex);
+    int max_y, max_x;
+    getmaxyx(this->outputBorder, max_y, max_x);
+    if (this->padTop + max_y - 2 < PAD_HEIGHT)
+        this->padTop += n;
+    this->refreshPad();
+}
+void DisplayManager::refreshPad()
+{
+    int borderHeight, borderWidth;
+    getmaxyx(this->outputBorder, borderHeight, borderWidth);
+
+    prefresh(this->outputWindow,
+             this->padTop, 0,
+             1, 1, 
+             borderHeight - 2, borderWidth - 2);
 }
 
 void DisplayManager::refreshAll ()
@@ -71,7 +118,7 @@ void DisplayManager::refreshAll ()
 
     wrefresh(this->outputBorder);
     wrefresh(this->inputBorder);
-    wrefresh(this->outputWindow);
+    this->refreshPad();
     wrefresh(this->inputWindow);
 }
 
@@ -115,6 +162,8 @@ void DisplayManager::showTitleScreen ()
 
         y_index++;
     }
+    this->padTop = std::max(0, y_start - 1);
+    this->refreshPad();
 }
 
 int DisplayManager::getWindowWidth () { return getmaxx(this->outputWindow); }
@@ -129,8 +178,10 @@ void DisplayManager::clearOutputWindow ()
     // Lock the display manager
     std::lock_guard<std::mutex> lock(this->mutex);
 
-    wclear(this->outputWindow);
-    wrefresh(this->outputWindow);
+    werase(this->outputWindow);
+    this->padTop = 0;
+    this->currentRow = 0;
+    this->refreshPad();
 }
 
 void DisplayManager::clearInputWindow ()
@@ -154,11 +205,11 @@ int DisplayManager::_mvwprintw (int y, int x, const char *format, ...)
     va_start(varglist, format);
 
     // Move cursor and print to that position
-    wmove(this->outputWindow, y, x);
+    wmove(this->outputWindow, this->currentRow + y, x);
     status = vw_printw(this->outputWindow, format, varglist);
 
     // Automatically refresh
-    wrefresh(this->outputWindow);
+    this->refreshPad();
 
     return status;
 }
@@ -230,6 +281,20 @@ int DisplayManager::_wgetnstr (char *buffer,
         lock.unlock();
 
         return INPUT_READ_SUBMIT;
+    }
+
+    // Handle mouse scroll
+    else if (ch == KEY_MOUSE) {
+
+        MEVENT event;
+        if (getmouse(&event) == OK) {
+            if (event.bstate & BUTTON4_PRESSED) {
+                this->scrollUp(1);
+            } else if (event.bstate & BUTTON5_PRESSED) {
+                this->scrollDown(1);
+            }
+        }
+        return ERR;
     }
 
     // Handle regular characters
