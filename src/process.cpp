@@ -1,5 +1,7 @@
 #include "../inc/process.h"
 #include <cstdint>
+#include <string>
+
 
 Process::~Process ()
 {
@@ -93,7 +95,7 @@ Instruction Process::createInstruction (int depth)
     switch (instruction.id) {
 
     case PRINT: {
-        std::string(to_string)
+        instruction.args.push_back("Hello world from process" + std::to_string(this->id) + "!");
         break;
     }
 
@@ -136,6 +138,14 @@ Instruction Process::createInstruction (int depth)
 
     case FOR: {
         int n = rand() % 256 + 1; // Random argument in range [1, 256]
+        //  TODO: FOR takes in` a set of instruction, so query create n times
+        /*
+            std::vector<Instruction> instructions;
+            int random_lines = rand() % 256 + 1;
+            for (int i = 0; i < random_lines; i++){
+                instructions.push_back(createInstruction(rand() % 2 == 0 ? depth + 1 : 0));
+            }
+        */
         instruction.args = {createInstruction(depth + 1), n};
         break;
     }
