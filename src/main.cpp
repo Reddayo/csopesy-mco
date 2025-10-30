@@ -51,8 +51,6 @@ int main ()
     ci_main.addCommand("initialize", 0, false,
                        [&os] (CommandArguments &) { os.run(); });
 
-    ci_main.addCommand("ls", 0, false, [&os] (CommandArguments &) { os.ls(); });
-
     ci_main.addCommand("scheduler-start", 0, false, [&os] (CommandArguments &) {
         os.setGenerateDummyProcesses(true);
     });
@@ -66,6 +64,7 @@ int main ()
         ci_main.exitInputs();
     });
 
+    /*
     // TODO
     ci_main.addCommand(
         // Switch to process screen
@@ -78,6 +77,37 @@ int main ()
 
             ci_main.exitInputs();
             ci_process.startInputs();
+        });
+    */
+
+    ci_main.addCommand(
+        // Switch to process screen
+        "screen", 1, true,
+        [&os, &dm, &ci_main, &ci_process] (CommandArguments &args) {
+            // War crimes ahead
+            bool valid = true;
+
+            if(args[0] == "-ls")
+                os.ls();
+            else if(args[0].substr(0, 3) == "-s ") {
+                dm.clearInputWindow();
+                dm.clearOutputWindow();
+                dm._mvwprintw(0, 0, "%s", "-s works");
+            }
+            else if(args[0].substr(0, 3) == "-r ") {
+                dm.clearInputWindow();
+                dm.clearOutputWindow();
+                dm._mvwprintw(0, 0, "%s", "-r works");
+            }
+            else {
+                dm.showErrorPrompt("Invalid command");
+                valid = false;
+            }
+
+            if(valid) {
+                ci_main.exitInputs();
+                ci_process.startInputs();
+            }
         });
 
     // Process command interpreter

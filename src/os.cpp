@@ -1,6 +1,9 @@
 #include <list>
 #include <mutex>
 #include <thread>
+#include <ctime>
+#include <string>
+#include <string.h>
 
 #include "../inc/core.h"
 #include "../inc/os.h"
@@ -22,7 +25,7 @@ void OS::run ()
     this->running = true;
 
     this->thread = std::thread([this] () {
-        int processId = 0;
+        int processAutoName = 0;
 
         this->resetCycles();
 
@@ -36,14 +39,14 @@ void OS::run ()
 
                 // Create a new process and wrap it in a unique pointer
                 std::unique_ptr<Process> process(new Process(
-                    processId, this->config.getMinIns() +
+                    std::to_string(processAutoName), this->config.getMinIns() +
                                    rand() % (this->config.getMaxIns() -
                                              this->config.getMinIns() + 1)));
 
                 // Transfer ownership of the unique pointer to the scheduler
                 // queue This calls std::move() internally
                 this->scheduler.addProcess(process);
-                processId++;
+                processAutoName++;
             }
 
             // Pre-empt processes if RR algorithm
@@ -179,9 +182,17 @@ void OS::ls ()
     // Running processes
     status_string += "Running processes:\n";
     for (int i : runningCoreIds) {
-        // Process name is same as ID .....I think
+        // Process has a name
         status_string += "process ";
-        status_string += std::to_string(cores[i].getProcess()->getId());
+        status_string += cores[i].getProcess()->getName();
+
+        // Time 
+        status_string += "  (";
+        std::time_t now = cores[i].getProcess()->getStartTime();
+        char* dt = ctime(&now);
+        dt[strcspn(dt, "\n")] = '\0';
+        status_string += dt;
+        status_string += ")";
 
         // Core name is same as ID ............I think
         status_string += "      Core ";
@@ -218,8 +229,43 @@ void OS::ls ()
         status_string += "\n";
     }
 
-    // this->dm.clearOutputWindow();
+    this->dm.clearOutputWindow(); // returned this since part of menu is not removed
     this->dm._mvwprintw(0, 0, "%s", status_string.c_str());
+}
+
+void OS::screenR (std::string processName)
+{
+    std::lock_guard<std::mutex> lock(this->mutex);
+
+    //:wheelchair:
+    // Number of cores
+    int nCores = this->cores.size();
+
+    // Running cores
+    std::list<int> runningCoreIds;
+    for (int i = 0; i < nCores; i++) {
+        if (cores[i].isRunning())
+            runningCoreIds.push_back(cores[i].getId());
+    }
+
+    /* to be finished
+    std::string screen_string;
+    for (int i : runningCoreIds) {
+        if(cores[i].getProcess()->getName() == processName) {
+
+        }
+    }
+    */
+
+    this->dm.clearOutputWindow();
+    this->dm._mvwprintw(0, 0, "%s", "");
+}
+
+void OS::screenS (std::string processName)
+{
+    std::lock_guard<std::mutex> lock(this->mutex);
+    // create and then just going to call screenR if process exists
+    
 }
 
 void OS::setGenerateDummyProcesses (bool value)
