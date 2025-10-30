@@ -93,8 +93,7 @@ Instruction Process::createInstruction (int depth)
     switch (instruction.id) {
 
     case PRINT: {
-        std::string(to_string)
-        break;
+        std::string(to_string) break;
     }
 
     case DECLARE: {
