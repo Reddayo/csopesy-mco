@@ -12,8 +12,8 @@ Process::~Process ()
 }
 
 // ARE YOU RE@DY!! I'M L@DY!! HAJIMEYOU YAREBA DEKIRU KITTO ZETTAI WATASHI #1
-Process::Process (std::string name, uint32_t instruction_count)
-    : name(name), state(READY), programCounter(0)
+Process::Process (int id, std::string name, uint32_t instruction_count)
+    : id(id), name(name), state(READY), programCounter(0)
 {
     randomizeInstructions(instruction_count);
     this->startTime = std::time(0);
@@ -35,6 +35,8 @@ uint32_t Process::getTotalCycles ()
     /** Return number of cycles */
     return this->instructions.size();
 }
+
+std::vector<Instruction> Process::getInstructions() { return this->instructions; }
 
 // Elapsed cycles
 

@@ -32,7 +32,7 @@ class Process
 {
   public:
     /** Creates a new Process. Must call randomizeInstructions() */
-    Process(std::string name, uint32_t instruction_count);
+    Process(int id, std::string name, uint32_t instruction_count);
 
     /** Destructor for a Process */
     ~Process();
@@ -48,6 +48,9 @@ class Process
 
     /** @return The process start time */
     std::time_t getStartTime();
+
+    /** @return The vector of instructions */
+    std::vector<Instruction> getInstructions();
 
     /** Sets the process state */
     void setState(enum ProcessState state);

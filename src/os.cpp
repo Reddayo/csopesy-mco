@@ -25,7 +25,7 @@ void OS::run ()
     this->running = true;
 
     this->thread = std::thread([this] () {
-        int processAutoName = 0;
+        int processAutoId = 0;
 
         this->resetCycles();
 
@@ -39,7 +39,7 @@ void OS::run ()
 
                 // Create a new process and wrap it in a unique pointer
                 std::unique_ptr<Process> process(
-                    new Process(std::to_string(processAutoName),
+                    new Process(processAutoId, std::to_string(processAutoId),
                                 this->config.getMinIns() +
                                     rand() % (this->config.getMaxIns() -
                                               this->config.getMinIns() + 1)));
@@ -47,7 +47,7 @@ void OS::run ()
                 // Transfer ownership of the unique pointer to the scheduler
                 // queue This calls std::move() internally
                 this->scheduler.addProcess(process);
-                processAutoName++;
+                processAutoId++;
             }
 
             // Pre-empt processes if RR algorithm
@@ -237,8 +237,6 @@ void OS::ls ()
 
 void OS::screenR (std::string processName)
 {
-    std::lock_guard<std::mutex> lock(this->mutex);
-
     //: wheelchair:
     // Number of cores
     int nCores = this->cores.size();
@@ -250,23 +248,64 @@ void OS::screenR (std::string processName)
             runningCoreIds.push_back(cores[i].getId());
     }
 
-    /* to be finished
     std::string screen_string;
+    int coreId;
+
     for (int i : runningCoreIds) {
         if(cores[i].getProcess()->getName() == processName) {
-
+            coreId = i;
         }
     }
-    */
 
+
+    screen_string += "Process name: ";
+    /*
+    screen_string += cores[coreId].getProcess()->getName();
+
+    screen_string += "\nID: ";
+    screen_string += std::to_string(cores[coreId].getProcess()->getId());
+
+    for(int i = 0; i < cores[coreId].getProcess()->getProgramCounter(); i++) {
+        screen_string += "\n";
+        switch (cores[coreId].getProcess()->getInstructions()[i].id) {
+            case PRINT:
+                screen_string += "PRINT";
+                break;
+            case DECLARE:
+                screen_string += "DECLARE";
+                break;
+            case ADD:
+                screen_string += "ADD";
+                break;
+            case SUBTRACT:
+                screen_string += "SUBTRACT";
+                break;
+            case SLEEP:
+                screen_string += "SLEEP";
+                break;
+            case FOR:
+                screen_string += "FOR";
+                break;
+            default:
+                break;
+        }
+    }
+
+    */
     this->dm.clearOutputWindow();
-    this->dm._mvwprintw(0, 0, "%s", "");
+    this->dm._mvwprintw(0, 0, "%s", "help");
 }
 
 void OS::screenS (std::string processName)
 {
-    std::lock_guard<std::mutex> lock(this->mutex);
-    // create and then just going to call screenR if process exists
+    std::unique_ptr<Process> process(
+                    new Process(10, processName,
+                                this->config.getMinIns() +
+                                    rand() % (this->config.getMaxIns() -
+                                              this->config.getMinIns() + 1)));
+
+    this->scheduler.addProcess(process);
+    screenR(processName);
 }
 
 void OS::setGenerateDummyProcesses (bool value)

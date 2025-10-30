@@ -92,11 +92,11 @@ int main ()
             else if (args[0].substr(0, 3) == "-s ") {
                 dm.clearInputWindow();
                 dm.clearOutputWindow();
-                dm._mvwprintw(0, 0, "%s", "-s works");
+                os.screenS("help");
             } else if (args[0].substr(0, 3) == "-r ") {
                 dm.clearInputWindow();
                 dm.clearOutputWindow();
-                dm._mvwprintw(0, 0, "%s", "-r works");
+                os.screenR("help");
             } else {
                 dm.showErrorPrompt("Invalid command");
                 valid = false;
