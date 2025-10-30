@@ -94,8 +94,8 @@ void Process::_SUBTRACT (std::vector<std::any> &args)
 
 void Process::_SLEEP (std::vector<std::any> &args)
 {
-    // this->state = WAITING;
-    // this->elapsedWaitingCycles = getArgValueUINT16(args[1]);
+    this->state = WAITING;
+    this->remainingWaitingCycles = getArgValueUINT16(args[0]);
 }
 
 // TODO: This
@@ -152,7 +152,7 @@ Instruction Process::createInstruction (int depth)
     }
 
     case SLEEP: {
-        instruction.args.push_back(rand() % 256); // uint8
+        instruction.args.push_back((uint16_t)(rand() % 256)); // uint16_t
         break;
     }
 

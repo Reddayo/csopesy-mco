@@ -51,17 +51,17 @@ void Process::resetElapsedCycles () { this->elapsedCycles = 0; }
 
 uint32_t Process::getRemainingBusyWaitingCycles ()
 {
-    return this->elapsedBusyWaitingCycles;
+    return this->remainingBusyWaitingCycles;
 }
 
 void Process::setBusyWaitingCycles (uint32_t value)
 {
-    this->elapsedBusyWaitingCycles = value;
+    this->remainingBusyWaitingCycles = value;
 }
 
 void Process::decrementBusyWaitingCycles ()
 {
-    this->elapsedBusyWaitingCycles--;
+    this->remainingBusyWaitingCycles--;
 }
 
 // Waiting cycles
@@ -69,15 +69,15 @@ void Process::decrementBusyWaitingCycles ()
 // TODO: Data type
 uint16_t Process::getRemainingWaitingCycles ()
 {
-    return this->elapsedWaitingCycles;
+    return this->remainingWaitingCycles;
 }
 
 void Process::setWaitingCycles (uint16_t value)
 {
-    this->elapsedWaitingCycles = value;
+    this->remainingWaitingCycles = value;
 }
 
-void Process::decrementWaitingCycles () { this->elapsedWaitingCycles--; }
+void Process::decrementWaitingCycles () { this->remainingWaitingCycles--; }
 
 std::string Process::getStateAsString ()
 {

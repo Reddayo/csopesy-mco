@@ -173,10 +173,10 @@ class Process
     uint32_t elapsedCycles = 0;
 
     /** Number of cycles the process has been in a busy-waiting state */
-    uint32_t elapsedBusyWaitingCycles = 0;
+    uint32_t remainingBusyWaitingCycles = 0;
 
     /** Number of cycles the process has been in a waiting state (SLEEP) */
-    uint16_t elapsedWaitingCycles = 0;
+    uint16_t remainingWaitingCycles = 0;
 
     /** Program counter */
     int programCounter = 0;

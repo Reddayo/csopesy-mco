@@ -34,7 +34,20 @@ class Scheduler
      */
     void addProcess(std::unique_ptr<Process> &process);
 
+    /**
+     * Adds a process to the sleep queue. Accepts a reference to a unique
+     * pointer to the Process and transfers ownership of it to the queue.
+     *
+     * @param process A reference to a unique pointer to a Process
+     */
+    void sleepProcess(std::unique_ptr<Process> &process);
+
     bool isQueueEmpty();
+
+    /**
+     * Decrements waiting queue for all sleeping processes by 1.
+     */
+    void countDownSleepingProcesses();
 
   private:
     /** Scheduling algorithm */
@@ -42,6 +55,8 @@ class Scheduler
 
     /** Ready queue containing unique pointers to Processes */
     std::queue<std::unique_ptr<Process>> readyQueue;
+
+    std::vector<std::unique_ptr<Process>> sleepQueue;
 
     /** Time quantum for RR algorithm, ignored in FCFS */
     uint32_t timeQuantumRR;

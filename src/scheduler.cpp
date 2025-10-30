@@ -27,4 +27,23 @@ void Scheduler::addProcess (std::unique_ptr<Process> &process)
     readyQueue.push(std::move(process));
 }
 
+void Scheduler::sleepProcess (std::unique_ptr<Process> &process)
+{
+    sleepQueue.push_back(std::move(process));
+}
+
 bool Scheduler::isQueueEmpty () { return this->readyQueue.empty(); }
+
+void Scheduler::countDownSleepingProcesses ()
+{
+    for (auto it = sleepQueue.begin(); it != sleepQueue.end();) {
+        // Decrement sleep timer by 1
+        (*it)->decrementWaitingCycles();
+
+        // Return to ready queue if sleep timer is 0
+        if ((*it)->getRemainingWaitingCycles() == 0) {
+            this->addProcess((*it));
+            it = sleepQueue.erase(it);
+        }
+    }
+}

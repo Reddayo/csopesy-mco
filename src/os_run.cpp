@@ -104,7 +104,14 @@ void OS::run ()
 
                                     // Destroy the Process
                                     process.reset();
-                                } else {
+                                } else if (process->getState() == WAITING) {
+                                    core.setRunning(false);
+
+                                    // Move process to sleep queue.
+                                    scheduler.sleepProcess(process);
+                                }
+
+                                else {
                                     // If process hasn't terminated yet, set a
                                     // busy-waiting timer until next instruction
                                     process->setBusyWaitingCycles(
@@ -131,6 +138,9 @@ void OS::run ()
                 thread.join();
                 this->threads.pop();
             }
+
+            // Count down all sleeping threads
+            this->scheduler.countDownSleepingProcesses();
 
             // Proceed to next cycle
             this->cycle++;
