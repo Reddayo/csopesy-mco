@@ -76,6 +76,12 @@ class DisplayManager
 
     WINDOW *outputWindow, *inputWindow;
 
+    /** Scrolls the output window up by n lines */
+    void scrollUp(int n);
+
+    /** Scrolls the output window down by n lines */
+    void scrollDown(int n);
+
     std::mutex mutex;
 };
 

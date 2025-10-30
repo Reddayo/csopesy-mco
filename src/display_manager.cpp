@@ -1,3 +1,4 @@
+#define NCURSES_MOUSE_VERSION 2
 #include <curses.h>
 #include <mutex>
 
@@ -62,6 +63,25 @@ DisplayManager::DisplayManager ()
     // Enable scrolling for input window
     scrollok(inputWindow, true);
     idlok(inputWindow, true);
+    scrollok(outputWindow, TRUE);
+    idlok(outputWindow, TRUE);
+
+    mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, nullptr);
+    keypad(this->inputWindow, true);
+}
+
+void DisplayManager::scrollUp(int n)
+{
+    std::lock_guard<std::mutex> lock(this->mutex);
+    wscrl(this->outputWindow, -n);
+    wrefresh(this->outputWindow);
+}
+
+void DisplayManager::scrollDown(int n)
+{
+    std::lock_guard<std::mutex> lock(this->mutex);
+    wscrl(this->outputWindow, n);
+    wrefresh(this->outputWindow);
 }
 
 void DisplayManager::refreshAll ()
@@ -221,6 +241,20 @@ int DisplayManager::_wgetnstr (char *buffer,
         lock.unlock();
 
         return INPUT_READ_SUBMIT;
+    }
+
+    // Handle mouse scroll
+    else if (ch == KEY_MOUSE) {
+
+        MEVENT event;
+        if (getmouse(&event) == OK) {
+            if (event.bstate & BUTTON4_PRESSED) {
+                this->scrollUp(1);
+            } else if (event.bstate & BUTTON5_PRESSED) {
+                this->scrollDown(1);
+            }
+        }
+        return ERR;
     }
 
     // Handle regular characters
