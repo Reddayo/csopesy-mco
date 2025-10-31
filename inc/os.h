@@ -69,7 +69,9 @@ class OS
 
     /** The current process loaded into the process screen */
     std::shared_ptr<Process> loadedProcess;
-
+    
+    std::shared_ptr<Process> findOngoingProcessByName(const std::string &processName);
+ 
     void showDefaultProcessScreenMessage();
 };
 

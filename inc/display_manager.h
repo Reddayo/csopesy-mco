@@ -94,8 +94,6 @@ class DisplayManager
     int padTop;     // Current top line visible
     int currentRow; // Current print row
 
- 
-
     std::mutex mutex;
 };
 

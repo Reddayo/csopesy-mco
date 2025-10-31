@@ -106,16 +106,17 @@ void OS::run ()
                                     replace below with this
                                     std::time_t endTime = std::time(nullptr);
                                     std::ostringstream label;
-                                    label << process->getName() 
-                                    << " (" << std::put_time(std::localtime(&endTime), "%m/%d/%Y %H:%M:%S") << ")";
+                                    label << process->getName()  << "\t"
+                                    << "(" << std::put_time(std::localtime(&endTime), "%m/%d/%Y %H:%M:%S") << ")";
 
                                     this->finishedProcesses.push_back({label.str(), process->getProgramCounter()});
                                     */
-
+                                    
+                                    // tabbing the timestamp cause i'm lazy
                                     std::time_t startTime =  process->getStartTime();
                                     std::ostringstream label;
-                                    label << process->getName() 
-                                    << " (" << std::put_time(std::localtime(&startTime), "%m/%d/%Y %H:%M:%S") << ")";
+                                    label << process->getName() << "\t"
+                                    << "(" << std::put_time(std::localtime(&startTime), "%m/%d/%Y %H:%M:%S") << ")";
 
                                     this->finishedProcesses.push_back({label.str(), process->getProgramCounter()});
 
