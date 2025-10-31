@@ -109,7 +109,7 @@ void OS::screenR (std::string processName)
     std::lock_guard<std::mutex> lock(this->mutex);
 
     // Flag for if the process was found
-    // bool found = false;
+    bool found = false;
 
     this->dm.clearOutputWindow();
 
@@ -125,14 +125,30 @@ void OS::screenR (std::string processName)
             // Show default message for this screen
             this->showDefaultProcessScreenMessage();
 
-            // found = true;
-            break;
+            return;
         }
     }
 
     // TODO: Search in the ready queue. Big problem because std::queue cannot be
     // iterated over, and we can't easily make a copy of it because we'd have to
     // call std::move() on each std::shared_ptr in the queue
+
+    const auto &readyQueue = this->scheduler.getReadyQueue();
+
+    for (const auto &process : readyQueue) {
+        if (process->getName() == processName) {
+            // Copy the process pointer to OS
+            this->loadedProcess.reset();
+            this->loadedProcess = process;
+
+            // Show default message for this screen
+            this->showDefaultProcessScreenMessage();
+
+            return;
+        }
+    }
+
+    this->dm._mvwprintw(0, 0, "Process '%s' not found.", processName.c_str());
 }
 
 void OS::showDefaultProcessScreenMessage ()

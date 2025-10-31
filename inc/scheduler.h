@@ -49,12 +49,14 @@ class Scheduler
      */
     void countDownSleepingProcesses();
 
+    std::deque<std::shared_ptr<Process>> &getReadyQueue();
+
   private:
     /** Scheduling algorithm */
     enum SchedulingAlgorithm algorithm;
 
     /** Ready queue containing shared pointers to Processes */
-    std::queue<std::shared_ptr<Process>> readyQueue;
+    std::deque<std::shared_ptr<Process>> readyQueue;
 
     std::vector<std::shared_ptr<Process>> sleepQueue;
 
