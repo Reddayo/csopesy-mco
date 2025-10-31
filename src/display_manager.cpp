@@ -109,6 +109,15 @@ void DisplayManager::refreshPad ()
              borderWidth - 2);
 }
 
+void DisplayManager::getOutputWindowMaxYX(int &maxY, int &maxX){
+    if (this->outputWindow)
+        getmaxyx(this->outputWindow, maxY, maxX);
+    else {
+        maxY = 0;
+        maxX = 0;
+    }
+}
+
 void DisplayManager::refreshAll ()
 {
     // Lock the display manager

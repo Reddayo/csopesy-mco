@@ -77,6 +77,8 @@ class DisplayManager
      * INPUT_READ_BUFFER_FULL if buffer is full, and ERR if wgetch() call fails
      */
     int _wgetnstr(char *buf, size_t maxLength, size_t &currentLength);
+    void refreshPad();
+    void getOutputWindowMaxYX(int &maxY, int &maxX);
 
   private:
     WINDOW *outputBorder, *inputBorder;
@@ -92,7 +94,7 @@ class DisplayManager
     int padTop;     // Current top line visible
     int currentRow; // Current print row
 
-    void refreshPad();
+ 
 
     std::mutex mutex;
 };

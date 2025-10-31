@@ -3,6 +3,7 @@
 #include <mutex>
 #include <string>
 #include <thread>
+#include <iomanip>
 
 #include "../inc/core.h"
 #include "../inc/os.h"
@@ -101,10 +102,23 @@ void OS::run ()
                                     // TODO: Move to terminated processes?
                                     core.setRunning(false);
 
-                                    this->finishedProcesses.push_back(
-                                        std::pair<std::string, int>(
-                                            process->getName(),
-                                            process->getProgramCounter()));
+                                    /* TODO: IF Finished processses uses END ITME,
+                                    replace below with this
+                                    std::time_t endTime = std::time(nullptr);
+                                    std::ostringstream label;
+                                    label << process->getName() 
+                                    << " (" << std::put_time(std::localtime(&endTime), "%m/%d/%Y %H:%M:%S") << ")";
+
+                                    this->finishedProcesses.push_back({label.str(), process->getProgramCounter()});
+                                    */
+
+                                    std::time_t startTime =  process->getStartTime();
+                                    std::ostringstream label;
+                                    label << process->getName() 
+                                    << " (" << std::put_time(std::localtime(&startTime), "%m/%d/%Y %H:%M:%S") << ")";
+
+                                    this->finishedProcesses.push_back({label.str(), process->getProgramCounter()});
+
 
                                     // Destroy the Process
                                     process.reset();

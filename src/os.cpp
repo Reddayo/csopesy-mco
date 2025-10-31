@@ -100,7 +100,18 @@ void OS::ls (bool writeReport)
     } // screen -ls
     else {
         this->dm.clearOutputWindow();
-        this->dm._mvwprintw(0, 0, "%s", ss.str().c_str());
+        int maxY, maxX;
+        this->dm.getOutputWindowMaxYX(maxY, maxX);
+
+        std::string line;
+        int y = 0;
+
+        while (std::getline(ss, line)) {
+            this->dm._mvwprintw(y++, 0, "%s", line.c_str());
+        }
+
+        // Refresh window to show everything
+        this->dm.refreshPad();
     }
 }
 
