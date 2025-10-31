@@ -51,6 +51,8 @@ class Scheduler
 
     std::deque<std::shared_ptr<Process>> &getReadyQueue();
 
+    std::vector<std::shared_ptr<Process>> &getSleepQueue();
+
   private:
     /** Scheduling algorithm */
     enum SchedulingAlgorithm algorithm;

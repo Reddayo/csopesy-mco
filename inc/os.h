@@ -69,9 +69,14 @@ class OS
 
     /** The current process loaded into the process screen */
     std::shared_ptr<Process> loadedProcess;
-    
-    std::shared_ptr<Process> findOngoingProcessByName(const std::string &processName);
- 
+
+    /**
+     * Finds an ongoing process by name and shares ownership of the pointer to
+     * that process
+     */
+    std::shared_ptr<Process> findOngoingProcessByName(
+        const std::string &processName);
+
     void showDefaultProcessScreenMessage();
 };
 

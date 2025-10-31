@@ -40,6 +40,11 @@ std::deque<std::shared_ptr<Process>> &Scheduler::getReadyQueue ()
     return this->readyQueue;
 }
 
+std::vector<std::shared_ptr<Process>> &Scheduler::getSleepQueue ()
+{
+    return this->sleepQueue;
+}
+
 void Scheduler::countDownSleepingProcesses ()
 {
     for (auto it = sleepQueue.begin(); it != sleepQueue.end();) {

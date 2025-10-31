@@ -120,58 +120,19 @@ void OS::screenR (std::string processName)
     // Lock mutex
     std::lock_guard<std::mutex> lock(this->mutex);
 
-    // Flag for if the process was found
-    /* Commenting out cause I am not sure if TODO has been fixed.
-    bool found = false;
+    // This pointer goes out of scope at the end of this call
+    std::shared_ptr<Process> foundProcess =
+        this->findOngoingProcessByName(processName);
 
     this->dm.clearOutputWindow();
 
-    for (Core &core : this->cores) {
-        // On a running core, check if process name matches
-        if (core.isRunning() &&
-            core.getProcessReference()->getName() == processName) {
-
-            // Copy the process pointer to OS for access with process-smi
-            this->loadedProcess.reset();
-            this->loadedProcess = core.getProcess();
-
-            // Show default message for this screen
-            this->showDefaultProcessScreenMessage();
-
-            return;
-        }
-    }
-
-    // TODO: Search in the ready queue. Big problem because std::queue cannot be
-    // iterated over, and we can't easily make a copy of it because we'd have to
-    // call std::move() on each std::shared_ptr in the queue
-
-    const auto &readyQueue = this->scheduler.getReadyQueue();
-
-    for (const auto &process : readyQueue) {
-        if (process->getName() == processName) {
-            // Copy the process pointer to OS
-            this->loadedProcess.reset();
-            this->loadedProcess = process;
-
-            // Show default message for this screen
-            this->showDefaultProcessScreenMessage();
-
-            return;
-        }
-    }
-    
-    this->dm._mvwprintw(0, 0, "Process '%s' not found.", processName.c_str());
-    */
-
-    std::shared_ptr<Process> foundProcess = this->findOngoingProcessByName(processName);
-
-    this->dm.clearOutputWindow();
-    if (foundProcess) {
+    if (foundProcess != nullptr) {
+        // Share ownership of pointer with OS
         this->loadedProcess = foundProcess;
         this->showDefaultProcessScreenMessage();
     } else {
-        this->dm._mvwprintw(0, 0, "Process '%s' not found.", processName.c_str());
+        this->dm._mvwprintw(0, 0, "Process '%s' not found.",
+                            processName.c_str());
     }
 }
 
@@ -190,30 +151,34 @@ void OS::screenS (std::string processName)
     // Lock mutex before creating a new process
     std::unique_lock<std::mutex> lock(this->mutex);
 
+    // Shared pointer goes out of scope immediately LOL
     if (this->findOngoingProcessByName(processName)) {
-        this->dm._mvwprintw(0, 0, "Process '%s' already exists.", processName.c_str());
+        this->dm._mvwprintw(0, 0, "Process '%s' already exists.",
+                            processName.c_str());
         return;
     }
 
     for (const auto &entry : this->finishedProcesses) {
         const std::string &label = entry.first;
         size_t tabPos = label.find('\t');
-        std::string name = (tabPos != std::string::npos) ? label.substr(0, tabPos) : label;
+        std::string name =
+            (tabPos != std::string::npos) ? label.substr(0, tabPos) : label;
 
         if (name == processName) {
-            this->dm._mvwprintw(0, 0, "Process '%s' already exists.", processName.c_str());
+            this->dm._mvwprintw(0, 0, "Process '%s' already exists.",
+                                processName.c_str());
             return;
         }
     }
-    
-    // TODO: Use a global counter for process IDs
+
     std::shared_ptr<Process> process(new Process(
         this->processAutoId, processName,
         this->config.getMinIns() + rand() % (this->config.getMaxIns() -
                                              this->config.getMinIns() + 1)));
-    // Right?? tho tis would be confusing when a 
-    // process is named "Haachama", with id: 810, and 
-    // I name a process process810, with id 812        
+
+    // Right?? tho tis would be confusing when a
+    // process is named "Haachama", with id: 810, and
+    // I name a process process810, with id 812
     this->processAutoId++;
 
     // Copies the shared pointer to loadedProcess
@@ -226,17 +191,32 @@ void OS::screenS (std::string processName)
     this->scheduler.addProcess(process);
 }
 
-std::shared_ptr<Process> OS::findOngoingProcessByName(const std::string &processName)
+std::shared_ptr<Process> OS::findOngoingProcessByName (
+    const std::string &processName)
 {
-    // Must already hold mutex before calling this function!
+    // WARNING: Must already hold mutex before calling this function
+
+    // Search cores
     for (Core &core : this->cores) {
-        if (core.isRunning() && core.getProcessReference()->getName() == processName)
+        if (core.isRunning() &&
+            core.getProcessReference()->getName() == processName)
+            // Share pointer ownership
             return core.getProcess();
     }
 
+    // Search ready queue
     const auto &readyQueue = this->scheduler.getReadyQueue();
     for (const auto &process : readyQueue) {
         if (process->getName() == processName)
+            // Share pointer ownership
+            return process;
+    }
+
+    // Search sleep queue
+    const auto &sleepQueue = this->scheduler.getSleepQueue();
+    for (const auto &process : sleepQueue) {
+        if (process->getName() == processName)
+            // Share pointer ownership
             return process;
     }
 
