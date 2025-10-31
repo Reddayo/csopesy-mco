@@ -99,7 +99,9 @@ void Process::_SLEEP (std::vector<std::any> &args)
 }
 
 // TODO: This
-void Process::_FOR (std::vector<std::any> &args) {}
+void Process::_FOR (std::vector<std::any> &args) {
+    
+}
 
 // TODO: Clean this up when we need to
 Instruction Process::createInstruction (int depth)

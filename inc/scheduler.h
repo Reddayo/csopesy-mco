@@ -48,13 +48,14 @@ class Scheduler
      * Decrements waiting queue for all sleeping processes by 1.
      */
     void countDownSleepingProcesses();
-
+    
+	std::deque<std::unique_ptr<Process>> &getReadyQueue ();
   private:
     /** Scheduling algorithm */
     enum SchedulingAlgorithm algorithm;
 
     /** Ready queue containing unique pointers to Processes */
-    std::queue<std::unique_ptr<Process>> readyQueue;
+    std::deque<std::unique_ptr<Process>> readyQueue;
 
     std::vector<std::unique_ptr<Process>> sleepQueue;
 

@@ -17,14 +17,14 @@ void Scheduler::dispatch (Core &core)
     core.setProcess(process);
 
     // readyQueue.front() is nulled by this point; pop to remove
-    readyQueue.pop();
+    readyQueue.pop_front();
 }
 
 uint32_t Scheduler::getQuantum () { return this->timeQuantumRR; }
 
 void Scheduler::addProcess (std::unique_ptr<Process> &process)
 {
-    readyQueue.push(std::move(process));
+    readyQueue.push_back(std::move(process));
 }
 
 void Scheduler::sleepProcess (std::unique_ptr<Process> &process)
@@ -33,6 +33,11 @@ void Scheduler::sleepProcess (std::unique_ptr<Process> &process)
 }
 
 bool Scheduler::isQueueEmpty () { return this->readyQueue.empty(); }
+
+std::deque<std::unique_ptr<Process>> &Scheduler::getReadyQueue()
+{
+    return this->readyQueue;
+}
 
 void Scheduler::countDownSleepingProcesses ()
 {

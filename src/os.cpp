@@ -95,7 +95,7 @@ void OS::screenR (std::string processName)
     std::lock_guard<std::mutex> lock(this->mutex);
 
     // Flag for if the process was found
-    // bool found = false;
+    bool found = false;
 
     this->dm.clearOutputWindow();
 
@@ -112,6 +112,21 @@ void OS::screenR (std::string processName)
     // TODO: Search in the ready queue. Big problem because std::queue cannot be
     // iterated over, and we can't easily make a copy of it because we'd have to
     // call std::move() on each std::unique_ptr in the queue
+
+    const auto &readyQueue = this->scheduler.getReadyQueue();
+
+    for (const auto &process : readyQueue) {
+        if (process->getName() == processName) {
+            std::string processState = process->getStateAsString();
+            this->dm._mvwprintw(0, 0, "%s", processState.c_str());
+            found = true;
+            return;
+        }
+    }
+
+    if (!found) {
+        this->dm._mvwprintw(0, 0, "Process '%s' not found.",processName.c_str());
+    }
 }
 
 void OS::screenS (std::string processName)
