@@ -22,7 +22,7 @@ class OS
 
     void resetCycles();
 
-    void ls();
+    void ls(bool writeReport);
 
     void screenR(std::string processName);
 

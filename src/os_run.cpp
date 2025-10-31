@@ -1,3 +1,4 @@
+#include <chrono>
 #include <list>
 #include <mutex>
 #include <string>
@@ -17,6 +18,9 @@ void OS::run ()
         this->resetCycles();
 
         while (this->running) {
+            // TODO: Need to slow cycles? One cycle will take at least 10ns
+            std::this_thread::sleep_for(std::chrono::nanoseconds(10));
+
             std::lock_guard<std::mutex> lock(this->mutex);
 
             // Create a new process and add it to the scheduler's ready queue
@@ -106,6 +110,8 @@ void OS::run ()
 
                                     // Destroy the Process
                                     process.reset();
+                                    return;
+
                                 } else if (process->getState() == WAITING) {
                                     core.setRunning(false);
 

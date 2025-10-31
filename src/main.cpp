@@ -98,7 +98,7 @@ int main ()
 
             // screen -ls
             if (args[0] == "-ls") {
-                os.ls();
+                os.ls(false);
                 return;
             } // screen -s process_name
             else if (args[0].substr(0, 3) == "-s ") {
@@ -121,6 +121,10 @@ int main ()
             ci_main.exitInputs();
             ci_process.startInputs();
         });
+
+    // Report util command. Same as screen -ls but writes to a file instead
+    ci_main.addCommand( //
+        "report-util", 0, false, [&os] (CommandArguments &) { os.ls(true); });
 
     // Process command interpreter
 

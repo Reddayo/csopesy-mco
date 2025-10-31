@@ -34,9 +34,6 @@ class Process
     /** Creates a new Process. Must call randomizeInstructions() */
     Process(int id, std::string name, uint32_t instruction_count);
 
-    /** Destructor for a Process */
-    ~Process();
-
     /** Pops an instruction and execute it (read ID and use a switch-case) */
     void execute(DisplayManager &dm);
 

@@ -1,7 +1,9 @@
 #include <ctime>
+#include <fstream>
 #include <iomanip>
 #include <list>
 #include <mutex>
+#include <sstream>
 #include <string>
 #include <thread>
 
@@ -24,7 +26,7 @@ void OS::incrementCycles () { this->cycle++; }
 
 void OS::resetCycles () { this->cycle = 0; }
 
-void OS::ls ()
+void OS::ls (bool writeReport)
 {
     // Lock the mutex first to avoid segfaults when accessing a pre-empted
     // process (which would be a null pointer)
@@ -87,7 +89,18 @@ void OS::ls ()
     }
 
     this->dm.clearOutputWindow();
-    this->dm._mvwprintw(0, 0, "%s", ss.str().c_str());
+
+    // report-util
+    if (writeReport) {
+        std::ofstream report("output.txt");
+        report << ss.str();
+        report.close();
+        this->dm._mvwprintw(0, 0, "Report written to csopesy-log.txt");
+    } // screen -ls
+    else {
+        this->dm.clearOutputWindow();
+        this->dm._mvwprintw(0, 0, "%s", ss.str().c_str());
+    }
 }
 
 void OS::screenR (std::string processName)
@@ -155,6 +168,7 @@ void OS::screenS (std::string processName)
 
 void OS::processSMI ()
 {
+    std::lock_guard<std::mutex> lock(this->mutex);
     this->dm.clearOutputWindow();
 
     // Print process state information
@@ -174,7 +188,7 @@ void OS::exit ()
     this->running = false;
 
     // Lock the mutex. TODO: I don't think this is actl needed
-    std::lock_guard<std::mutex> lock(this->mutex);
+    // std::lock_guard<std::mutex> lock(this->mutex);
 
     if (this->thread.joinable()) {
         this->thread.join();

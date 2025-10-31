@@ -1,5 +1,6 @@
 #include "../inc/scheduler.h"
 #include <cstdint>
+#include <stdexcept>
 
 Scheduler::Scheduler (enum SchedulingAlgorithm scheduler_type, uint32_t quantum)
     : algorithm(scheduler_type), timeQuantumRR(quantum)
@@ -37,11 +38,18 @@ bool Scheduler::isQueueEmpty () { return this->readyQueue.empty(); }
 void Scheduler::countDownSleepingProcesses ()
 {
     for (auto it = sleepQueue.begin(); it != sleepQueue.end();) {
+        // TODO: Not sure exactly why this is necessary but shouganai
+        if ((*it) == nullptr) {
+            it = sleepQueue.erase(it);
+            continue;
+        }
+
         // Decrement sleep timer by 1
         (*it)->decrementWaitingCycles();
 
         // Return to ready queue if sleep timer is 0
         if ((*it)->getRemainingWaitingCycles() == 0) {
+            (*it)->setState(READY);
             this->addProcess((*it));
             it = sleepQueue.erase(it);
         }

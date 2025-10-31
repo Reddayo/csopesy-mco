@@ -4,14 +4,6 @@
 
 #include "../inc/process.h"
 
-Process::~Process ()
-{
-    for (Instruction inst : this->instructions) inst.args.clear();
-    this->instructions.clear();
-    this->variables.clear();
-    this->startTime = std::time(0);
-}
-
 // ARE YOU RE@DY!! I'M L@DY!! HAJIMEYOU YAREBA DEKIRU KITTO ZETTAI WATASHI #1
 Process::Process (int id, std::string name, uint32_t instruction_count)
     : id(id), name(name), state(READY), programCounter(0)
