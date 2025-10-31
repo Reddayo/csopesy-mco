@@ -1,7 +1,7 @@
 #define NCURSES_MOUSE_VERSION 2
+#include <algorithm>
 #include <curses.h>
 #include <mutex>
-#include <algorithm>
 
 #include "../inc/display_manager.h"
 
@@ -83,7 +83,7 @@ DisplayManager::DisplayManager ()
     keypad(this->inputWindow, true);
 }
 
-void DisplayManager::scrollUp(int n)
+void DisplayManager::scrollUp (int n)
 {
     std::lock_guard<std::mutex> lock(this->mutex);
     if (this->padTop > 0)
@@ -91,7 +91,7 @@ void DisplayManager::scrollUp(int n)
     this->refreshPad();
 }
 
-void DisplayManager::scrollDown(int n)
+void DisplayManager::scrollDown (int n)
 {
     std::lock_guard<std::mutex> lock(this->mutex);
     int max_y, max_x;
@@ -100,15 +100,13 @@ void DisplayManager::scrollDown(int n)
         this->padTop += n;
     this->refreshPad();
 }
-void DisplayManager::refreshPad()
+void DisplayManager::refreshPad ()
 {
     int borderHeight, borderWidth;
     getmaxyx(this->outputBorder, borderHeight, borderWidth);
 
-    prefresh(this->outputWindow,
-             this->padTop, 0,
-             1, 1, 
-             borderHeight - 2, borderWidth - 2);
+    prefresh(this->outputWindow, this->padTop, 0, 1, 1, borderHeight - 2,
+             borderWidth - 2);
 }
 
 void DisplayManager::refreshAll ()
@@ -164,6 +162,25 @@ void DisplayManager::showTitleScreen ()
     }
     this->padTop = std::max(0, y_start - 1);
     this->refreshPad();
+}
+
+void DisplayManager::setOutputBorderLabel (std::string message)
+{
+    box(outputBorder, 0, 0);
+    mvwprintw(outputBorder, 0, 2, " %s ", message.c_str());
+    this->refreshAll();
+}
+
+void DisplayManager::clearOutputBorderLabel ()
+{
+    int max_y, max_x;
+    getmaxyx(this->outputBorder, max_y, max_x);
+
+    box(outputBorder, 0, 0);
+    mvwprintw(outputBorder, 0, 2, " CSOPESY S12 ");
+    mvwprintw(outputBorder, 0, max_x - 38,
+              " CESAR | LLOVIT | MARQUESES | SILVA ");
+    this->refreshAll();
 }
 
 int DisplayManager::getWindowWidth () { return getmaxx(this->outputWindow); }

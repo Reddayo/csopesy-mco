@@ -47,6 +47,10 @@ class DisplayManager
     /** Exits to/Shows the title screen **/
     void showTitleScreen();
 
+    void setOutputBorderLabel(std::string message);
+
+    void clearOutputBorderLabel();
+
     /**
      * Thread-safe wrapper function for curses' mvwprintw().
      *
@@ -85,8 +89,8 @@ class DisplayManager
     /** Scrolls the output window down by n lines */
     void scrollDown(int n);
 
-    int padTop;          // Current top line visible
-    int currentRow;      // Current print row
+    int padTop;     // Current top line visible
+    int currentRow; // Current print row
 
     void refreshPad();
 

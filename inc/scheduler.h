@@ -27,20 +27,20 @@ class Scheduler
     uint32_t getQuantum();
 
     /**
-     * Adds a process to the ready queue. Accepts a reference to a unique
+     * Adds a process to the ready queue. Accepts a reference to a shared
      * pointer to the Process and transfers ownership of it to the queue.
      *
-     * @param process A reference to a unique pointer to a Process
+     * @param process A reference to a shared pointer to a Process
      */
-    void addProcess(std::unique_ptr<Process> &process);
+    void addProcess(std::shared_ptr<Process> &process);
 
     /**
-     * Adds a process to the sleep queue. Accepts a reference to a unique
+     * Adds a process to the sleep queue. Accepts a reference to a shared
      * pointer to the Process and transfers ownership of it to the queue.
      *
-     * @param process A reference to a unique pointer to a Process
+     * @param process A reference to a shared pointer to a Process
      */
-    void sleepProcess(std::unique_ptr<Process> &process);
+    void sleepProcess(std::shared_ptr<Process> &process);
 
     bool isQueueEmpty();
 
@@ -53,10 +53,10 @@ class Scheduler
     /** Scheduling algorithm */
     enum SchedulingAlgorithm algorithm;
 
-    /** Ready queue containing unique pointers to Processes */
-    std::queue<std::unique_ptr<Process>> readyQueue;
+    /** Ready queue containing shared pointers to Processes */
+    std::queue<std::shared_ptr<Process>> readyQueue;
 
-    std::vector<std::unique_ptr<Process>> sleepQueue;
+    std::vector<std::shared_ptr<Process>> sleepQueue;
 
     /** Time quantum for RR algorithm, ignored in FCFS */
     uint32_t timeQuantumRR;

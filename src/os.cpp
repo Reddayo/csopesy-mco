@@ -58,10 +58,11 @@ void OS::ls ()
     ss << "Running processes:\n";
     for (int i : runningCoreIds) {
         // Process has a name
-        ss << std::left << std::setw(10) << cores[i].getProcess()->getName();
+        ss << std::left << std::setw(10)
+           << cores[i].getProcessReference()->getName();
 
         // Formatted process start time
-        std::time_t now = cores[i].getProcess()->getStartTime();
+        std::time_t now = cores[i].getProcessReference()->getStartTime();
         ss << std::put_time(std::localtime(&now), " (%m/%d/%Y %H:%M:%S)");
 
         // Core ID
@@ -70,8 +71,8 @@ void OS::ls ()
 
         // Progress
         ss << std::right << std::setw(10)
-           << cores[i].getProcess()->getProgramCounter() << " / "
-           << cores[i].getProcess()->getTotalCycles() << "\n";
+           << cores[i].getProcessReference()->getProgramCounter() << " / "
+           << cores[i].getProcessReference()->getTotalCycles() << "\n";
     }
 
     // TODO: Use process name instead of ID
@@ -100,9 +101,16 @@ void OS::screenR (std::string processName)
     this->dm.clearOutputWindow();
 
     for (Core &core : this->cores) {
-        if (core.isRunning() && core.getProcess()->getName() == processName) {
-            std::string processState = core.getProcess()->getStateAsString();
-            this->dm._mvwprintw(0, 0, "%s", processState.c_str());
+        // On a running core, check if process name matches
+        if (core.isRunning() &&
+            core.getProcessReference()->getName() == processName) {
+
+            // Copy the process pointer to OS for access with process-smi
+            this->loadedProcess.reset();
+            this->loadedProcess = core.getProcess();
+
+            // Show default message for this screen
+            this->showDefaultProcessScreenMessage();
 
             // found = true;
             break;
@@ -111,7 +119,17 @@ void OS::screenR (std::string processName)
 
     // TODO: Search in the ready queue. Big problem because std::queue cannot be
     // iterated over, and we can't easily make a copy of it because we'd have to
-    // call std::move() on each std::unique_ptr in the queue
+    // call std::move() on each std::shared_ptr in the queue
+}
+
+void OS::showDefaultProcessScreenMessage ()
+{
+    this->dm._mvwprintw(
+        0, 0,
+        // Default message
+        "You are on the screen for process %s. Type help to get a list of "
+        "valid commands.",
+        this->loadedProcess->getName().c_str());
 }
 
 void OS::screenS (std::string processName)
@@ -120,15 +138,28 @@ void OS::screenS (std::string processName)
     std::unique_lock<std::mutex> lock(this->mutex);
 
     // TODO: Use a global counter for process IDs
-    std::unique_ptr<Process> process(new Process(
+    std::shared_ptr<Process> process(new Process(
         10, processName,
         this->config.getMinIns() + rand() % (this->config.getMaxIns() -
                                              this->config.getMinIns() + 1)));
 
-    // Print the process state to the output window.
-    this->dm._mvwprintw(0, 0, "%s", process->getStateAsString().c_str());
+    // Copies the shared pointer to loadedProcess
+    this->loadedProcess = process;
 
+    // Show default message for this screen
+    this->showDefaultProcessScreenMessage();
+
+    // Transfers ownership to scheduler queue
     this->scheduler.addProcess(process);
+}
+
+void OS::processSMI ()
+{
+    this->dm.clearOutputWindow();
+
+    // Print process state information
+    this->dm._mvwprintw(0, 0, "%s",
+                        this->loadedProcess->getStateAsString().c_str());
 }
 
 void OS::setGenerateDummyProcesses (bool value)

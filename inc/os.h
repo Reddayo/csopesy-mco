@@ -28,6 +28,8 @@ class OS
 
     void screenS(std::string processName);
 
+    void processSMI();
+
     void setGenerateDummyProcesses(bool value);
 
     /** @return True if the OS is running */
@@ -63,10 +65,10 @@ class OS
 
     std::mutex mutex;
 
-    // :wheelchair:
-    // first int is ID, second int is num of cycles
-    // that's right, i'll dig a hole, and then i'll bury myself in it, and then
-    // i'll reflect on it there
+    /** The current process loaded into the process screen */
+    std::shared_ptr<Process> loadedProcess;
+
+    void showDefaultProcessScreenMessage();
 };
 
 #endif

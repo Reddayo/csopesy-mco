@@ -46,7 +46,7 @@ int main ()
         "help", 0, false, //
         [&dm] (CommandArguments &) {
             dm.clearOutputWindow();
-            dm._mvwprintw(0, 0, "%s", "You called for help, but nobody came");
+            dm._mvwprintw(0, 0, "%s", " You called for help, but nobody came");
         });
 
     // Initialize OS. Must be called before anything else
@@ -115,12 +115,22 @@ int main ()
                 return;
             }
 
+            dm.setOutputBorderLabel(args[0].substr(3));
+
             // Pass control to process command interpreter
             ci_main.exitInputs();
             ci_process.startInputs();
         });
 
     // Process command interpreter
+
+    // help command. Argument list goes unused
+    ci_process.addCommand(
+        "help", 0, false, //
+        [&dm] (CommandArguments &) {
+            dm.clearOutputWindow();
+            dm._mvwprintw(0, 0, "%s", " You called for help, but nobody came");
+        });
 
     // Exit to MAIN SCREEN
     ci_process.addCommand(
@@ -131,11 +141,16 @@ int main ()
 
             dm.showTitleScreen();
 
+            dm.clearOutputBorderLabel();
+
             ci_process.exitInputs();
             ci_main.startInputs();
         });
 
     // TODO: process-smi
+    ci_process.addCommand( //
+        "process-smi", 0, false,
+        [&os] (CommandArguments &) { os.processSMI(); });
 
     // =========================================================================
 

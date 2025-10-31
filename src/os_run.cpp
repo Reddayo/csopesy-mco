@@ -24,14 +24,14 @@ void OS::run ()
             if (this->generateDummyProcesses &&
                 this->cycle % this->config.getBatchProcessFreq() == 0) {
 
-                // Create a new process and wrap it in a unique pointer
-                std::unique_ptr<Process> process(new Process(
+                // Create a new process and wrap it in a shared pointer
+                std::shared_ptr<Process> process(new Process(
                     processAutoId, "process" + std::to_string(processAutoId),
                     this->config.getMinIns() +
                         rand() % (this->config.getMaxIns() -
                                   this->config.getMinIns() + 1)));
 
-                // Transfer ownership of the unique pointer to the scheduler
+                // Transfer ownership of the shared pointer to the scheduler
                 // queue This calls std::move() internally
                 this->scheduler.addProcess(process);
                 processAutoId++;
@@ -41,10 +41,11 @@ void OS::run ()
             if (this->config.getScheduler() == RR) {
                 for (Core &core : this->cores) {
                     if (core.isRunning()) {
-                        // Get a reference to the unique pointer owned by the
+                        // Get a reference to the shared pointer owned by the
                         // core. Ownership is not relinquished until we know it
                         // must be pre-empted.
-                        std::unique_ptr<Process> &process = core.getProcess();
+                        std::shared_ptr<Process> &process =
+                            core.getProcessReference();
 
                         // TODO: Better way than resetting elapsed cycles?
                         if (process->getElapsedCycles() ==
@@ -81,9 +82,10 @@ void OS::run ()
                 if (core.isRunning()) {
                     // Create new thread
                     std::thread thread = std::thread([this, &core] () {
-                        // Get a reference to the unique pointer owned by the
+                        // Get a reference to the shared pointer owned by the
                         // Core. Does NOT relinquish ownership.
-                        std::unique_ptr<Process> &process = core.getProcess();
+                        std::shared_ptr<Process> &process =
+                            core.getProcessReference();
 
                         // Check if process is running first
                         if (process->getState() == RUNNING) {

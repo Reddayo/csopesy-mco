@@ -9,11 +9,11 @@ Scheduler::Scheduler (enum SchedulingAlgorithm scheduler_type, uint32_t quantum)
 
 void Scheduler::dispatch (Core &core)
 {
-    std::unique_ptr<Process> &process = readyQueue.front();
+    std::shared_ptr<Process> &process = readyQueue.front();
     process->setState(RUNNING);
     process->setLastCoreID(core.getId());
 
-    // Ownership of unique pointer is transferred to Core
+    // Ownership of shared pointer is transferred to Core
     core.setProcess(process);
 
     // readyQueue.front() is nulled by this point; pop to remove
@@ -22,12 +22,12 @@ void Scheduler::dispatch (Core &core)
 
 uint32_t Scheduler::getQuantum () { return this->timeQuantumRR; }
 
-void Scheduler::addProcess (std::unique_ptr<Process> &process)
+void Scheduler::addProcess (std::shared_ptr<Process> &process)
 {
     readyQueue.push(std::move(process));
 }
 
-void Scheduler::sleepProcess (std::unique_ptr<Process> &process)
+void Scheduler::sleepProcess (std::shared_ptr<Process> &process)
 {
     sleepQueue.push_back(std::move(process));
 }
