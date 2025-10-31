@@ -39,7 +39,7 @@ int main ()
 
     CommandInterpreter ci_main(dm);
 
-    // Main command interpreter
+    // Main command interpreter ------------------------------------------------
 
     // help command. Argument list goes unused
     ci_main.addCommand(
@@ -122,11 +122,11 @@ int main ()
             ci_process.startInputs();
         });
 
-    // Report util command. Same as screen -ls but writes to a file instead
+    // report-util command. Same as screen -ls but writes to a file instead
     ci_main.addCommand( //
         "report-util", 0, false, [&os] (CommandArguments &) { os.ls(true); });
 
-    // Process command interpreter
+    // Process command interpreter ---------------------------------------------
 
     // help command. Argument list goes unused
     ci_process.addCommand(

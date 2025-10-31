@@ -13,8 +13,6 @@ void OS::run ()
     this->running = true;
 
     this->thread = std::thread([this] () {
-        int processAutoId = 0;
-
         this->resetCycles();
 
         while (this->running) {
@@ -104,8 +102,8 @@ void OS::run ()
                                     core.setRunning(false);
 
                                     this->finishedProcesses.push_back(
-                                        std::pair<int, int>(
-                                            process->getId(),
+                                        std::pair<std::string, int>(
+                                            process->getName(),
                                             process->getProgramCounter()));
 
                                     // Destroy the Process

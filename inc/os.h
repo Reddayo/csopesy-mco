@@ -45,6 +45,8 @@ class OS
   private:
     int cycle;
 
+    int processAutoId;
+
     Scheduler scheduler;
 
     Config &config;
@@ -53,7 +55,7 @@ class OS
 
     std::vector<Core> cores;
 
-    std::list<std::pair<int, int>> finishedProcesses;
+    std::list<std::pair<std::string, int>> finishedProcesses;
 
     std::queue<std::thread> threads;
 

@@ -80,9 +80,10 @@ void OS::ls (bool writeReport)
     // TODO: Use process name instead of ID
     // Finished processes
     ss << "\nFinished processes:\n";
-    for (std::pair<int, int> finishedProcess : this->finishedProcesses) {
+    for (std::pair<std::string, int> finishedProcess :
+         this->finishedProcesses) {
         // Process name
-        ss << "Process " << finishedProcess.first << "      FINISHED     ";
+        ss << finishedProcess.first << "      FINISHED     ";
 
         // Progress
         ss << finishedProcess.second << " / " << finishedProcess.second << "\n";
@@ -92,7 +93,7 @@ void OS::ls (bool writeReport)
 
     // report-util
     if (writeReport) {
-        std::ofstream report("output.txt");
+        std::ofstream report("csopesy-log.txt");
         report << ss.str();
         report.close();
         this->dm._mvwprintw(0, 0, "Report written to csopesy-log.txt");
@@ -168,7 +169,7 @@ void OS::screenS (std::string processName)
 
     // TODO: Use a global counter for process IDs
     std::shared_ptr<Process> process(new Process(
-        10, processName,
+        this->processAutoId, processName,
         this->config.getMinIns() + rand() % (this->config.getMaxIns() -
                                              this->config.getMinIns() + 1)));
 
