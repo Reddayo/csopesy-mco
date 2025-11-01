@@ -128,10 +128,8 @@ void Process::_FOR (std::vector<std::any> &args)
             }
         }
 
-        // Nullify everything in args[0] because we don't need them anymore
-        for (auto &instruction : loop) {
-            instruction.reset();
-        }
+        // TODO (?): Why are there so many copies of the shared_ptrs to each
+        // instruction
     }
 }
 
@@ -143,8 +141,8 @@ std::shared_ptr<Instruction> Process::createInstruction (int depth)
     // Avoid generating a FOR instruction beyond depth = 3
     // ...when we finish fixing it, for now it avoids FOR completely
     instruction->id =
-        static_cast<InstructionID>(rand() % (depth > 0 && depth < 3 ? 5 : 6));
-    //                     TODO: Set this to 6 to enable FOR instructions ^
+        static_cast<InstructionID>(rand() % (depth >= 0 && depth < 3 ? 6 : 5));
+    //                  TODO: Set this to 6 to enable FOR instructions ^
 
     switch (instruction->id) {
     case PRINT: {
@@ -193,7 +191,7 @@ std::shared_ptr<Instruction> Process::createInstruction (int depth)
     }
 
     case FOR: {
-        // Random argument in range [1, 256]
+        // Random argument in range [1, 5]
         uint16_t n = rand() % 5 + 1;
 
         std::vector<std::shared_ptr<Instruction>> instructions;
@@ -201,11 +199,11 @@ std::shared_ptr<Instruction> Process::createInstruction (int depth)
         // Random number of lines in instruction
         int random_lines = rand() % 5 + 1;
         for (int i = 0; i < random_lines; i++) {
-            instructions.push_back(createInstruction(depth + 1));
+            instructions.push_back(std::move(createInstruction(depth + 1)));
         }
 
         // Copies all instructions to the argument, sharing ownership
-        instruction->args = {instructions, n};
+        instruction->args = {std::move(instructions), n};
 
         // Instructions vector dies here and its pointers with it
 
