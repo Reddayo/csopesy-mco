@@ -22,6 +22,7 @@ OS::OS (DisplayManager &dm, Config &config)
     }
 };
 
+// TODO: Unused
 void OS::incrementCycles () { this->cycle++; }
 
 void OS::resetCycles () { this->cycle = 0; }
@@ -54,13 +55,11 @@ void OS::ls (bool writeReport)
        << "Cores used: " << nRunningCores << "\n"
        << "Cores available: " << nCores - nRunningCores << "\n\n";
 
-    // TODO: Clean up alignment with std::left and std::setw in this section
-
     // Running processes
     ss << "Running processes:\n";
     for (int i : runningCoreIds) {
         // Process has a name
-        ss << std::left << std::setw(10)
+        ss << std::left << std::setw(12)
            << cores[i].getProcessReference()->getName();
 
         // Formatted process start time
@@ -68,8 +67,7 @@ void OS::ls (bool writeReport)
         ss << std::put_time(std::localtime(&now), " (%m/%d/%Y %H:%M:%S)");
 
         // Core ID
-        ss << " Core: " << std::setw(5) << std::to_string(cores[i].getId())
-           << "     ";
+        ss << "  Core: " << std::setw(5) << std::to_string(cores[i].getId());
 
         // Progress
         ss << std::right << std::setw(10)
@@ -77,16 +75,17 @@ void OS::ls (bool writeReport)
            << cores[i].getProcessReference()->getTotalCycles() << "\n";
     }
 
-    // TODO: Use process name instead of ID
     // Finished processes
     ss << "\nFinished processes:\n";
     for (std::pair<std::string, int> finishedProcess :
          this->finishedProcesses) {
-        // Process name
-        ss << finishedProcess.first << "      FINISHED     ";
+        // Process name + Creation timestamp
+        ss << finishedProcess.first << "  FINISHED";
 
         // Progress
-        ss << finishedProcess.second << " / " << finishedProcess.second << "\n";
+        // Right-align with width 13 lines it up with running processes
+        ss << std::right << std::setw(13) << finishedProcess.second << " / "
+           << finishedProcess.second << "\n";
     }
 
     this->dm.clearOutputWindow();
@@ -100,12 +99,11 @@ void OS::ls (bool writeReport)
     } // screen -ls
     else {
         this->dm.clearOutputWindow();
-        int maxY, maxX;
-        this->dm.getOutputWindowMaxYX(maxY, maxX);
 
         std::string line;
         int y = 0;
 
+        // Print each line of string -ls separately
         while (std::getline(ss, line)) {
             this->dm._mvwprintw(y++, 0, "%s", line.c_str());
         }
@@ -158,6 +156,8 @@ void OS::screenS (std::string processName)
         return;
     }
 
+    // TODO: Should we be able to reuse names for process that have already
+    // terminated?
     for (const auto &entry : this->finishedProcesses) {
         const std::string &label = entry.first;
         size_t tabPos = label.find('\t');
@@ -176,9 +176,8 @@ void OS::screenS (std::string processName)
         this->config.getMinIns() + rand() % (this->config.getMaxIns() -
                                              this->config.getMinIns() + 1)));
 
-    // Right?? tho tis would be confusing when a
-    // process is named "Haachama", with id: 810, and
-    // I name a process process810, with id 812
+    // TODO: Would be confusing when a process is named "Haachama", with id:
+    // 810, and I name a process process810, with id 812
     this->processAutoId++;
 
     // Copies the shared pointer to loadedProcess

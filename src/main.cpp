@@ -151,7 +151,6 @@ int main ()
             ci_main.startInputs();
         });
 
-    // TODO: process-smi
     ci_process.addCommand( //
         "process-smi", 0, false,
         [&os] (CommandArguments &) { os.processSMI(); });

@@ -22,6 +22,11 @@ class OS
 
     void resetCycles();
 
+    /**
+     * screen -ls command
+     *
+     * @param writeReport True for report-util command
+     */
     void ls(bool writeReport);
 
     void screenR(std::string processName);
@@ -70,14 +75,14 @@ class OS
     /** The current process loaded into the process screen */
     std::shared_ptr<Process> loadedProcess;
 
+    void showDefaultProcessScreenMessage();
+
     /**
      * Finds an ongoing process by name and shares ownership of the pointer to
      * that process
      */
     std::shared_ptr<Process> findOngoingProcessByName(
         const std::string &processName);
-
-    void showDefaultProcessScreenMessage();
 };
 
 #endif

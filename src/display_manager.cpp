@@ -10,10 +10,11 @@
  * terminal is allocated for the output window.
  */
 const int INPUT_WINDOW_HEIGHT = 10;
+
 const int PAD_HEIGHT = 1000;
 const int PAD_WIDTH = COLS;
 
-/* probably better to have something like this
+/* TODO: Probably better to have something like this
 struct Screen {
     WINDOW* pad;
     int padTop;
@@ -58,13 +59,16 @@ DisplayManager::DisplayManager ()
     box(outputBorder, 0, 0);
     box(inputBorder, 0, 0);
 
-    // Content windows are created as subwindows of the border windows
-    this->outputWindow = newpad(PAD_HEIGHT, max_x - 2);
-    this->padTop = 0;
-    this->currentRow = 0;
-
+    // Input window is created as subwindows of the border windows
     this->inputWindow = subwin(inputBorder, INPUT_WINDOW_HEIGHT - 2, max_x - 2,
                                max_y - INPUT_WINDOW_HEIGHT + 1, 1);
+
+    // Output window is a pad with PAD_HEIGHT lines
+    this->outputWindow = newpad(PAD_HEIGHT, max_x - 2);
+
+    // Initialize both pad cursors
+    this->padTop = 0;     // Top of pad
+    this->currentRow = 0; // Current print position
 
     // Print border titles
     mvwprintw(outputBorder, 0, 2, " CSOPESY S12 ");
@@ -85,37 +89,37 @@ DisplayManager::DisplayManager ()
 
 void DisplayManager::scrollUp (int n)
 {
+    // Lock the display manager
     std::lock_guard<std::mutex> lock(this->mutex);
+
     if (this->padTop > 0)
         this->padTop -= n;
+
     this->refreshPad();
 }
 
 void DisplayManager::scrollDown (int n)
 {
+    // Lock the display manager
     std::lock_guard<std::mutex> lock(this->mutex);
+
     int max_y, max_x;
+    // Use border as a reference for the pad
     getmaxyx(this->outputBorder, max_y, max_x);
+
     if (this->padTop + max_y - 2 < PAD_HEIGHT)
         this->padTop += n;
+
     this->refreshPad();
 }
+
 void DisplayManager::refreshPad ()
 {
-    int borderHeight, borderWidth;
-    getmaxyx(this->outputBorder, borderHeight, borderWidth);
+    int max_y, max_x;
+    getmaxyx(this->outputBorder, max_y, max_x);
 
-    prefresh(this->outputWindow, this->padTop, 0, 1, 1, borderHeight - 2,
-             borderWidth - 2);
-}
-
-void DisplayManager::getOutputWindowMaxYX(int &maxY, int &maxX){
-    if (this->outputWindow)
-        getmaxyx(this->outputWindow, maxY, maxX);
-    else {
-        maxY = 0;
-        maxX = 0;
-    }
+    // Update visible region
+    prefresh(this->outputWindow, this->padTop, 0, 1, 1, max_y - 2, max_x - 2);
 }
 
 void DisplayManager::refreshAll ()
@@ -125,8 +129,9 @@ void DisplayManager::refreshAll ()
 
     wrefresh(this->outputBorder);
     wrefresh(this->inputBorder);
-    this->refreshPad();
     wrefresh(this->inputWindow);
+
+    this->refreshPad();
 }
 
 void DisplayManager::showInputPrompt ()
@@ -169,6 +174,7 @@ void DisplayManager::showTitleScreen ()
 
         y_index++;
     }
+
     this->padTop = std::max(0, y_start - 1);
     this->refreshPad();
 }

@@ -4,6 +4,8 @@
 #include <any>
 #include <cstdint>
 #include <ctime>
+#include <functional>
+#include <memory>
 #include <queue>
 #include <sstream>
 #include <string>
@@ -62,7 +64,7 @@ class Process
     // These methods have to do with the # of cycles that have elapsed since the
     // process was created
 
-    /** @return Number of finished cycles */
+    /** @return Number of finished cycles since process was last dispatched */
     uint32_t getElapsedCycles();
 
     /** Increments the cycle count for this Process */
@@ -77,6 +79,7 @@ class Process
     // (delay-per-exec) NOTE: Process will have a state of RUNNING even in a
     // busy-waiting state.
 
+    /** @return Number of cycles this process has been in busy-waiting */
     uint32_t getRemainingBusyWaitingCycles();
 
     void setBusyWaitingCycles(uint32_t value);
@@ -134,14 +137,15 @@ class Process
     void randomizeInstructions(int instruction_count);
 
     /**
-     * Create a single random instruction.
+     * Create a single random instruction and relinquishes ownership to a unique
+     * pointer to it
      *
      * @param depth Begins at zero by default. Used to limit the depth of the
      *              FOR instruction
      *
-     * @return The newly-created instruction
+     * @return A unique pointer to a new instruction
      */
-    Instruction createInstruction(int depth = 0);
+    std::shared_ptr<Instruction> createInstruction(int depth = 0);
 
     /**
      * Generates a random variable name composed of one letter followed by a
@@ -179,7 +183,7 @@ class Process
     int programCounter = 0;
 
     /** List of instructions to execute */
-    std::vector<Instruction> instructions;
+    std::vector<std::shared_ptr<Instruction>> instructions;
 
     /** List of variables, will not be released until process ends */
     std::unordered_map<std::string, uint16_t> variables;

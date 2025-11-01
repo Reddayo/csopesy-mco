@@ -53,7 +53,6 @@ void Marquee::stop ()
 void Marquee::start ()
 {
     if (this->asciiText.empty()) {
-        // TODO: Do something when ASCII art is empty
         dm.showErrorPrompt("No marquee text set!");
         return;
     }

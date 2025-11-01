@@ -1,13 +1,15 @@
 #include <chrono>
+#include <iomanip>
 #include <list>
 #include <mutex>
-#include <string>
+#include <sstream>
 #include <thread>
-#include <iomanip>
 
 #include "../inc/core.h"
 #include "../inc/os.h"
 #include "../inc/scheduler.h"
+
+#define CYCLE_NS_DELAY 10
 
 void OS::run ()
 {
@@ -17,8 +19,9 @@ void OS::run ()
         this->resetCycles();
 
         while (this->running) {
-            // TODO: Need to slow cycles? One cycle will take at least 10ns
-            std::this_thread::sleep_for(std::chrono::nanoseconds(10));
+            // TODO: Need to slow cycles? Adjust CYCLE_NS_DELAY
+            std::this_thread::sleep_for(
+                std::chrono::nanoseconds(CYCLE_NS_DELAY));
 
             std::lock_guard<std::mutex> lock(this->mutex);
 
@@ -27,12 +30,16 @@ void OS::run ()
             if (this->generateDummyProcesses &&
                 this->cycle % this->config.getBatchProcessFreq() == 0) {
 
+                // Generate process name
+                std::ostringstream processName;
+                processName << "process" << processAutoId;
+
                 // Create a new process and wrap it in a shared pointer
-                std::shared_ptr<Process> process(new Process(
-                    processAutoId, "process" + std::to_string(processAutoId),
-                    this->config.getMinIns() +
-                        rand() % (this->config.getMaxIns() -
-                                  this->config.getMinIns() + 1)));
+                std::shared_ptr<Process> process(
+                    new Process(processAutoId, processName.str(),
+                                this->config.getMinIns() +
+                                    rand() % (this->config.getMaxIns() -
+                                              this->config.getMinIns() + 1)));
 
                 // Transfer ownership of the shared pointer to the scheduler
                 // queue This calls std::move() internally
@@ -54,6 +61,7 @@ void OS::run ()
                         if (process->getElapsedCycles() ==
                             this->config.getQuantumCycles()) {
 
+                            // Reset elapsed cycles when pre-empting
                             process->resetElapsedCycles();
 
                             core.setRunning(false);
@@ -99,27 +107,22 @@ void OS::run ()
 
                                 // When process terminates, core stops running
                                 if (process->getState() == TERMINATED) {
-                                    // TODO: Move to terminated processes?
                                     core.setRunning(false);
 
-                                    /* TODO: IF Finished processses uses END ITME,
-                                    replace below with this
-                                    std::time_t endTime = std::time(nullptr);
+                                    // std::time_t endTime = std::time(nullptr);
+                                    std::time_t startTime =
+                                        process->getStartTime();
                                     std::ostringstream label;
-                                    label << process->getName()  << "\t"
-                                    << "(" << std::put_time(std::localtime(&endTime), "%m/%d/%Y %H:%M:%S") << ")";
 
-                                    this->finishedProcesses.push_back({label.str(), process->getProgramCounter()});
-                                    */
-                                    
-                                    // tabbing the timestamp cause i'm lazy
-                                    std::time_t startTime =  process->getStartTime();
-                                    std::ostringstream label;
-                                    label << process->getName() << "\t"
-                                    << "(" << std::put_time(std::localtime(&startTime), "%m/%d/%Y %H:%M:%S") << ")";
+                                    label << std::left << std::setw(12)
+                                          << process->getName()
+                                          << std::put_time(
+                                                 std::localtime(&startTime),
+                                                 " (%m/%d/%Y %H:%M:%S)");
 
-                                    this->finishedProcesses.push_back({label.str(), process->getProgramCounter()});
-
+                                    this->finishedProcesses.push_back(
+                                        {label.str(),
+                                         process->getProgramCounter()});
 
                                     // Destroy the Process
                                     process.reset();
@@ -127,6 +130,9 @@ void OS::run ()
 
                                 } else if (process->getState() == WAITING) {
                                     core.setRunning(false);
+
+                                    // Reset elapsed cycles when pre-empting
+                                    process->resetElapsedCycles();
 
                                     // Move process to sleep queue.
                                     scheduler.sleepProcess(process);

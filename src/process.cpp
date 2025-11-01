@@ -31,7 +31,7 @@ uint32_t Process::getTotalCycles ()
     return this->instructions.size();
 }
 
-// Elapsed cycles
+// Elapsed ---------------------------------------------------------------------
 
 uint32_t Process::getElapsedCycles () { return this->elapsedCycles; }
 
@@ -39,7 +39,7 @@ void Process::incrementElapsedCycles () { elapsedCycles++; }
 
 void Process::resetElapsedCycles () { this->elapsedCycles = 0; }
 
-// Busy-waiting cycles
+// Busy-waiting cycles ---------------------------------------------------------
 
 uint32_t Process::getRemainingBusyWaitingCycles ()
 {
@@ -56,7 +56,7 @@ void Process::decrementBusyWaitingCycles ()
     this->remainingBusyWaitingCycles--;
 }
 
-// Waiting cycles
+// Waiting cycles --------------------------------------------------------------
 
 // TODO: Data type
 uint16_t Process::getRemainingWaitingCycles ()
@@ -70,6 +70,8 @@ void Process::setWaitingCycles (uint16_t value)
 }
 
 void Process::decrementWaitingCycles () { this->remainingWaitingCycles--; }
+
+// -----------------------------------------------------------------------------
 
 std::string Process::getStateAsString ()
 {
@@ -86,13 +88,11 @@ std::string Process::getStateAsString ()
 
 void Process::setLastCoreID (uint32_t core) { this->core = core; }
 
-// TODO: Depending on how sir responds, this might be replaced with a
-// randomizeCommands + assembleCommands or something to that effect
 void Process::randomizeInstructions (int instruction_count)
 {
     // NOTE: Count is randomly assigned by the scheduler
     for (int i = 0; i < instruction_count; i++) {
-        this->instructions.push_back(createInstruction());
+        this->instructions.push_back(std::move(createInstruction()));
     }
 }
 
@@ -101,11 +101,11 @@ std::string Process::generateVariableName (bool uniqueness)
     // WARNING: Uniqueness is not enforced by default
     std::string varName;
 
-    do {
+    do { // Randomly generate a name. Format is letter + random val in [0, 999]
         varName =
             std::string(1, 'a' + (rand() % 26)) + std::to_string(rand() % 1000);
     }
-    // Randomly generate names until you get a unique one
+    // Repeat until you get a unique one
     while (uniqueness == true && variables.count(varName));
 
     return varName;

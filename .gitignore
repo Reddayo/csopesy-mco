@@ -1,3 +1,9 @@
+# Config file
+config.txt
+
+# bin files
+bin/
+
 # Kate swap files
 .*.kate-swp
 .swp.*

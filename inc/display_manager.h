@@ -47,9 +47,17 @@ class DisplayManager
     /** Exits to/Shows the title screen **/
     void showTitleScreen();
 
+    /** Sets the message displayed at the top border of the output window */
     void setOutputBorderLabel(std::string message);
 
+    /**
+     * Resets the message displayed at the top border of the output window to
+     * CSOPESY S12 ... CESAR | LLOVIT | MARQUESES | SILVA
+     */
     void clearOutputBorderLabel();
+
+    /** Refreshes the output window pad */
+    void refreshPad();
 
     /**
      * Thread-safe wrapper function for curses' mvwprintw().
@@ -77,8 +85,6 @@ class DisplayManager
      * INPUT_READ_BUFFER_FULL if buffer is full, and ERR if wgetch() call fails
      */
     int _wgetnstr(char *buf, size_t maxLength, size_t &currentLength);
-    void refreshPad();
-    void getOutputWindowMaxYX(int &maxY, int &maxX);
 
   private:
     WINDOW *outputBorder, *inputBorder;
@@ -91,8 +97,11 @@ class DisplayManager
     /** Scrolls the output window down by n lines */
     void scrollDown(int n);
 
-    int padTop;     // Current top line visible
-    int currentRow; // Current print row
+    /** Current top line visible */
+    int padTop;
+
+    /** Current print row */
+    int currentRow;
 
     std::mutex mutex;
 };
