@@ -108,7 +108,14 @@ void Process::_SLEEP (std::vector<std::any> &args)
 }
 
 // TODO: This
-void Process::_FOR (std::vector<std::any> &args) {}
+void Process::_FOR (std::vector<std::any> &args) {
+    for (int i = 0; i < getArgValueUINT16(args[1]); i++) {
+        for (Instruction inst : args[0]) {
+            instructions.insert(instructions.begin() + this->programCounter + 1, inst)
+        }
+    }
+
+}
 
 std::shared_ptr<Instruction> Process::createInstruction (int depth)
 {
