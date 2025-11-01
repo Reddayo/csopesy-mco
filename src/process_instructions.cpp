@@ -108,13 +108,31 @@ void Process::_SLEEP (std::vector<std::any> &args)
 }
 
 // TODO: This
-void Process::_FOR (std::vector<std::any> &args) {
+void Process::_FOR (std::vector<std::any> &args)
+{
     for (int i = 0; i < getArgValueUINT16(args[1]); i++) {
-        for (Instruction inst : args[0]) {
-            instructions.insert(instructions.begin() + this->programCounter + 1, inst)
+        // I hate this language I'm so sorry for this
+        auto &loop =
+            std::any_cast<std::vector<std::shared_ptr<Instruction>> &>(args[0]);
+
+        int j = 0;
+
+        for (int i = 0; i < getArgValueUINT16(args[1]); i++) {
+            for (auto &instruction : loop) {
+                this->instructions.insert(
+                    // Insert at next instruction
+                    this->instructions.begin() + this->programCounter + 1 + j,
+                    // Share ownership with main instruction queue
+                    instruction);
+                j++;
+            }
+        }
+
+        // Nullify everything in args[0] because we don't need them anymore
+        for (auto &instruction : loop) {
+            instruction.reset();
         }
     }
-
 }
 
 std::shared_ptr<Instruction> Process::createInstruction (int depth)
@@ -125,7 +143,7 @@ std::shared_ptr<Instruction> Process::createInstruction (int depth)
     // Avoid generating a FOR instruction beyond depth = 3
     // ...when we finish fixing it, for now it avoids FOR completely
     instruction->id =
-        static_cast<InstructionID>(rand() % (depth > 0 && depth < 3 ? 5 : 5));
+        static_cast<InstructionID>(rand() % (depth > 0 && depth < 3 ? 5 : 6));
     //                     TODO: Set this to 6 to enable FOR instructions ^
 
     switch (instruction->id) {
@@ -175,18 +193,22 @@ std::shared_ptr<Instruction> Process::createInstruction (int depth)
     }
 
     case FOR: {
-        int n = rand() % 256 + 1; // Random argument in range [1, 256]
+        // Random argument in range [1, 256]
+        uint16_t n = rand() % 5 + 1;
 
-        /* TODO: FOR takes in` a set of instruction, so query create n times
-        std::vector<Instruction> instructions;
-        int random_lines = rand() % 256 + 1;
+        std::vector<std::shared_ptr<Instruction>> instructions;
+
+        // Random number of lines in instruction
+        int random_lines = rand() % 5 + 1;
         for (int i = 0; i < random_lines; i++) {
-            this->instructions.push_back(
-                createInstruction(rand() % 2 == 0 ? depth + 1 : 0));
+            instructions.push_back(createInstruction(depth + 1));
         }
-        */
 
-        instruction->args = {createInstruction(depth + 1), n};
+        // Copies all instructions to the argument, sharing ownership
+        instruction->args = {instructions, n};
+
+        // Instructions vector dies here and its pointers with it
+
         break;
     }
     }
