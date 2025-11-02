@@ -15,7 +15,8 @@ OS::OS (DisplayManager &dm, Config &config)
     : dm(dm),                                    // Display manager
       config(config),                            // Config values
       scheduler(Scheduler(config.getScheduler(), // Scheduler
-                          config.getQuantumCycles()))
+                          config.getQuantumCycles())),
+      generateDummyProcesses(false)
 {
     for (int i = 0; i < config.getNumCPU(); i++) {
         this->cores.push_back(Core(i));
@@ -129,7 +130,8 @@ void OS::screenR (std::string processName)
         this->loadedProcess = foundProcess;
         this->showDefaultProcessScreenMessage();
     } else {
-        this->dm._mvwprintw(0, 0, "Process '%s' not found.",
+        this->dm._mvwprintw(0, 0, "Process '%s' not found. Use command "
+                                  "\"exit\" to return to main manu.",
                             processName.c_str());
     }
 }
@@ -228,8 +230,18 @@ void OS::processSMI ()
     this->dm.clearOutputWindow();
 
     // Print process state information
-    this->dm._mvwprintw(0, 0, "%s",
-                        this->loadedProcess->getStateAsString().c_str());
+    std::stringstream ss(this->loadedProcess->getStateAsString());
+
+    std::string line;
+    int y = 0;
+
+    // Print each line of string process-smi separately
+    while (std::getline(ss, line)) {
+        this->dm._mvwprintw(y++, 0, "%s", line.c_str());
+    }
+
+    // Refresh window to show everything
+    this->dm.refreshPad();
 }
 
 void OS::setGenerateDummyProcesses (bool value)
@@ -238,6 +250,8 @@ void OS::setGenerateDummyProcesses (bool value)
 }
 
 bool OS::isRunning () { return this->running; }
+
+bool OS::isGenerating () { return this->generateDummyProcesses; }
 
 void OS::exit ()
 {
