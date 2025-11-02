@@ -110,26 +110,22 @@ void Process::_SLEEP (std::vector<std::any> &args)
 // TODO: This
 void Process::_FOR (std::vector<std::any> &args)
 {
+    // I hate this language I'm so sorry for this
+    std::vector<std::shared_ptr<Instruction>> &loop =
+        std::any_cast<std::vector<std::shared_ptr<Instruction>> &>(args[0]);
+
+    int j = 0;
+
     for (int i = 0; i < getArgValueUINT16(args[1]); i++) {
-        // I hate this language I'm so sorry for this
-        auto &loop =
-            std::any_cast<std::vector<std::shared_ptr<Instruction>> &>(args[0]);
-
-        int j = 0;
-
-        for (int i = 0; i < getArgValueUINT16(args[1]); i++) {
-            for (auto &instruction : loop) {
-                this->instructions.insert(
-                    // Insert at next instruction
-                    this->instructions.begin() + this->programCounter + 1 + j,
-                    // Share ownership with main instruction queue
-                    instruction);
-                j++;
-            }
+        // Make a copy of the shared ptr
+        for (std::shared_ptr<Instruction> instruction : loop) {
+            this->instructions.insert(
+                // Insert at next instruction
+                this->instructions.begin() + this->programCounter + 1 + j,
+                // Move ownership of the copy to the main instruction queue
+                std::move(instruction));
+            j++;
         }
-
-        // TODO (?): Why are there so many copies of the shared_ptrs to each
-        // instruction
     }
 }
 
