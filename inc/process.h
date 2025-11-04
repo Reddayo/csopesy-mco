@@ -102,6 +102,8 @@ class Process
 
     void setLastCoreID(uint32_t core);
 
+    void setTotalCycles(int totalCycles);
+
   private:
     /**
      * Helper that extracts an value of type uint16_t from an argument of type
@@ -142,10 +144,16 @@ class Process
      *
      * @param depth Begins at zero by default. Used to limit the depth of the
      *              FOR instruction
+     * @param instCtr   Instruction counter
+     * 
+     * @param instruction_count   Instruction count to limit number of instructions
+     * 
+     * @param loopCount   Number of times an instruction will be looped. If no FOR loop, set to 1.
      *
      * @return A unique pointer to a new instruction
      */
-    std::shared_ptr<Instruction> createInstruction(int depth = 0);
+    std::shared_ptr<Instruction> createInstruction(int depth, int *instCtr,
+                                                    int instruction_count, int loopCount);
 
     /**
      * Generates a random variable name composed of one letter followed by a
@@ -166,6 +174,9 @@ class Process
 
     /** Process time of creation */
     std::time_t startTime;
+
+    /** Total number of instructions */
+    int totalCycles;
 
     /** Process state. Initialized to READY */
     enum ProcessState state;

@@ -241,6 +241,9 @@ void OS::processSMI ()
         this->dm._mvwprintw(y++, 0, "%s", line.c_str());
     }
 
+    if(this->loadedProcess->getState() == TERMINATED)
+        this->dm._mvwprintw(y+2, 0, "%s", "Finished!");
+
     // Refresh window to show everything
     this->dm.refreshPad();
 }

@@ -140,16 +140,21 @@ void Process::_FOR (std::vector<std::any> &args)
     }
 }
 
-std::shared_ptr<Instruction> Process::createInstruction (int depth)
+std::shared_ptr<Instruction> Process::createInstruction (int depth, int *instCtr, int instruction_count, int loopCount)
 {
     // Create a new Instruction and establish a shareable pointer to it
     std::shared_ptr<Instruction> instruction(new Instruction);
 
     // Avoid generating a FOR instruction beyond depth = 3
-    // ...when we finish fixing it, for now it avoids FOR completely
+    // Avoid exceeding instruction count
+    // 25 since 5 maximum loops, 5 maximum instructions inside
     instruction->id =
-        static_cast<InstructionID>(rand() % (depth >= 0 && depth < 3 ? 6 : 5));
-    //                  TODO: Set this to 6 to enable FOR instructions ^
+        static_cast<InstructionID>(rand() % (depth >= 0 && depth < 3 
+                        && (*instCtr + loopCount + loopCount * 25 < instruction_count) ? 6 : 5));
+    //                                    TODO: Set this to 6 to enable FOR instructions ^
+
+    // Increment instruction counter
+    *instCtr += loopCount;
 
     switch (instruction->id) {
     case PRINT: {
@@ -220,7 +225,8 @@ std::shared_ptr<Instruction> Process::createInstruction (int depth)
         // Random number of lines in instruction
         int random_lines = rand() % 5 + 1;
         for (int i = 0; i < random_lines; i++) {
-            instructions.push_back(std::move(createInstruction(depth + 1)));
+            instructions.push_back(std::move(createInstruction(
+                                            depth + 1, instCtr, instruction_count, n * loopCount)));
         }
 
         // Copies all instructions to the argument, sharing ownership

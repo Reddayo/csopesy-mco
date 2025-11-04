@@ -24,11 +24,10 @@ enum ProcessState Process::getState () { return this->state; }
 
 uint32_t Process::getProgramCounter () { return this->programCounter; }
 
-// TODO: Deal with instruction size logic here
 uint32_t Process::getTotalCycles ()
 {
     /** Return number of cycles */
-    return this->instructions.size();
+    return this->totalCycles;
 }
 
 // Elapsed ---------------------------------------------------------------------
@@ -69,6 +68,11 @@ void Process::setWaitingCycles (uint16_t value)
     this->remainingWaitingCycles = value;
 }
 
+void Process::setTotalCycles (int totalCycles)
+{
+    this->totalCycles = totalCycles;
+}
+
 void Process::decrementWaitingCycles () { this->remainingWaitingCycles--; }
 
 // -----------------------------------------------------------------------------
@@ -80,7 +84,7 @@ std::string Process::getStateAsString ()
     ss << "Process name: " << this->name << "\n";
     ss << "Process ID: " << this->id << "\n\n";
     ss << "Current instruction line: " << this->programCounter << "\n";
-    ss << "Total instructions: " << this->instructions.size() << "\n\n";
+    ss << "Total instructions: " << this->getTotalCycles() << "\n\n";
     ss << "Logs:\n" << this->print_stream.str();
 
     return ss.str();
@@ -91,9 +95,13 @@ void Process::setLastCoreID (uint32_t core) { this->core = core; }
 void Process::randomizeInstructions (int instruction_count)
 {
     // NOTE: Count is randomly assigned by the scheduler
-    for (int i = 0; i < instruction_count; i++) {
-        this->instructions.push_back(std::move(createInstruction()));
+    int instCtr = 0;
+    while (instCtr < instruction_count) {
+        this->instructions.push_back(std::move(createInstruction(0, &instCtr,
+                                                        instruction_count, 1)));
     }
+
+    this->setTotalCycles(instruction_count);
 }
 
 std::string Process::generateVariableName (bool uniqueness)
