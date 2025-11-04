@@ -78,9 +78,14 @@ int main ()
     // Initialize OS. Must be called before anything else
     ci_main.addCommand(
         "initialize", 0, false, //
-        [&os, &dm, &ci_main, &ci_process] (CommandArguments &) { 
-            if (os.isRunning())
-                dm.showErrorPrompt("Processor configuration is already initialized.");
+        [&os, &config, &dm, &ci_main, &ci_process] (CommandArguments &) { 
+            if (os.isRunning()){
+                os.exit();
+                os.reset();
+                config = Config("config.txt");
+                os.updateConfig(config);
+                os.run();
+            }
             else
                 os.run();
         });

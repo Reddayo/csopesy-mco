@@ -24,6 +24,41 @@ OS::OS (DisplayManager &dm, Config &config)
 };
 
 // TODO: Unused
+
+void OS::updateConfig(Config &config) {
+    this->config = config;
+
+    this->scheduler = Scheduler(config.getScheduler(), config.getQuantumCycles());
+
+    this->cores.clear();
+    for (int i = 0; i < config.getNumCPU(); ++i) {
+        this->cores.push_back(Core(i));
+    }
+}
+
+void OS::reset(){
+    std::lock_guard<std::mutex> lock(this->mutex);
+    this->cycle = 0;
+    this->processAutoId = 0;
+
+    this->cores.clear();
+    this->finishedProcesses.clear();
+
+    while (!this->threads.empty()) {
+        if (this->threads.front().joinable())
+            this->threads.front().join();
+        this->threads.pop();
+    }
+
+    if (this->thread.joinable())
+        this->thread.join();
+
+    this->generateDummyProcesses = false;
+    this->running = false;
+
+    this->loadedProcess.reset();
+}
+
 void OS::incrementCycles () { this->cycle++; }
 
 void OS::resetCycles () { this->cycle = 0; }
