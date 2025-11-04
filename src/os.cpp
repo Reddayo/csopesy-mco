@@ -130,8 +130,9 @@ void OS::screenR (std::string processName)
         this->loadedProcess = foundProcess;
         this->showDefaultProcessScreenMessage();
     } else {
-        this->dm._mvwprintw(0, 0, "Process '%s' not found. Use command "
-                                  "\"exit\" to return to main manu.",
+        this->dm._mvwprintw(0, 0,
+                            "Process '%s' not found. Use command "
+                            "\"exit\" to return to main manu.",
                             processName.c_str());
     }
 }

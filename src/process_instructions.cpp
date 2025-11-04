@@ -62,7 +62,18 @@ void Process::_PRINT (std::vector<std::any> &args)
         // Core information
         << "Core: " << this->core <<
         // Message
-        " \"" << std::any_cast<std::string>(args[0]) << "\"\n";
+        " \"" << std::any_cast<std::string>(args[0]);
+
+    if (args.size() > 1) {
+        // Starting at the second argument, treat as variable names
+        for (auto i = begin(args) + 1, e = end(args); i != e; ++i) {
+            std::string var_name = std::any_cast<std::string>(*i);
+
+            print_stream << this->variables[var_name];
+        }
+    };
+
+    print_stream << "\"\n";
 }
 
 void Process::_DECLARE (std::vector<std::any> &args)
@@ -142,14 +153,28 @@ std::shared_ptr<Instruction> Process::createInstruction (int depth)
 
     switch (instruction->id) {
     case PRINT: {
-        // TODO: Wtf does "message should be able to store a variable" mean
-        instruction->args = {"Hello world from " + this->name + "!"};
+        if (this->declaredVariableNames.empty() || rand() % 2 == 0) {
+            // Print a "hello world" message
+            instruction->args = {"Hello world from " + this->name + "!"};
+        } else {
+            // Pick a random declared variable
+            size_t index = rand() % this->declaredVariableNames.size();
+
+            instruction->args = {
+                // Message
+                "Selected var " + this->declaredVariableNames[index] + " = ",
+                // Print a random declared variable
+                this->declaredVariableNames[index]};
+        }
+
         break;
     }
 
     case DECLARE: {
         std::string var = generateVariableName(1);
         uint16_t val = rand() % 65536;
+
+        this->declaredVariableNames.push_back(var);
 
         // var, uint16
         instruction->args = {var, val};

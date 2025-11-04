@@ -1,8 +1,8 @@
 #include <curses.h>
+#include <filesystem>
 #include <map>
 #include <string>
 #include <thread>
-#include <filesystem>
 
 #include "../inc/command_interpreter.h"
 #include "../inc/config.h"
@@ -38,14 +38,13 @@ int main ()
 
     if (!std::filesystem::exists("config.txt")) {
         dm.showErrorPrompt("File config.txt does not exist in the directory. "
-                            "Use command \"exit\" to close program.");
+                           "Use command \"exit\" to close program.");
 
-        ci_main.addCommand(
-        "exit", 0, false, //
-        [&dm, &ci_main] (CommandArguments &) {
-            ci_main.exitInputs();
-            endwin();
-        });
+        ci_main.addCommand("exit", 0, false, //
+                           [&dm, &ci_main] (CommandArguments &) {
+                               ci_main.exitInputs();
+                               endwin();
+                           });
 
         ci_main.startInputs();
     }
@@ -63,24 +62,32 @@ int main ()
         "help", 0, false, //
         [&dm] (CommandArguments &) {
             dm.clearOutputWindow();
-            dm._mvwprintw(1, 0, "%s",
+            dm._mvwprintw(
+                1, 0, "%s",
                 "Main menu commands:\n"
-                "initialize                 - initialize the processor configuration of the application\n"
-                "scheduler-start            - continuously generate dummy processes for the CPU scheduler\n"
+                "initialize                 - initialize the processor "
+                "configuration of the application\n"
+                "scheduler-start            - continuously generate dummy "
+                "processes for the CPU scheduler\n"
                 "scheduler-stop             - stop generating dummy processes\n"
-                "screen -s <process name>   - create a new process and access its screen\n"
-                "screen -r <process name>   - access the screen of an existing process\n"
+                "screen -s <process name>   - create a new process and access "
+                "its screen\n"
+                "screen -r <process name>   - access the screen of an existing "
+                "process\n"
                 "screen -ls                 - list all running processes\n"
-                "report-util                - generate CPU utilization report in csopesy-log.txt\n"
+                "report-util                - generate CPU utilization report "
+                "in csopesy-log.txt\n"
                 "exit                       - terminate the console");
         });
 
     // Initialize OS. Must be called before anything else
     ci_main.addCommand(
         "initialize", 0, false, //
-        [&os, &dm, &ci_main, &ci_process] (CommandArguments &) { 
+        [&os, &dm, &ci_main, &ci_process] (CommandArguments &) {
             if (os.isRunning())
-                dm.showErrorPrompt("Processor configuration is already initialized.");
+                // TODO: Kill and re-initialize OS. Maybe show a warning
+                dm.showErrorPrompt(
+                    "Processor configuration is already initialized.");
             else
                 os.run();
         });
@@ -92,11 +99,10 @@ int main ()
             if (!os.isRunning())
                 dm.showErrorPrompt(
                     "OS is not initialized. Use command \"initialize\" first.");
+            else if (!os.isGenerating())
+                os.setGenerateDummyProcesses(true);
             else
-                if(!os.isGenerating())
-                    os.setGenerateDummyProcesses(true);
-                else
-                    dm.showErrorPrompt("Scheduler is already started.");
+                dm.showErrorPrompt("Scheduler is already started.");
         });
 
     // Same command as scheduler-start according to specs
@@ -106,11 +112,10 @@ int main ()
             if (!os.isRunning())
                 dm.showErrorPrompt(
                     "OS is not initialized. Use command \"initialize\" first.");
+            else if (!os.isGenerating())
+                os.setGenerateDummyProcesses(true);
             else
-                if(!os.isGenerating())
-                    os.setGenerateDummyProcesses(true);
-                else
-                    dm.showErrorPrompt("Scheduler is already started.");
+                dm.showErrorPrompt("Scheduler is already started.");
         });
 
     // Stop randomly generating dummy processes
@@ -120,11 +125,10 @@ int main ()
             if (!os.isRunning())
                 dm.showErrorPrompt(
                     "OS is not initialized. Use command \"initialize\" first.");
+            else if (os.isGenerating())
+                os.setGenerateDummyProcesses(false);
             else
-                if(os.isGenerating())
-                    os.setGenerateDummyProcesses(false);
-                else
-                    dm.showErrorPrompt("Scheduler is not yet started.");
+                dm.showErrorPrompt("Scheduler is not yet started.");
         });
 
     // Exit the PROGRAM
@@ -184,9 +188,11 @@ int main ()
         "help", 0, false, //
         [&dm] (CommandArguments &) {
             dm.clearOutputWindow();
-            dm._mvwprintw(1, 0, "%s",
+            dm._mvwprintw(
+                1, 0, "%s",
                 "Screen commands:\n"
-                "process-smi                - print updated details and logs from print instructions\n"
+                "process-smi                - print updated details and logs "
+                "from print instructions\n"
                 "exit                       - return to the main menu");
         });
 

@@ -192,6 +192,8 @@ class Process
 
     /** The most recent core ID this process was assigned to. Defaults to 0 */
     uint32_t core;
+
+    std::vector<std::string> declaredVariableNames;
 };
 
 #endif

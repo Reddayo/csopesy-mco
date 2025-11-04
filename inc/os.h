@@ -40,7 +40,7 @@ class OS
     /** @return True if the OS is running */
     bool isRunning();
 
-        /** @return True if the scheduler is generating processes */
+    /** @return True if the scheduler is generating processes */
     bool isGenerating();
 
     /**
