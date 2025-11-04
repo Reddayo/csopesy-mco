@@ -101,7 +101,7 @@ void Process::randomizeInstructions (int instruction_count)
                                                         instruction_count, 1)));
     }
 
-    this->setTotalCycles(instruction_count);
+    this->setTotalCycles(instCtr);
 }
 
 std::string Process::generateVariableName (bool uniqueness)
