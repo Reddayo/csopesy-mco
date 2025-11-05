@@ -25,10 +25,12 @@ OS::OS (DisplayManager &dm, Config &config)
 
 // TODO: Unused
 
-void OS::updateConfig(Config &config) {
+void OS::updateConfig (Config &config)
+{
     this->config = config;
 
-    this->scheduler = Scheduler(config.getScheduler(), config.getQuantumCycles());
+    this->scheduler =
+        Scheduler(config.getScheduler(), config.getQuantumCycles());
 
     this->cores.clear();
     for (int i = 0; i < config.getNumCPU(); ++i) {
@@ -36,7 +38,8 @@ void OS::updateConfig(Config &config) {
     }
 }
 
-void OS::reset(){
+void OS::reset ()
+{
     std::lock_guard<std::mutex> lock(this->mutex);
     this->cycle = 0;
     this->processAutoId = 0;
@@ -275,9 +278,6 @@ void OS::processSMI ()
     while (std::getline(ss, line)) {
         this->dm._mvwprintw(y++, 0, "%s", line.c_str());
     }
-
-    if(this->loadedProcess->getState() == TERMINATED)
-        this->dm._mvwprintw(y+2, 0, "%s", "Finished!");
 
     // Refresh window to show everything
     this->dm.refreshPad();

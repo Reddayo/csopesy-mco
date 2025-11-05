@@ -40,6 +40,7 @@ void Process::execute (DisplayManager &dm)
     // If no instructions left in queue, set status to TERMINATED
     if (this->programCounter >= this->instructions.size()) {
         this->setState(TERMINATED);
+        this->print_stream << "\nFinished!";
     }
 }
 
@@ -140,7 +141,10 @@ void Process::_FOR (std::vector<std::any> &args)
     }
 }
 
-std::shared_ptr<Instruction> Process::createInstruction (int depth, int *instCtr, int instruction_count, int loopCount)
+std::shared_ptr<Instruction> Process::createInstruction (int depth,
+                                                         int *instCtr,
+                                                         int instruction_count,
+                                                         int loopCount)
 {
     // Create a new Instruction and establish a shareable pointer to it
     std::shared_ptr<Instruction> instruction(new Instruction);
@@ -148,17 +152,25 @@ std::shared_ptr<Instruction> Process::createInstruction (int depth, int *instCtr
     // Avoid generating a FOR instruction beyond depth = 3
     // Avoid exceeding instruction count
     // 25 since 5 maximum loops, 5 maximum instructions inside
-    instruction->id =
-        static_cast<InstructionID>(rand() % (depth >= 0 && depth < 3 
-                        && (*instCtr + loopCount + loopCount * 25 < instruction_count) ? 6 : 5));
-    //                                    TODO: Set this to 6 to enable FOR instructions ^
+    instruction->id = static_cast<InstructionID>(
+        rand() %
+        (depth >= 0 && depth < 3 &&
+                 (*instCtr + loopCount + loopCount * 25 < instruction_count)
+             ? 6
+             : 5));
 
     // Increment instruction counter
     *instCtr += loopCount;
 
     switch (instruction->id) {
     case PRINT: {
-        if (this->declaredVariableNames.empty() || rand() % 2 == 0) {
+        instruction->args = {"Hello world from " + this->name + "!"};
+
+        /* TODO: Uncomment this if you want to randomly print a "hello world"
+        message and a variable
+
+        if (this->declaredVariableNames.empty() || rand() % 2 == 0)
+        {
             // Print a "hello world" message
             instruction->args = {"Hello world from " + this->name + "!"};
         } else {
@@ -171,6 +183,7 @@ std::shared_ptr<Instruction> Process::createInstruction (int depth, int *instCtr
                 // Print a random declared variable
                 this->declaredVariableNames[index]};
         }
+        */
 
         break;
     }
@@ -179,7 +192,7 @@ std::shared_ptr<Instruction> Process::createInstruction (int depth, int *instCtr
         std::string var = generateVariableName(1);
         uint16_t val = rand() % 65536;
 
-        this->declaredVariableNames.push_back(var);
+        // this->declaredVariableNames.push_back(var);
 
         // var, uint16
         instruction->args = {var, val};
@@ -226,7 +239,7 @@ std::shared_ptr<Instruction> Process::createInstruction (int depth, int *instCtr
         int random_lines = rand() % 5 + 1;
         for (int i = 0; i < random_lines; i++) {
             instructions.push_back(std::move(createInstruction(
-                                            depth + 1, instCtr, instruction_count, n * loopCount)));
+                depth + 1, instCtr, instruction_count, n * loopCount)));
         }
 
         // Copies all instructions to the argument, sharing ownership

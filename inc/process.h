@@ -145,15 +145,19 @@ class Process
      * @param depth Begins at zero by default. Used to limit the depth of the
      *              FOR instruction
      * @param instCtr   Instruction counter
-     * 
-     * @param instruction_count   Instruction count to limit number of instructions
-     * 
-     * @param loopCount   Number of times an instruction will be looped. If no FOR loop, set to 1.
+     *
+     * @param instruction_count   Instruction count to limit number of
+     * instructions
+     *
+     * @param loopCount   Number of times an instruction will be looped. If no
+     * FOR loop, set to 1.
      *
      * @return A unique pointer to a new instruction
      */
-    std::shared_ptr<Instruction> createInstruction(int depth, int *instCtr,
-                                                    int instruction_count, int loopCount);
+    std::shared_ptr<Instruction> createInstruction(int depth,
+                                                   int *instCtr,
+                                                   int instruction_count,
+                                                   int loopCount);
 
     /**
      * Generates a random variable name composed of one letter followed by a
@@ -204,7 +208,7 @@ class Process
     /** The most recent core ID this process was assigned to. Defaults to 0 */
     uint32_t core;
 
-    std::vector<std::string> declaredVariableNames;
+    // std::vector<std::string> declaredVariableNames;
 };
 
 #endif
