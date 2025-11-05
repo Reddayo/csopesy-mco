@@ -8,6 +8,7 @@
 Process::Process (int id, std::string name, uint32_t instruction_count)
     : id(id), name(name), state(READY), programCounter(0)
 {
+    this->variables["x"] = 0;
     randomizeInstructions(instruction_count);
     this->startTime = std::time(0);
 }
@@ -97,8 +98,8 @@ void Process::randomizeInstructions (int instruction_count)
     // NOTE: Count is randomly assigned by the scheduler
     int instCtr = 0;
     while (instCtr < instruction_count) {
-        this->instructions.push_back(std::move(createInstruction(0, &instCtr,
-                                                        instruction_count, 1)));
+        this->instructions.push_back(
+            std::move(createInstruction(0, &instCtr, instruction_count, 1)));
     }
 
     this->setTotalCycles(instCtr);

@@ -152,12 +152,17 @@ std::shared_ptr<Instruction> Process::createInstruction (int depth,
     // Avoid generating a FOR instruction beyond depth = 3
     // Avoid exceeding instruction count
     // 25 since 5 maximum loops, 5 maximum instructions inside
+
     instruction->id = static_cast<InstructionID>(
         rand() %
         (depth >= 0 && depth < 3 &&
-                 (*instCtr + loopCount + loopCount * 25 < instruction_count)
+                 (*instCtr + loopCount + loopCount * 26 < instruction_count)
              ? 6
              : 5));
+    //*/
+
+    // TODO: Use this for test case
+    // instruction->id = this->instructions.size() % 2 == 0 ? PRINT : ADD;
 
     // Increment instruction counter
     *instCtr += loopCount;
@@ -165,12 +170,13 @@ std::shared_ptr<Instruction> Process::createInstruction (int depth,
     switch (instruction->id) {
     case PRINT: {
         instruction->args = {"Hello world from " + this->name + "!"};
+        // TODO: Use this one for test case
+        // instruction->args = {std::string("Value from: "), std::string("x")};
 
         /* TODO: Uncomment this if you want to randomly print a "hello world"
-        message and a variable
+           message and a variable *
 
-        if (this->declaredVariableNames.empty() || rand() % 2 == 0)
-        {
+        if (this->declaredVariableNames.empty() || rand() % 2 == 0) {
             // Print a "hello world" message
             instruction->args = {"Hello world from " + this->name + "!"};
         } else {
@@ -183,7 +189,7 @@ std::shared_ptr<Instruction> Process::createInstruction (int depth,
                 // Print a random declared variable
                 this->declaredVariableNames[index]};
         }
-        */
+        //*/
 
         break;
     }
@@ -192,6 +198,7 @@ std::shared_ptr<Instruction> Process::createInstruction (int depth,
         std::string var = generateVariableName(1);
         uint16_t val = rand() % 65536;
 
+        // TODO: Not needed in test cases
         // this->declaredVariableNames.push_back(var);
 
         // var, uint16
@@ -200,6 +207,13 @@ std::shared_ptr<Instruction> Process::createInstruction (int depth,
     }
 
     case ADD:
+        /* TODO: Uncomment for test case */
+        {
+            // ADD(x, x, random number in [1, 10])
+            instruction->args = {std::string("x"), std::string("x"),
+                                 (uint16_t)(rand() % 10 + 1)};
+            break;
+        } //*/
     case SUBTRACT: {
         // First argument is always a destination variable
         std::string var1 = generateVariableName();
@@ -238,8 +252,12 @@ std::shared_ptr<Instruction> Process::createInstruction (int depth,
         // Random number of lines in instruction
         int random_lines = rand() % 5 + 1;
         for (int i = 0; i < random_lines; i++) {
-            instructions.push_back(std::move(createInstruction(
-                depth + 1, instCtr, instruction_count, n * loopCount)));
+
+            if (*instCtr + loopCount + loopCount * 26 < instruction_count)
+                instructions.push_back(std::move(createInstruction(
+                    depth + 1, instCtr, instruction_count, n * loopCount)));
+            else
+                break;
         }
 
         // Copies all instructions to the argument, sharing ownership

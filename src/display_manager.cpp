@@ -11,7 +11,7 @@
  */
 const int INPUT_WINDOW_HEIGHT = 10;
 
-const int PAD_HEIGHT = 1000;
+const int PAD_HEIGHT = 5000;
 const int PAD_WIDTH = COLS;
 
 /* TODO: Probably better to have something like this

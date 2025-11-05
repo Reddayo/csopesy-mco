@@ -56,7 +56,7 @@ class OS
   private:
     int cycle;
 
-    int processAutoId;
+    int processAutoId = 0;
 
     Scheduler scheduler;
 

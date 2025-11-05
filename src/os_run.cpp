@@ -9,7 +9,7 @@
 #include "../inc/os.h"
 #include "../inc/scheduler.h"
 
-#define CYCLE_NS_DELAY 10
+#define CYCLE_NS_DELAY 100000000
 
 void OS::run ()
 {
@@ -47,30 +47,60 @@ void OS::run ()
                 processAutoId++;
             }
 
-            // Pre-empt processes if RR algorithm
-            if (this->config.getScheduler() == RR) {
-                for (Core &core : this->cores) {
-                    if (core.isRunning()) {
-                        // Get a reference to the shared pointer owned by the
-                        // core. Ownership is not relinquished until we know it
-                        // must be pre-empted.
-                        std::shared_ptr<Process> &process =
-                            core.getProcessReference();
+            // Pre-empt processes
+            for (Core &core : this->cores) {
+                if (core.isRunning()) {
+                    // Get a reference to the shared pointer owned by the
+                    // core. Ownership is not relinquished until we know it
+                    // must be pre-empted.
+                    std::shared_ptr<Process> &process =
+                        core.getProcessReference();
 
-                        // TODO: Better way than resetting elapsed cycles?
-                        if (process->getElapsedCycles() ==
-                            this->config.getQuantumCycles()) {
+                    // When process terminates, core stops running
+                    if (process->getState() == TERMINATED) {
+                        core.setRunning(false);
 
-                            // Reset elapsed cycles when pre-empting
-                            process->resetElapsedCycles();
+                        // std::time_t endTime = std::time(nullptr);
+                        std::time_t startTime = process->getStartTime();
+                        std::ostringstream label;
 
-                            core.setRunning(false);
-                            process->setState(READY);
+                        label << std::left << std::setw(12)
+                              << process->getName()
+                              << std::put_time(std::localtime(&startTime),
+                                               " (%m/%d/%Y %H:%M:%S)");
 
-                            // Relinquishes ownership of pointer to the ready
-                            // queue
-                            this->scheduler.addProcess(process);
-                        }
+                        this->finishedProcesses.push_back(
+                            {label.str(), process->getProgramCounter()});
+
+                        // Destroy the Process
+                        process.reset();
+                    }
+
+                    // SLEEP pre-empt
+                    else if (process->getState() == WAITING) {
+                        core.setRunning(false);
+
+                        // Reset elapsed cycles when pre-empting
+                        process->resetElapsedCycles();
+
+                        // Move process to sleep queue.
+                        scheduler.sleepProcess(process);
+                    }
+
+                    // RR pre-empt
+                    else if (this->config.getScheduler() == RR &&
+                             process->getElapsedCycles() ==
+                                 this->config.getQuantumCycles()) {
+
+                        // Reset elapsed cycles when pre-empting
+                        process->resetElapsedCycles();
+
+                        core.setRunning(false);
+                        process->setState(READY);
+
+                        // Relinquishes ownership of pointer to the ready
+                        // queue
+                        this->scheduler.addProcess(process);
                     }
                 }
             }
@@ -105,47 +135,13 @@ void OS::run ()
                             if (process->getRemainingBusyWaitingCycles() == 0) {
                                 process->execute(dm);
 
-                                // When process terminates, core stops running
-                                if (process->getState() == TERMINATED) {
-                                    core.setRunning(false);
-
-                                    // std::time_t endTime = std::time(nullptr);
-                                    std::time_t startTime =
-                                        process->getStartTime();
-                                    std::ostringstream label;
-
-                                    label << std::left << std::setw(12)
-                                          << process->getName()
-                                          << std::put_time(
-                                                 std::localtime(&startTime),
-                                                 " (%m/%d/%Y %H:%M:%S)");
-
-                                    this->finishedProcesses.push_back(
-                                        {label.str(),
-                                         process->getProgramCounter()});
-
-                                    // Destroy the Process
-                                    process.reset();
-                                    return;
-
-                                } else if (process->getState() == WAITING) {
-                                    core.setRunning(false);
-
-                                    // Reset elapsed cycles when pre-empting
-                                    process->resetElapsedCycles();
-
-                                    // Move process to sleep queue.
-                                    scheduler.sleepProcess(process);
-                                }
-
-                                else {
+                                if (process->getState() == RUNNING) {
                                     // If process hasn't terminated yet, set a
                                     // busy-waiting timer until next instruction
                                     process->setBusyWaitingCycles(
                                         this->config.getDelaysPerExec());
                                     process->incrementElapsedCycles();
                                 }
-
                             } else {
                                 // Delay execution until busy-waiting timer out
                                 process->decrementBusyWaitingCycles();
