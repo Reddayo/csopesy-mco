@@ -18,6 +18,7 @@ class OS
     /** OS main loop */
     void run();
 
+    void updateConfig(Config &config);
     void incrementCycles();
 
     void resetCycles();
@@ -49,6 +50,8 @@ class OS
      * thread to allow for exiting the program.
      */
     void exit();
+
+    void reset();
 
   private:
     int cycle;
