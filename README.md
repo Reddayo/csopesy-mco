@@ -44,6 +44,8 @@ Alternatively, if you want to compile manually, compile all source files in the 
 g++ -g src/**.cpp -lncurses -o bin/a.out
 ```
 
+Entry class file, where main function is located, is in src/main.cpp
+
 ## Windows users
 
 For Windows, we can use **PDCurses**, which is an implementation of curses that uses the same function calls as the popular **ncurses** for Unix systems. Compiling using GCC on **MinGW64** is strongly recommended. If you do not have it, I suggest installing it through [MSYS2](https://www.msys2.org/), using the package [`mingw-w64-x86_64-gcc`](https://packages.msys2.org/packages/mingw-w64-x86_64-gcc)):
