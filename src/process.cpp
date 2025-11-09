@@ -4,11 +4,14 @@
 
 #include "../inc/process.h"
 
-// ARE YOU RE@DY!! I'M L@DY!! HAJIMEYOU YAREBA DEKIRU KITTO ZETTAI WATASHI #1
-Process::Process (int id, std::string name, uint32_t instruction_count)
-    : id(id), name(name), state(READY), programCounter(0)
+// ARE YOU RE@DY!! I'M L@DY!! HAJIMEYOU YAREBA DEKIRU KITTO ZETTAI WATASHI #1                    // TODO: might be bad
+Process::Process (int id, std::string name, uint32_t instruction_count, uint32_t memory_size, uint32_t mem_per_frame)
+    : id(id), name(name), state(READY), programCounter(0), memory_size(memory_size), mem_per_frame(mem_per_frame)
 {
-    this->variables["x"] = 0;
+    requiredPages = (memory_size + mem_per_frame - 1)/ mem_per_frame;
+
+    this->variables["x"] = 0; //im assuming this doesn't really do anything
+    /* this->memsize = memsize; */
     randomizeInstructions(instruction_count);
     this->startTime = std::time(0);
 }

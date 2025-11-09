@@ -44,6 +44,8 @@ void Process::execute (DisplayManager &dm)
     }
 }
 
+
+/* Remake to handle hexadecimal memory address location */
 uint16_t Process::getArgValueUINT16 (std::any &arg)
 {
     if (arg.type() == typeid(std::string)) {
@@ -139,6 +141,22 @@ void Process::_FOR (std::vector<std::any> &args)
             j++;
         }
     }
+}
+
+void Process::_READ (std::vector<std::any> &args){
+
+    /* Something like this, but need to rethink how variables are stored.
+        variables[std::any_cast<std::string>(args[0])] =
+            (uint16_t)(getArgValueUINT16(args[1]));
+    */
+}
+void Process::_WRITE (std::vector<std::any> &args){
+    /*
+
+        variables[hexadecimal_memory_location(arg[0])] =
+            (uint16_t)(getArgValueUINT16(args[1]));
+    
+    */
 }
 
 std::shared_ptr<Instruction> Process::createInstruction (int depth,

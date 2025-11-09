@@ -167,7 +167,14 @@ int main ()
                 dm.clearInputWindow();
                 dm.clearOutputWindow();
                 os.screenR(args[0].substr(3));
-            } else {
+            } /* else if(args[0].substr(0, 3) == "-c ") {
+                dm.clearInputWindow();
+                dm.clearOutputWIndow();
+
+                might be ideal to pre process memsize here, instead of in the OS, 
+                so showErrorPrompt  can be used
+                os.screenC(args[0].subtr(3), and the "instruction_string here");
+            }*/ else {
                 dm.showErrorPrompt("Invalid command");
                 return;
             }

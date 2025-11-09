@@ -39,7 +39,11 @@ void OS::run ()
                     new Process(processAutoId, processName.str(),
                                 this->config.getMinIns() +
                                     rand() % (this->config.getMaxIns() -
-                                              this->config.getMinIns() + 1)));
+                                              this->config.getMinIns() + 1),
+                                this->config.getMinMemPerProc() +
+                                    rand() % (this->config.getMaxMemPerProc() -
+                                              this->config.getMinMemPerProc() + 1),
+                                this->config.getMemPerFrame()));
 
                 // Transfer ownership of the shared pointer to the scheduler
                 // queue This calls std::move() internally

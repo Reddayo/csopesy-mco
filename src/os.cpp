@@ -185,7 +185,11 @@ void OS::showDefaultProcessScreenMessage ()
         this->loadedProcess->getName().c_str());
 }
 
-void OS::screenS (std::string processName)
+/* TODO: ScreenC*/
+void OS::screenC(std::string processName, uint32_t memsize, std::string instructionSet){}
+
+/* TODO: mem size*/
+void OS::screenS (std::string processName/*, uint32_t memsize */)
 {
     // Lock mutex before creating a new process
     std::unique_lock<std::mutex> lock(this->mutex);
@@ -213,9 +217,14 @@ void OS::screenS (std::string processName)
     }
 
     std::shared_ptr<Process> process(new Process(
-        this->processAutoId, processName,
+        this->processAutoId, 
+        processName,
         this->config.getMinIns() + rand() % (this->config.getMaxIns() -
-                                             this->config.getMinIns() + 1)));
+                                             this->config.getMinIns() + 1),
+        this->config.getMinMemPerProc() +
+                         rand() % (this->config.getMaxMemPerProc() -
+                         this->config.getMinMemPerProc() + 1),
+        this->config.getMemPerFrame()));
 
     // TODO: Would be confusing when a process is named "Haachama", with id:
     // 810, and I name a process process810, with id 812

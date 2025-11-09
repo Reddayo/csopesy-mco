@@ -14,7 +14,7 @@
 
 #include "display_manager.h"
 
-enum InstructionID { PRINT, DECLARE, ADD, SUBTRACT, SLEEP, FOR };
+enum InstructionID { PRINT, DECLARE, ADD, SUBTRACT, SLEEP, FOR /*,WRITE, READ*/ };
 
 enum ProcessState {
     NEW,       // Mostly unused, except for "empty" Process
@@ -30,11 +30,18 @@ struct Instruction {
     std::vector<std::any> args;
 };
 
+struct Page {
+    int frameNumber;   // which frame in RAM this page is mapped to
+    bool present;      // True if the page is currently in physical memory
+    bool dirty;        // True if the page has been modified since being loaded
+};
+
+
 class Process
 {
   public:
-    /** Creates a new Process. Must call randomizeInstructions() */
-    Process(int id, std::string name, uint32_t instruction_count);
+    /** Creates a new Process. Must call randomizeInstructions() */                     // vvv this is probably bad
+    Process(int id, std::string name, uint32_t instruction_count, uint32_t memory_size, uint32_t mem_per_frame);
 
     /** Pops an instruction and execute it (read ID and use a switch-case) */
     void execute(DisplayManager &dm);
@@ -131,6 +138,10 @@ class Process
 
     void _FOR(std::vector<std::any> &args);
 
+    void _READ(std::vector<std::any> &args);
+
+    void _WRITE(std::vector<std::any> &args);
+
     /**
      * Creates a random set of instructions
      *
@@ -201,7 +212,16 @@ class Process
     std::vector<std::shared_ptr<Instruction>> instructions;
 
     /** List of variables, will not be released until process ends */
-    std::unordered_map<std::string, uint16_t> variables;
+    std::unordered_map<std::string, uint16_t> variables;  // Probably don't need anymore too...
+
+    uint32_t memory_size;             // memory of the process
+    uint32_t mem_per_frame;           // memory per page
+    uint16_t requiredPages;           // required pages of the process
+ 
+    std::unique_ptr<uint8_t[]> memory; // the actual memory array
+    std::unordered_map<uint16_t, std::string> symbols_map; // address to variable name
+
+    std::vector<Page> page_table; // used by memory manager
 
     std::stringstream print_stream;
 

@@ -3,6 +3,7 @@
 #include <string>
 
 #include "../inc/config.h"
+#include "../inc/helper.h"
 
 // Setters
 
@@ -62,6 +63,52 @@ void Config::setDelayPerExec (uint32_t delaysPerExec)
     this->delaysPerExec = delaysPerExec;
 }
 
+void Config::setMaxOverAllMem(uint32_t maxOverAllMem){
+
+    if (maxOverAllMem == 0)
+        throw std::runtime_error("Maximum instructions must be positive");
+
+    if (isPowerOf2NInRange(maxOverAllMem))
+        throw std::runtime_error("Memory is not power of 2 and in range");
+
+    this->maxOverAllMem = maxOverAllMem;
+}
+
+void Config::setMemPerFrame(uint32_t memPerFrame){
+
+    if (memPerFrame == 0)
+        throw std::runtime_error("Memory instructions must be positive");
+    
+    if (isPowerOf2NInRange(memPerFrame))
+        throw std::runtime_error("Memory is not power of 2 and in range");
+
+    
+    this->memPerFrame = memPerFrame;
+}
+
+void Config::setMinMemPerProc(uint32_t minMemPerProc){
+
+    if (minMemPerProc == 0)
+        throw std::runtime_error("Minimum instructions must be positive");
+
+    if (isPowerOf2NInRange(minMemPerProc))
+        throw std::runtime_error("Memory is not power of 2 and in range");
+
+    
+    this->minMemPerProc = minMemPerProc;
+}
+
+void Config::setMaxMemPerProc(uint32_t maxMemPerProc){
+
+    if (maxMemPerProc == 0)
+        throw std::runtime_error("Maximum instructions must be positive");
+
+    if (isPowerOf2NInRange(maxMemPerProc))
+        throw std::runtime_error("Memory is not power of 2 and in range");
+
+    this->maxMemPerProc = maxMemPerProc;
+}
+
 // Getters
 
 uint32_t Config::getNumCPU () { return this->numCPU; }
@@ -77,6 +124,14 @@ uint32_t Config::getMinIns () { return this->minIns; }
 uint32_t Config::getMaxIns () { return this->maxIns; }
 
 uint32_t Config::getDelaysPerExec () { return this->delaysPerExec; }
+
+uint32_t Config::getMaxOverAllMem(){ return this->maxOverAllMem;  }
+
+uint32_t Config::getMemPerFrame(){ return this->memPerFrame; }
+
+uint32_t Config::getMinMemPerProc(){ return this->minMemPerProc; }
+
+uint32_t Config::getMaxMemPerProc(){ return this->maxMemPerProc; }
 
 // Constructor
 
@@ -106,7 +161,15 @@ Config::Config (std::string filename)
                 this->setMaxIns(std::stoul(value));
             } else if (key == "delay-per-exec") {
                 this->setDelayPerExec(std::stoul(value));
-            } else {
+            } else if (key == "max-overall-mem"){
+                this->setMaxOverAllMem(std::stoul(value));
+            } else if (key == "mem-per-frame"){
+                this->setMemPerFrame(std::stoul(value));
+            } else if (key == "min-mem-per-proc"){
+                this->setMinMemPerProc(std::stoul(value));
+            } else if (key == "max-mem-per-proc"){
+                this->setMaxMemPerProc(std::stoul(value));
+            }  else {
                 throw std::runtime_error(key);
             }
         }

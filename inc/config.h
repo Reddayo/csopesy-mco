@@ -28,6 +28,14 @@ class Config
 
     void setDelayPerExec(uint32_t delaysPerExec);
 
+    void setMaxOverAllMem(uint32_t maxOverAllMem);
+
+    void setMemPerFrame(uint32_t memPerFrame);
+
+    void setMinMemPerProc(uint32_t minMemPerProc);
+
+    void setMaxMemPerProc(uint32_t maxMemPerProc);
+
     // Getters
 
     uint32_t getNumCPU();
@@ -44,6 +52,14 @@ class Config
 
     uint32_t getDelaysPerExec();
 
+    uint32_t getMaxOverAllMem();
+
+    uint32_t getMemPerFrame();
+
+    uint32_t getMinMemPerProc();
+
+    uint32_t getMaxMemPerProc();
+
   private:
     uint32_t numCPU;
 
@@ -58,6 +74,17 @@ class Config
     uint32_t maxIns;
 
     uint32_t delaysPerExec;
+
+    /* Memory */
+
+    uint32_t maxOverAllMem;
+
+    uint32_t memPerFrame;
+
+    uint32_t maxMemPerProc;
+
+    uint32_t minMemPerProc;
+
 };
 
 #endif
