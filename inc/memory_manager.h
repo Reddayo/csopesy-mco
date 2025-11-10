@@ -1,3 +1,6 @@
+#ifndef MEMORY_MANAGER_H
+#define MEMORY_MANAGER_H
+
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -7,6 +10,7 @@
 
 #include "../inc/config.h"
 #include "../inc/process.h"
+#include "../inc/backing_store.h"
 
 struct Frame {
     bool isOccupied;   // true if the frame is allocated
@@ -15,6 +19,7 @@ struct Frame {
 
     int ownerPID;      // Process ID that owns this frame
     int virtualPage;   // The virtual page number mapped to this physical frame
+    uint64_t age;
 };
 
 class MemoryManager {
@@ -24,13 +29,12 @@ class MemoryManager {
         
         // Load a process into memory
         void loadProcess(Process& process);
-
-        // Handle a page fault when a process accesses a non-resident page
-        void handlePageFault(Process& process, uint32_t logicalAddress);
+        uint8_t read(Process &process, uint32_t logicalAddress);
+        void write(Process &process, uint32_t logicalAddress, uint8_t value);
 
     private:
         uint32_t memory_size;        // total physical memory size in bytes
-        uint32_t page_size;         // size of each page/frame in bytes
+        uint32_t frame_size;         // size of each page/frame in bytes
         uint32_t numFrames;        // total number of frames in memory
 
         std::unique_ptr<uint8_t[]> memory;  // actual physical memory array
@@ -39,7 +43,10 @@ class MemoryManager {
 
         std::mutex mutex;
         // not sure, will figure out
-        int findFreeFrame();                // find an unused frame in memory
-
-        void allocateFrame(Process& process, int pageNumber); // assign frame to process page
+        uint64_t ageCounter = 0;
+        int findFrame(int processId, uint32_t pageNumber);
+        int findLRUFrame();                // find an unused frame in memory
+        int allocateFrame(Process& process, int pageNumber); // assign frame to process page
 };
+
+#endif

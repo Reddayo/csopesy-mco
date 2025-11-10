@@ -133,6 +133,7 @@ uint32_t Config::getMinMemPerProc(){ return this->minMemPerProc; }
 
 uint32_t Config::getMaxMemPerProc(){ return this->maxMemPerProc; }
 
+uint32_t Config::getNumFrames(){ return this->maxOverAllMem / this->memPerFrame; }
 // Constructor
 
 Config::Config (std::string filename)

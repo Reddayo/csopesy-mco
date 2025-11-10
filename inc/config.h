@@ -60,6 +60,8 @@ class Config
 
     uint32_t getMaxMemPerProc();
 
+    uint32_t getNumFrames();
+
   private:
     uint32_t numCPU;
 
