@@ -48,6 +48,19 @@ int MemoryManager::allocateFrame(int processId, int pageNumber) {
         );
     }
 
+    if (!backingStore.pageExists(processId, pageNumber))
+    {
+        // Create a temporary zero buffer (not using RAM frames)
+        std::vector<uint8_t> blank(frame_size, 0);
+
+        // Write this "new" page to backing store
+        backingStore.pageOut(
+            processId,
+            pageNumber,
+            blank.data()
+        );
+    }
+
     // Load requested page into the frame
     backingStore.pageIn(
         processId,
@@ -82,6 +95,7 @@ int MemoryManager::findFrame(int processId, uint32_t pageNumber){
 }
 
 uint16_t MemoryManager::read(int processId, uint32_t logicalAddress, int n) {
+    std::lock_guard<std::mutex> lock(mutex);
     uint16_t value = 0;
 
     for (int i = 0; i < n; i++) {
@@ -107,6 +121,7 @@ uint16_t MemoryManager::read(int processId, uint32_t logicalAddress, int n) {
 }
 
 void MemoryManager::write(int processId,  uint32_t logicalAddress, uint16_t value, int n) {
+    std::lock_guard<std::mutex> lock(mutex);
     for (int i = 0; i < n; i++) {
         uint8_t byte = (value >> (8 * i)) & 0xFF;
 

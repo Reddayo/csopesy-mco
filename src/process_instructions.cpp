@@ -3,6 +3,7 @@
 #include <ctime>
 #include <iomanip>
 #include <limits>
+#include <chrono>
 
 #include "../inc/process.h"
 
@@ -90,12 +91,13 @@ void Process::_DECLARE (std::vector<std::any> &args, MemoryManager &mm)
 {
     // DECLARE (var, uint16)
     
-    if(variables.size() > 32){
+    if(variables.size() >= 32){
         std::time_t now = std::time(0);
         print_stream
         << std::put_time(std::localtime(&now), "(%m/%d/%Y %H:%M:%S) ")
-        << "Declare instruction failed. Reached 32 variables limit." 
-        << "\"\n";
+        << "Declare instruction failed. Reached 32 variables limit: " << variables.size() 
+        << " " << logicalAddressCounter
+        << "\n";
         return;
     }
 
@@ -113,6 +115,20 @@ void Process::_DECLARE (std::vector<std::any> &args, MemoryManager &mm)
 
     // store initial value in physical memory
     mm.write(this->id, logicalAddressCounter, value, 2);
+    // Debugging do not remove, until you're sure it's fine
+    auto now = std::chrono::system_clock::now();
+    std::time_t now_c = std::chrono::system_clock::to_time_t(now);
+    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                now.time_since_epoch()) % 1000;
+
+    print_stream 
+        << std::put_time(std::localtime(&now_c), "(%m/%d/%Y %H:%M:%S)")
+        << "." << std::setw(3) << std::setfill('0') << ms.count() << " "
+        << "Declare Success: Address: " << logicalAddressCounter
+        << " Value: " << value
+        << " Count: " << variables.size()
+        << " Name: " << varName
+        << "\n";
 
     logicalAddressCounter+=2;
 }
@@ -181,12 +197,7 @@ void Process::_READ (std::vector<std::any> &args, MemoryManager &mm)
 }
 void Process::_WRITE (std::vector<std::any> &args, MemoryManager &mm)
 {
-    /*
 
-        variables[hexadecimal_memory_location(arg[0])] =
-            (uint16_t)(getArgValueUINT16(args[1]));
-    
-    */
 }
 
 std::shared_ptr<Instruction> Process::createInstruction (int depth,
@@ -207,6 +218,8 @@ std::shared_ptr<Instruction> Process::createInstruction (int depth,
                  (*instCtr + loopCount + loopCount * 26 < instruction_count)
              ? 6
              : 5));
+    //for testing DECLARE instructions: 
+    //instruction->id = static_cast<InstructionID>(1);
     //*/
 
     // TODO: Use this for test case

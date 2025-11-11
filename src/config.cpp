@@ -65,10 +65,7 @@ void Config::setDelayPerExec (uint32_t delaysPerExec)
 
 void Config::setMaxOverAllMem(uint32_t maxOverAllMem){
 
-    if (maxOverAllMem == 0)
-        throw std::runtime_error("Maximum instructions must be positive");
-
-    if (isPowerOf2NInRange(maxOverAllMem))
+    if (!isPowerOf2NInRange(maxOverAllMem))
         throw std::runtime_error("Memory is not power of 2 and in range");
 
     this->maxOverAllMem = maxOverAllMem;
@@ -76,10 +73,7 @@ void Config::setMaxOverAllMem(uint32_t maxOverAllMem){
 
 void Config::setMemPerFrame(uint32_t memPerFrame){
 
-    if (memPerFrame == 0)
-        throw std::runtime_error("Memory instructions must be positive");
-    
-    if (isPowerOf2NInRange(memPerFrame))
+    if (!isPowerOf2NInRange(memPerFrame))
         throw std::runtime_error("Memory is not power of 2 and in range");
 
     
@@ -88,10 +82,7 @@ void Config::setMemPerFrame(uint32_t memPerFrame){
 
 void Config::setMinMemPerProc(uint32_t minMemPerProc){
 
-    if (minMemPerProc == 0)
-        throw std::runtime_error("Minimum instructions must be positive");
-
-    if (isPowerOf2NInRange(minMemPerProc))
+    if (!isPowerOf2NInRange(minMemPerProc))
         throw std::runtime_error("Memory is not power of 2 and in range");
 
     
@@ -100,10 +91,7 @@ void Config::setMinMemPerProc(uint32_t minMemPerProc){
 
 void Config::setMaxMemPerProc(uint32_t maxMemPerProc){
 
-    if (maxMemPerProc == 0)
-        throw std::runtime_error("Maximum instructions must be positive");
-
-    if (isPowerOf2NInRange(maxMemPerProc))
+    if (!isPowerOf2NInRange(maxMemPerProc))
         throw std::runtime_error("Memory is not power of 2 and in range");
 
     this->maxMemPerProc = maxMemPerProc;

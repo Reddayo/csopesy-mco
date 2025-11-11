@@ -206,6 +206,8 @@ class Process
     /** Number of cycles the process has been in a waiting state (SLEEP) */
     uint16_t remainingWaitingCycles = 0;
 
+    uint64_t variableCounter = 0;
+
     /** Program counter */
     int programCounter = 0;
 
@@ -229,7 +231,7 @@ class Process
     /** The most recent core ID this process was assigned to. Defaults to 0 */
     uint32_t core;
 
-    // std::vector<std::string> declaredVariableNames;
+    // std::vector<A: " << logicalstd::string> declaredVariableNames;
 };
 
 #endif

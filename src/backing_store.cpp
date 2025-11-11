@@ -14,7 +14,7 @@ BackingStore::BackingStore(const std::string& filename, uint32_t frameSize)
 // data points to an address from RAM
 // write it to backing store
 void BackingStore::pageOut(int processID, int pageNumber, const uint8_t* data){
-
+    
     std::lock_guard<std::mutex> lock(mutex);
 
     std::fstream file(filename, std::ios::in | std::ios::out);
@@ -96,9 +96,16 @@ bool BackingStore::pageIn(int processID, int pageNumber, uint8_t* dest){
     
 };
 
+
 // Remove them from the map and file once a process ends, some sort of compaction but that would be EXPENSIVE
 // Just delete them.
 void BackingStore::deleteProcessPages(int processID){
 
    return;
 };
+
+
+bool BackingStore::pageExists(int processId, int pageNumber) {
+    std::lock_guard<std::mutex> lock(mutex);
+    return pageMap.find({processId, pageNumber}) != pageMap.end();
+}

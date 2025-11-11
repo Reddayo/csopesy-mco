@@ -9,8 +9,8 @@ Process::Process (int id, std::string name, uint32_t instruction_count, uint32_t
     : id(id), name(name), state(READY), programCounter(0), memory_size(memory_size), mem_per_frame(mem_per_frame)
 {
     requiredPages = (memory_size + mem_per_frame - 1)/ mem_per_frame;
-
-    this->variables["x"] = 0; //im assuming this doesn't really do anything
+    this->print_stream << "Required Pages: " << requiredPages << "; Memory Size: " << memory_size <<"\n";
+    //this->variables["x"] = 0; //im assuming this doesn't really do anything
     /* this->memsize = memsize; */
     randomizeInstructions(instruction_count);
     this->startTime = std::time(0);
@@ -114,12 +114,24 @@ std::string Process::generateVariableName (bool uniqueness)
     // WARNING: Uniqueness is not enforced by default
     std::string varName;
 
-    do { // Randomly generate a name. Format is letter + random val in [0, 999]
-        varName =
-            std::string(1, 'a' + (rand() % 26)) + std::to_string(rand() % 1000);
+    // 50/50 reuse old or generate new
+    if (uniqueness || variables.empty()) {
+        do {
+            varName = "var" + std::to_string(variableCounter++);
+        } while (variables.count(varName));
+    } else {
+
+        bool roll = (rand() % 2 == 0);
+
+        if (roll) {
+            varName = "var" + std::to_string(variableCounter++);
+        } else {
+            int index = rand() % variables.size();
+            auto it = variables.begin();
+            std::advance(it, index);
+            varName = it->first; 
+        }
     }
-    // Repeat until you get a unique one
-    while (uniqueness == true && variables.count(varName));
 
     return varName;
 }

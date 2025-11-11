@@ -28,6 +28,8 @@ class BackingStore {
 
         // Remove them from the map and file once a process ends
         void deleteProcessPages(int processId);
+
+        bool pageExists(int processId, int pageNumber);
     private:
         std::string filename;
         uint32_t frameSize;
