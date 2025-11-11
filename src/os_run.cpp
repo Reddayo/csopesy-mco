@@ -137,7 +137,7 @@ void OS::run ()
 
                             // If process is NOT in a busy waiting state...
                             if (process->getRemainingBusyWaitingCycles() == 0) {
-                                process->execute(dm);
+                                process->execute(mm);
 
                                 if (process->getState() == RUNNING) {
                                     // If process hasn't terminated yet, set a

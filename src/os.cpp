@@ -11,12 +11,13 @@
 #include "../inc/os.h"
 #include "../inc/scheduler.h"
 
-OS::OS (DisplayManager &dm, Config &config)
+OS::OS (DisplayManager &dm,  MemoryManager &mm, Config &config)
     : dm(dm),                                    // Display manager
+      mm(mm),                                    // Memory Manager
       config(config),                            // Config values
       scheduler(Scheduler(config.getScheduler(), // Scheduler
                           config.getQuantumCycles())),
-      generateDummyProcesses(false)
+      generateDummyProcesses(false)  
 {
     for (int i = 0; i < config.getNumCPU(); i++) {
         this->cores.push_back(Core(i));

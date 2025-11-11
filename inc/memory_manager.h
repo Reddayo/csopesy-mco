@@ -8,9 +8,9 @@
 #include <mutex>
 #include <optional>
 
-#include "../inc/config.h"
-#include "../inc/process.h"
-#include "../inc/backing_store.h"
+#include "backing_store.h"
+
+struct Page;
 
 struct Frame {
     bool isOccupied;   // true if the frame is allocated
@@ -25,12 +25,12 @@ struct Frame {
 class MemoryManager {
     public:
         /* Use the config to initialize Backing Store, Main Memory, Frame Table */
-        MemoryManager(Config& config);
+        MemoryManager(const std::string &filename, uint32_t memory_size, uint32_t frame_size);
         
         // Load a process into memory
-        void loadProcess(Process& process);
-        uint8_t read(Process &process, uint32_t logicalAddress);
-        void write(Process &process, uint32_t logicalAddress, uint8_t value);
+        //void loadProcess(std::string processId, std::vector<Page> page_table);
+        uint16_t read(int processId, uint32_t logicalAddress, int n);
+        void write(int processId, uint32_t logicalAddress, uint16_t value, int n);
 
     private:
         uint32_t memory_size;        // total physical memory size in bytes
@@ -46,7 +46,7 @@ class MemoryManager {
         uint64_t ageCounter = 0;
         int findFrame(int processId, uint32_t pageNumber);
         int findLRUFrame();                // find an unused frame in memory
-        int allocateFrame(Process& process, int pageNumber); // assign frame to process page
+        int allocateFrame(int processId, int pageNumber); // assign frame to process page
 };
 
 #endif

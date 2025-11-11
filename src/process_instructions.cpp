@@ -6,7 +6,7 @@
 
 #include "../inc/process.h"
 
-void Process::execute (DisplayManager &dm)
+void Process::execute (MemoryManager &mm)
 {
     // Maintain a reference to the instruction pointer (don't claim ownership)
     std::shared_ptr<Instruction> &instr = instructions[this->programCounter];
@@ -14,22 +14,28 @@ void Process::execute (DisplayManager &dm)
     // Execute a different method depending on instruction ID
     switch (instr->id) {
     case PRINT:
-        _PRINT(instr->args);
+        _PRINT(instr->args, mm);
         break;
     case DECLARE:
-        _DECLARE(instr->args);
+        _DECLARE(instr->args, mm);
         break;
     case ADD:
-        _ADD(instr->args);
+        _ADD(instr->args, mm);
         break;
     case SUBTRACT:
-        _SUBTRACT(instr->args);
+        _SUBTRACT(instr->args, mm);
         break;
     case SLEEP:
-        _SLEEP(instr->args);
+        _SLEEP(instr->args, mm);
         break;
     case FOR:
-        _FOR(instr->args);
+        _FOR(instr->args, mm);
+        break;
+    case READ:
+        _READ(instr->args, mm);
+        break;
+    case WRITE:
+        _WRITE(instr->args, mm);
         break;
     default:
         break;
@@ -55,7 +61,7 @@ uint16_t Process::getArgValueUINT16 (std::any &arg)
     }
 };
 
-void Process::_PRINT (std::vector<std::any> &args)
+void Process::_PRINT (std::vector<std::any> &args, MemoryManager &mm)
 {
     std::time_t now = std::time(0);
 
@@ -79,14 +85,39 @@ void Process::_PRINT (std::vector<std::any> &args)
     print_stream << "\"\n";
 }
 
-void Process::_DECLARE (std::vector<std::any> &args)
+// ASSUMES THAT STUFF IS 2-BYTES ALIGNED
+void Process::_DECLARE (std::vector<std::any> &args, MemoryManager &mm)
 {
     // DECLARE (var, uint16)
-    variables[std::any_cast<std::string>(args[0])] =
-        (uint16_t)(getArgValueUINT16(args[1]));
+    
+    if(variables.size() > 32){
+        std::time_t now = std::time(0);
+        print_stream
+        << std::put_time(std::localtime(&now), "(%m/%d/%Y %H:%M:%S) ")
+        << "Declare instruction failed. Reached 32 variables limit." 
+        << "\"\n";
+        return;
+    }
+
+    std::string varName = std::any_cast<std::string>(args[0]);
+    uint16_t value = static_cast<uint16_t>(getArgValueUINT16(args[1]));
+    
+    // check if that address is occupied already if not increment
+    while (std::any_of(variables.begin(), variables.end(),
+                       [this](auto &p){ return p.second == logicalAddressCounter; }))
+    {
+        logicalAddressCounter += 2;
+    }
+    
+    variables[varName] = logicalAddressCounter;
+
+    // store initial value in physical memory
+    mm.write(this->id, logicalAddressCounter, value, 2);
+
+    logicalAddressCounter+=2;
 }
 
-void Process::_ADD (std::vector<std::any> &args)
+void Process::_ADD (std::vector<std::any> &args, MemoryManager &mm)
 {
     // ADD (var, var/uint16, var/uint16)
     int result = getArgValueUINT16(args[1]) + getArgValueUINT16(args[2]);
@@ -100,7 +131,7 @@ void Process::_ADD (std::vector<std::any> &args)
         static_cast<uint16_t>(result);
 }
 
-void Process::_SUBTRACT (std::vector<std::any> &args)
+void Process::_SUBTRACT (std::vector<std::any> &args, MemoryManager &mm)
 {
     // SUBTRACT (var, var/uint16, var/uint16)
     int result = getArgValueUINT16(args[1]) - getArgValueUINT16(args[2]);
@@ -114,7 +145,7 @@ void Process::_SUBTRACT (std::vector<std::any> &args)
         static_cast<uint16_t>(result);
 }
 
-void Process::_SLEEP (std::vector<std::any> &args)
+void Process::_SLEEP (std::vector<std::any> &args, MemoryManager &mm)
 {
     // Set to WAITING so that processs gets moved to sleep queue in next cycle
     this->state = WAITING;
@@ -122,7 +153,7 @@ void Process::_SLEEP (std::vector<std::any> &args)
 }
 
 // TODO: This
-void Process::_FOR (std::vector<std::any> &args)
+void Process::_FOR (std::vector<std::any> &args, MemoryManager &mm)
 {
     // I hate this language I'm so sorry for this
     std::vector<std::shared_ptr<Instruction>> &loop =
@@ -143,14 +174,13 @@ void Process::_FOR (std::vector<std::any> &args)
     }
 }
 
-void Process::_READ (std::vector<std::any> &args){
+void Process::_READ (std::vector<std::any> &args, MemoryManager &mm)
+{
 
-    /* Something like this, but need to rethink how variables are stored.
-        variables[std::any_cast<std::string>(args[0])] =
-            (uint16_t)(getArgValueUINT16(args[1]));
-    */
+
 }
-void Process::_WRITE (std::vector<std::any> &args){
+void Process::_WRITE (std::vector<std::any> &args, MemoryManager &mm)
+{
     /*
 
         variables[hexadecimal_memory_location(arg[0])] =

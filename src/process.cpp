@@ -14,6 +14,7 @@ Process::Process (int id, std::string name, uint32_t instruction_count, uint32_t
     /* this->memsize = memsize; */
     randomizeInstructions(instruction_count);
     this->startTime = std::time(0);
+    this->logicalAddressCounter = 0;
 }
 
 std::string Process::getName () { return this->name; }

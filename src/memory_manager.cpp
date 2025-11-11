@@ -1,11 +1,10 @@
 #include "../inc/memory_manager.h"
-#include "../inc/backing_store.h"
 
-MemoryManager::MemoryManager(Config& config)
-: memory_size(config.getMaxOverAllMem()),
-  frame_size(config.getMemPerFrame()),
-  numFrames(config.getNumFrames()), //probably not needed
-  backingStore(BackingStore("csopesy-backing-store.txt", frame_size))
+MemoryManager::MemoryManager( const std::string &filename, uint32_t memory_size, uint32_t frame_size)
+    : memory_size(memory_size),
+      frame_size(frame_size),
+      numFrames(memory_size / frame_size),
+      backingStore(filename, frame_size)
 {
     this->ageCounter = 0;
     memory = std::make_unique<uint8_t[]>(memory_size);
@@ -37,7 +36,7 @@ int MemoryManager::findLRUFrame() {
     return lruIndex;
 }
 
-int MemoryManager::allocateFrame(Process& process, int pageNumber) {
+int MemoryManager::allocateFrame(int processId, int pageNumber) {
     int frameIndex = findLRUFrame();
 
     // If the frame is occupied, page it out first
@@ -51,7 +50,7 @@ int MemoryManager::allocateFrame(Process& process, int pageNumber) {
 
     // Load requested page into the frame
     backingStore.pageIn(
-        process.getId(),
+        processId,
         pageNumber,
         memory.get() + frameIndex * frame_size
     );
@@ -59,7 +58,7 @@ int MemoryManager::allocateFrame(Process& process, int pageNumber) {
     frameTable[frameIndex].isOccupied = true;
     frameTable[frameIndex].isDirty = false;
     frameTable[frameIndex].isReferenced = true;
-    frameTable[frameIndex].ownerPID = process.getId();
+    frameTable[frameIndex].ownerPID = processId;
     frameTable[frameIndex].virtualPage = pageNumber;
     frameTable[frameIndex].age = ageCounter++;
 
@@ -82,48 +81,49 @@ int MemoryManager::findFrame(int processId, uint32_t pageNumber){
     
 }
 
-// TODO: Ask sir if there's gonna be a read/write of odd address
-uint8_t MemoryManager::read(Process &process, uint32_t logicalAddress){
-    uint32_t pageNumber = logicalAddress / frame_size;
-    uint32_t offset = logicalAddress % frame_size;
+uint16_t MemoryManager::read(int processId, uint32_t logicalAddress, int n) {
+    uint16_t value = 0;
 
-    int frameIndex = findFrame(process.getId(), pageNumber);
+    for (int i = 0; i < n; i++) {
+        uint32_t addr = logicalAddress + i;
+        uint32_t pageNumber = addr / frame_size;
+        uint32_t offset = addr % frame_size;
 
-    if (frameIndex != -1) 
-    {
+        int frameIndex = findFrame(processId, pageNumber);
+
+         // page not in ram, page fault
+        if (frameIndex == -1)
+            frameIndex = allocateFrame(processId, pageNumber);
+
         frameTable[frameIndex].age = ageCounter++;
         frameTable[frameIndex].isReferenced = true;
-        return memory[frameIndex * frame_size + offset];
+
+        uint8_t byte = memory[frameIndex * frame_size + offset];
+
+        value |= (byte << (8 * i));
     }
-    
-    frameIndex = allocateFrame(process, pageNumber);
 
-    return memory[frameIndex * frame_size + offset];
-};
+    return value;
+}
 
-void MemoryManager::write(Process &process, uint32_t logicalAddress, uint8_t value){
+void MemoryManager::write(int processId,  uint32_t logicalAddress, uint16_t value, int n) {
+    for (int i = 0; i < n; i++) {
+        uint8_t byte = (value >> (8 * i)) & 0xFF;
 
-    uint32_t pageNumber = logicalAddress / frame_size;
-    uint32_t offset = logicalAddress % frame_size;
+        uint32_t addr = logicalAddress + i;
+        uint32_t pageNumber = addr / frame_size;
+        uint32_t offset = addr % frame_size;
 
-    // Find page in RAM
-    int frameIndex = findFrame(process.getId(), pageNumber);
+        int frameIndex = findFrame(processId, pageNumber);
 
-    if (frameIndex != -1) 
-    {
-        memory[frameIndex * frame_size + offset] = value;
+        // page not in ram, page fault
+        if (frameIndex == -1)
+            frameIndex = allocateFrame(processId, pageNumber);
+
+        memory[frameIndex * frame_size + offset] = byte;
+
         frameTable[frameIndex].isDirty = true;
         frameTable[frameIndex].age = ageCounter++;
         frameTable[frameIndex].isReferenced = true;
-        return;
-        
     }
-    // Page not in ram, page fault
-    frameIndex = allocateFrame(process, pageNumber);
-
-    memory[frameIndex * frame_size + offset] = value;
-    frameTable[frameIndex].isDirty = true;
-    frameTable[frameIndex].age = ageCounter++;
-    frameTable[frameIndex].isReferenced = true;
-
-};
+}

@@ -8,12 +8,13 @@
 
 #include "config.h"
 #include "display_manager.h"
+#include "memory_manager.h"
 #include "scheduler.h"
 
 class OS
 {
   public:
-    OS(DisplayManager &dm, Config &config);
+    OS(DisplayManager &dm, MemoryManager &mm, Config &config );
 
     /** OS main loop */
     void run();
@@ -65,6 +66,8 @@ class OS
     Config &config;
 
     DisplayManager &dm;
+
+    MemoryManager &mm;
 
     std::vector<Core> cores;
 

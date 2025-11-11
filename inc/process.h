@@ -13,8 +13,9 @@
 #include <vector>
 
 #include "display_manager.h"
+#include "memory_manager.h"
 
-enum InstructionID { PRINT, DECLARE, ADD, SUBTRACT, SLEEP, FOR /*,WRITE, READ*/ };
+enum InstructionID { PRINT, DECLARE, ADD, SUBTRACT, SLEEP, FOR, READ, WRITE };
 
 enum ProcessState {
     NEW,       // Mostly unused, except for "empty" Process
@@ -44,7 +45,7 @@ class Process
     Process(int id, std::string name, uint32_t instruction_count, uint32_t memory_size, uint32_t mem_per_frame);
 
     /** Pops an instruction and execute it (read ID and use a switch-case) */
-    void execute(DisplayManager &dm);
+    void execute(MemoryManager &mm);
 
     /** @return The process name */
     std::string getName();
@@ -126,21 +127,21 @@ class Process
     // Instruction methods
     // Implementations are in process_instructions.cpp
 
-    void _PRINT(std::vector<std::any> &args);
+    void _PRINT(std::vector<std::any> &args, MemoryManager &mm);
 
-    void _DECLARE(std::vector<std::any> &args);
+    void _DECLARE(std::vector<std::any> &args, MemoryManager &mm);
 
-    void _ADD(std::vector<std::any> &args);
+    void _ADD(std::vector<std::any> &args, MemoryManager &mm);
 
-    void _SUBTRACT(std::vector<std::any> &args);
+    void _SUBTRACT(std::vector<std::any> &args, MemoryManager &mm);
 
-    void _SLEEP(std::vector<std::any> &args);
+    void _SLEEP(std::vector<std::any> &args, MemoryManager &mm);
 
-    void _FOR(std::vector<std::any> &args);
+    void _FOR(std::vector<std::any> &args, MemoryManager &mm);
 
-    void _READ(std::vector<std::any> &args);
+    void _READ(std::vector<std::any> &args, MemoryManager &mm);
 
-    void _WRITE(std::vector<std::any> &args);
+    void _WRITE(std::vector<std::any> &args, MemoryManager &mm);
 
     /**
      * Creates a random set of instructions
@@ -212,16 +213,16 @@ class Process
     std::vector<std::shared_ptr<Instruction>> instructions;
 
     /** List of variables, will not be released until process ends */
-    std::unordered_map<std::string, uint16_t> variables;  // Probably don't need anymore too...
+    /** Variables to address */
+    std::unordered_map<std::string, uint32_t> variables;
 
+    // tbh you can pass uint16_t - 1, for better memory management but nah
     uint32_t memory_size;             // memory of the process
     uint32_t mem_per_frame;           // memory per page
     uint16_t requiredPages;           // required pages of the process
  
-    std::unique_ptr<uint8_t[]> memory; // the actual memory array
-    std::unordered_map<uint16_t, std::string> symbols_map; // address to variable name
-
-    std::vector<Page> page_table; // used by memory manager
+    // the max is 65535, maxed starting mappable address is whatever the memory_size is - 2
+    uint32_t logicalAddressCounter;
 
     std::stringstream print_stream;
 

@@ -53,7 +53,11 @@ int main ()
 
     Config config("config.txt");
 
-    OS os(dm, config);
+
+    // Could be better
+    MemoryManager mm("csopesy-backing-store.txt", config.getMaxOverAllMem(), config.getMemPerFrame());
+
+    OS os(dm, mm, config);
 
     // Main command interpreter ------------------------------------------------
 
