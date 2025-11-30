@@ -32,17 +32,23 @@ struct Instruction {
 };
 
 struct Page {
-    int frameNumber;   // which frame in RAM this page is mapped to
-    bool present;      // True if the page is currently in physical memory
-    bool dirty;        // True if the page has been modified since being loaded
+    int frameNumber; // which frame in RAM this page is mapped to
+    bool present;    // True if the page is currently in physical memory
+    bool dirty;      // True if the page has been modified since being loaded
 };
-
 
 class Process
 {
   public:
-    /** Creates a new Process. Must call randomizeInstructions() */                     // vvv this is probably bad
-    Process(int id, std::string name, uint32_t instruction_count, uint32_t memory_size, uint32_t mem_per_frame);
+    /** Creates a new Process. Must call randomizeInstructions() */ // vvv this
+                                                                    // is
+                                                                    // probably
+                                                                    // bad
+    Process(int id,
+            std::string name,
+            uint32_t instruction_count,
+            uint32_t memory_size,
+            uint32_t mem_per_frame);
 
     /** Pops an instruction and execute it (read ID and use a switch-case) */
     void execute(MemoryManager &mm);
@@ -219,11 +225,12 @@ class Process
     std::unordered_map<std::string, uint32_t> variables;
 
     // tbh you can pass uint16_t - 1, for better memory management but nah
-    uint32_t memory_size;             // memory of the process
-    uint32_t mem_per_frame;           // memory per page
-    uint16_t requiredPages;           // required pages of the process
- 
-    // the max is 65535, maxed starting mappable address is whatever the memory_size is - 2
+    uint32_t memory_size;   // memory of the process
+    uint32_t mem_per_frame; // memory per page
+    uint16_t requiredPages; // required pages of the process
+
+    // the max is 65535, maxed starting mappable address is whatever the
+    // memory_size is - 2
     uint32_t logicalAddressCounter;
 
     std::stringstream print_stream;
@@ -232,6 +239,7 @@ class Process
     uint32_t core;
 
     // std::vector<A: " << logicalstd::string> declaredVariableNames;
+    uint32_t memorySize;
 };
 
 #endif

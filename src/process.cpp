@@ -4,17 +4,26 @@
 
 #include "../inc/process.h"
 
-// ARE YOU RE@DY!! I'M L@DY!! HAJIMEYOU YAREBA DEKIRU KITTO ZETTAI WATASHI #1                    // TODO: might be bad
-Process::Process (int id, std::string name, uint32_t instruction_count, uint32_t memory_size, uint32_t mem_per_frame)
-    : id(id), name(name), state(READY), programCounter(0), memory_size(memory_size), mem_per_frame(mem_per_frame)
+// ARE YOU RE@DY!! I'M L@DY!! HAJIMEYOU YAREBA DEKIRU KITTO ZETTAI WATASHI #1 //
+// TODO: might be bad
+Process::Process (int id,
+                  std::string name,
+                  uint32_t instruction_count,
+                  uint32_t memory_size,
+                  uint32_t mem_per_frame)
+    : id(id), name(name), state(READY), programCounter(0),
+      memory_size(memory_size), mem_per_frame(mem_per_frame)
 {
-    requiredPages = (memory_size + mem_per_frame - 1)/ mem_per_frame;
-    this->print_stream << "Required Pages: " << requiredPages << "; Memory Size: " << memory_size <<"\n";
-    //this->variables["x"] = 0; //im assuming this doesn't really do anything
+    requiredPages = (memory_size + mem_per_frame - 1) / mem_per_frame;
+    this->print_stream << "Required Pages: " << requiredPages
+                       << "; Memory Size: " << memory_size << "\n";
+    // this->variables["x"] = 0; //im assuming this doesn't really do anything
     /* this->memsize = memsize; */
-    randomizeInstructions(instruction_count);
+
     this->startTime = std::time(0);
     this->logicalAddressCounter = 0;
+    this->memorySize = memory_size;
+    randomizeInstructions(instruction_count);
 }
 
 std::string Process::getName () { return this->name; }
@@ -129,7 +138,7 @@ std::string Process::generateVariableName (bool uniqueness)
             int index = rand() % variables.size();
             auto it = variables.begin();
             std::advance(it, index);
-            varName = it->first; 
+            varName = it->first;
         }
     }
 

@@ -1,9 +1,11 @@
 #include <algorithm> // for std::clamp if using C++17 TBF, i can just use if else
+#include <chrono>
 #include <cstdint>
 #include <ctime>
 #include <iomanip>
 #include <limits>
-#include <chrono>
+#include <sstream>
+#include <string>
 
 #include "../inc/process.h"
 
@@ -51,13 +53,30 @@ void Process::execute (MemoryManager &mm)
     }
 }
 
-
 /* Remake to handle hexadecimal memory address location */
+// TODO: Haven't tested this lmao
 uint16_t Process::getArgValueUINT16 (std::any &arg)
 {
     if (arg.type() == typeid(std::string)) {
-        return this->variables[std::any_cast<std::string>(arg)];
+        std::string str = std::any_cast<std::string>(arg);
+
+        if (str.substr(0, 2) == "0x") {
+            std::istringstream iss(str);
+            // TODO: Range
+            unsigned int address;
+
+            iss >> std::hex >> address;
+
+            return address;
+        }
+
+        return this->variables[str];
     } else {
+        if (arg.type() == typeid(uint32_t)) {
+            // Lmao
+            return std::any_cast<uint32_t>(arg);
+        }
+
         return std::any_cast<uint16_t>(arg);
     }
 };
@@ -90,27 +109,26 @@ void Process::_PRINT (std::vector<std::any> &args, MemoryManager &mm)
 void Process::_DECLARE (std::vector<std::any> &args, MemoryManager &mm)
 {
     // DECLARE (var, uint16)
-    
-    if(variables.size() >= 32){
+
+    if (variables.size() >= 32) {
         std::time_t now = std::time(0);
         print_stream
-        << std::put_time(std::localtime(&now), "(%m/%d/%Y %H:%M:%S) ")
-        << "Declare instruction failed. Reached 32 variables limit: " << variables.size() 
-        << " " << logicalAddressCounter
-        << "\n";
+            << std::put_time(std::localtime(&now), "(%m/%d/%Y %H:%M:%S) ")
+            << "Declare instruction failed. Reached 32 variables limit: "
+            << variables.size() << " " << logicalAddressCounter << "\n";
         return;
     }
 
     std::string varName = std::any_cast<std::string>(args[0]);
     uint16_t value = static_cast<uint16_t>(getArgValueUINT16(args[1]));
-    
+
     // check if that address is occupied already if not increment
-    while (std::any_of(variables.begin(), variables.end(),
-                       [this](auto &p){ return p.second == logicalAddressCounter; }))
-    {
+    while (std::any_of(variables.begin(), variables.end(), [this] (auto &p) {
+        return p.second == logicalAddressCounter;
+    })) {
         logicalAddressCounter += 2;
     }
-    
+
     variables[varName] = logicalAddressCounter;
 
     // store initial value in physical memory
@@ -119,18 +137,17 @@ void Process::_DECLARE (std::vector<std::any> &args, MemoryManager &mm)
     auto now = std::chrono::system_clock::now();
     std::time_t now_c = std::chrono::system_clock::to_time_t(now);
     auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-                now.time_since_epoch()) % 1000;
+                  now.time_since_epoch()) %
+              1000;
 
-    print_stream 
-        << std::put_time(std::localtime(&now_c), "(%m/%d/%Y %H:%M:%S)")
-        << "." << std::setw(3) << std::setfill('0') << ms.count() << " "
-        << "Declare Success: Address: " << logicalAddressCounter
-        << " Value: " << value
-        << " Count: " << variables.size()
-        << " Name: " << varName
-        << "\n";
+    print_stream << std::put_time(std::localtime(&now_c), "(%m/%d/%Y %H:%M:%S)")
+                 << "." << std::setw(3) << std::setfill('0') << ms.count()
+                 << " "
+                 << "Declare Success: Address: " << logicalAddressCounter
+                 << " Value: " << value << " Count: " << variables.size()
+                 << " Name: " << varName << "\n";
 
-    logicalAddressCounter+=2;
+    logicalAddressCounter += 2;
 }
 
 void Process::_ADD (std::vector<std::any> &args, MemoryManager &mm)
@@ -192,12 +209,43 @@ void Process::_FOR (std::vector<std::any> &args, MemoryManager &mm)
 
 void Process::_READ (std::vector<std::any> &args, MemoryManager &mm)
 {
+    std::string varname = std::any_cast<std::string>(args[0]);
+    uint32_t address = getArgValueUINT16(args[1]);
+    uint32_t var_address = variables[varname];
 
+    uint16_t value_read = mm.read(this->id, address, 2);
+    mm.write(this->id, var_address, value_read, 2);
 
+    auto now = std::chrono::system_clock::now();
+    std::time_t now_c = std::chrono::system_clock::to_time_t(now);
+    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                  now.time_since_epoch()) %
+              1000;
+
+    print_stream << std::put_time(std::localtime(&now_c), "(%m/%d/%Y %H:%M:%S)")
+                 << "." << std::setw(3) << std::setfill('0') << ms.count()
+                 << " Reading from address " << address << " into variable "
+                 << varname << " (memory location: " << var_address
+                 << "):\n    Value is " << value_read << "\n";
 }
 void Process::_WRITE (std::vector<std::any> &args, MemoryManager &mm)
 {
+    uint32_t address = getArgValueUINT16(args[0]);
+    uint32_t value = getArgValueUINT16(args[1]);
 
+    auto now = std::chrono::system_clock::now();
+    std::time_t now_c = std::chrono::system_clock::to_time_t(now);
+    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                  now.time_since_epoch()) %
+              1000;
+
+    print_stream << std::put_time(std::localtime(&now_c), "(%m/%d/%Y %H:%M:%S)")
+                 << "." << std::setw(3) << std::setfill('0') << ms.count()
+                 << " Writing value " << value << " into address " << address
+                 << "\n";
+
+    mm.write(this->id, getArgValueUINT16(args[0]), getArgValueUINT16(args[1]),
+             2);
 }
 
 std::shared_ptr<Instruction> Process::createInstruction (int depth,
@@ -216,10 +264,10 @@ std::shared_ptr<Instruction> Process::createInstruction (int depth,
         rand() %
         (depth >= 0 && depth < 3 &&
                  (*instCtr + loopCount + loopCount * 26 < instruction_count)
-             ? 6
-             : 5));
-    //for testing DECLARE instructions: 
-    //instruction->id = static_cast<InstructionID>(1);
+             ? 8
+             : 7));
+    // for testing DECLARE instructions:
+    // instruction->id = static_cast<InstructionID>(1);
     //*/
 
     // TODO: Use this for test case
@@ -328,6 +376,22 @@ std::shared_ptr<Instruction> Process::createInstruction (int depth,
 
         break;
     }
+
+    case READ: {
+        instruction->args = {std::string("kotone"),
+                             // Address in [0, 2, 4, ... 20]
+                             // Test: Read from address 16
+                             (uint32_t)16}; //(uint32_t)((rand() % 11) * 2)};
+        break;
+    }
+
+    case WRITE: {
+    }
+        instruction->args = {
+            // Test: Write value of 69 to address 16
+            (uint32_t)16,  // (uint32_t)(rand() % this->memorySize),
+            (uint16_t)69}; // (uint16_t)((rand() % 11) * 2)};
+        break;
     }
 
     return std::move(instruction);
