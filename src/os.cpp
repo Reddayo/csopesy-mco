@@ -187,7 +187,50 @@ void OS::showDefaultProcessScreenMessage ()
 }
 
 /* TODO: ScreenC*/
-void OS::screenC(std::string processName, uint32_t memsize, std::string instructionSet){}
+void OS::screenC(std::string processName, uint32_t memsize, std::string instructionSet)
+{
+    std::unique_lock<std::mutex> lock(this->mutex);
+
+    std::vector<std::shared_ptr<Instruction>> parsed_instructions;
+    std::stringstream ss(instructionSet);
+    std::string instruction_line;
+
+
+    if (memsize < 64 || memsize > 65536) { // 2^6 to 2^16
+        if (!(memsize > 0) && ((memsize & (memsize - 1)) == 0)) {
+            this->dm._mvwprintw(0, 0, "invalid memory allocation: Memory size must be a power of 2.");
+            return;
+        }
+    } else {
+        this->dm._mvwprintw(0, 0, "invalid memory allocation: Memory size must be in the range of 64 (2^6) to 65536 (2^16)");
+        return;
+    }
+
+    while (std::getline(ss, instructionSet, ';')) {
+        instruction_line.erase(0, instruction_line.find_first_not_of(" \n\r\t"));
+        instruction_line.erase(instruction_line.find_last_not_of(" \n\r\t") + 1);
+
+        if (!instruction_line.empty()) {
+            //deal with each instruction
+        }
+    }
+
+    if (parsed_instructions.size() < 1 || parsed_instructions.size() > 50) {
+        this->dm._mvwprintw(0, 0, "invalid command: Instruction set size must be between 1 and 50.");
+        return;
+    }
+
+    uint32_t instruction_count = parsed_instructions.size();
+
+    std::shared_ptr<Process> process(new Process(
+        this->processAutoId, processName, instruction_count, memsize,
+        this->config.getMemPerFrame()));
+
+    this->processAutoId++;
+    this->loadedProcess = foundProcess;
+    this->showDefaultProcessScreenMessage();
+    this->scheduler.addProcess(process);
+}
 
 /* TODO: mem size*/
 void OS::screenS (std::string processName/*, uint32_t memsize */)
