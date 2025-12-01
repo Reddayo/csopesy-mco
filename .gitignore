@@ -55,3 +55,7 @@ bin/
 
 # debug information files
 *.dwo
+
+# output files
+csopesy-backing-store.txt
+csopesy-log.txt

@@ -273,7 +273,7 @@ std::shared_ptr<Process> OS::findOngoingProcessByName (
     return nullptr; // Not found
 }
 
-void OS::processSMI ()
+void OS::processSMI_process ()
 {
     std::lock_guard<std::mutex> lock(this->mutex);
     this->dm.clearOutputWindow();
@@ -291,6 +291,79 @@ void OS::processSMI ()
 
     // Refresh window to show everything
     this->dm.refreshPad();
+}
+
+
+void OS::processSMI_main (){
+
+    std::lock_guard<std::mutex> lock(this->mutex);
+    this->dm.clearOutputWindow();
+
+
+    std::stringstream ss;
+
+    std::string line;
+    int y = 0; 
+
+    // Number of cores
+    int nCores = this->cores.size();
+
+    // Calculate number of running cores
+    std::list<int> runningCoreIds;
+    for (int i = 0; i < nCores; i++) {
+        if (cores[i].isRunning())
+            runningCoreIds.push_back(cores[i].getId());
+    }
+    int nRunningCores = runningCoreIds.size();
+
+    int mem_usage = mm.getMemUsage();
+    int ram_size = mm.getRAMSize();
+    float memUtil = mem_usage * 100.0 / ram_size;
+    float cpuUtil = nRunningCores * 100.0 / nCores;
+    this->dm._mvwprintw(y++, 0, "CPU Utlization: ", cpuUtil);
+    this->dm._mvwprintw(y++, 0, "Memory Usage: %d / %d", mem_usage, ram_size);
+    this->dm._mvwprintw(y++, 0, "Memory Utiization: %.2f", memUtil);
+
+    int totalMemUsedForReal = 0;
+    ss << "Running processes:\n";
+    for (int i : runningCoreIds) {
+        // Process has a name
+        ss << std::left << std::setw(12)
+           << cores[i].getProcessReference()->getName();
+
+        // Formatted process start time
+        std::time_t now = cores[i].getProcessReference()->getStartTime();
+        ss << std::put_time(std::localtime(&now), " (%m/%d/%Y %H:%M:%S)");
+
+        // Core ID
+        ss << "  Core: " << std::setw(5) << std::to_string(cores[i].getId());
+
+        // Progress
+        ss << std::right << std::setw(10)
+           << cores[i].getProcessReference()->getProgramCounter() << " / "
+           << cores[i].getProcessReference()->getTotalCycles() << " ";
+
+        int pid = cores[i].getProcessReference()->getId();
+        uint32_t processMem = mm.getMemUsageForPID(pid);
+
+        ss << "Mem Usage: " << processMem << " bytes\n";
+
+        totalMemUsedForReal += processMem; 
+    }
+
+    // Print each line of string -ls separately
+    while (std::getline(ss, line)) {
+        this->dm._mvwprintw(y++, 0, "%s", line.c_str());
+    }
+
+    this->dm._mvwprintw(y++, 0, "Total Memory Used For Real: %d \n", totalMemUsedForReal);
+
+    // Refresh window to show everything
+    this->dm.refreshPad();
+
+    // Refresh window to show everything
+    this->dm.refreshPad();
+
 }
 
 void OS::setGenerateDummyProcesses (bool value)

@@ -194,6 +194,10 @@ int main ()
     ci_main.addCommand( //
         "report-util", 0, false, [&os] (CommandArguments &) { os.ls(true); });
 
+    ci_main.addCommand( //
+        "process-smi", 0, false,
+        [&os] (CommandArguments &) { os.processSMI_main(); });
+
     // Process command interpreter ---------------------------------------------
 
     // help command. Argument list goes unused
@@ -226,7 +230,7 @@ int main ()
 
     ci_process.addCommand( //
         "process-smi", 0, false,
-        [&os] (CommandArguments &) { os.processSMI(); });
+        [&os] (CommandArguments &) { os.processSMI_process(); });
 
     // =========================================================================
 

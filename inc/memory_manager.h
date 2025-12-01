@@ -32,6 +32,10 @@ class MemoryManager {
         uint16_t read(int processId, uint32_t logicalAddress, int n);
         void write(int processId, uint32_t logicalAddress, uint16_t value, int n);
 
+        uint32_t getRAMSize();
+        uint32_t getMemUsage();
+        uint32_t getMemUsageForPID(int pid);
+
     private:
         uint32_t memory_size;        // total physical memory size in bytes
         uint32_t frame_size;         // size of each page/frame in bytes

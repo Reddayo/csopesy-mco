@@ -37,7 +37,9 @@ class OS
 
     void screenC(std::string processName, uint32_t memsize, std::string instructionSet);
 
-    void processSMI();
+    void processSMI_process();
+
+    void processSMI_main();
 
     void setGenerateDummyProcesses(bool value);
 

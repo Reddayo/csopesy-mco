@@ -142,3 +142,22 @@ void MemoryManager::write(int processId,  uint32_t logicalAddress, uint16_t valu
         frameTable[frameIndex].isReferenced = true;
     }
 }
+
+uint32_t MemoryManager::getMemUsage(){
+
+    return frame_size * numFrames;
+}
+
+
+uint32_t MemoryManager::getRAMSize(){
+    return memory_size;
+}
+
+uint32_t MemoryManager::getMemUsageForPID(int pid) {
+    uint32_t used = 0;
+    for (const auto &frame : frameTable) {
+        if (frame.isOccupied && frame.ownerPID == pid)
+            used += frame_size;
+    }
+    return used;
+}
