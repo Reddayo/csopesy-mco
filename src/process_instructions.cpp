@@ -152,30 +152,38 @@ void Process::_DECLARE (std::vector<std::any> &args, MemoryManager &mm)
 
 void Process::_ADD (std::vector<std::any> &args, MemoryManager &mm)
 {
+    // Get memory addresses of variables
+    int varAddrDest = getArgValueUINT16(args[0]);
+    int varAddr1 = getArgValueUINT16(args[1]);
+    int varAddr2 = getArgValueUINT16(args[2]);
+
     // ADD (var, var/uint16, var/uint16)
-    int result = getArgValueUINT16(args[1]) + getArgValueUINT16(args[2]);
+    int result = mm.read(this->id, varAddr1, 2) + mm.read(this->id, varAddr2, 2);
 
     // Clamp uint16 to [0, max(uint16)]
     result = std::clamp(result, 0,
                         static_cast<int>(std::numeric_limits<uint16_t>::max()));
 
-    // Save result to var
-    variables[std::any_cast<std::string>(args[0])] =
-        static_cast<uint16_t>(result);
+    // Write result into memory
+    mm.write(this->id, varAddrDest, static_cast<uint16_t>(result), 2);
 }
 
 void Process::_SUBTRACT (std::vector<std::any> &args, MemoryManager &mm)
 {
-    // SUBTRACT (var, var/uint16, var/uint16)
-    int result = getArgValueUINT16(args[1]) - getArgValueUINT16(args[2]);
+    // Get memory addresses of variables
+    int varAddrDest = getArgValueUINT16(args[0]);
+    int varAddr1 = getArgValueUINT16(args[1]);
+    int varAddr2 = getArgValueUINT16(args[2]);
+
+    // ADD (var, var/uint16, var/uint16)
+    int result = mm.read(this->id, varAddr1, 2) - mm.read(this->id, varAddr2, 2);
 
     // Clamp uint16 to [0, max(uint16)]
     result = std::clamp(result, 0,
                         static_cast<int>(std::numeric_limits<uint16_t>::max()));
 
-    // Save result to var
-    variables[std::any_cast<std::string>(args[0])] =
-        static_cast<uint16_t>(result);
+    // Write result into memory
+    mm.write(this->id, varAddrDest, static_cast<uint16_t>(result), 2);
 }
 
 void Process::_SLEEP (std::vector<std::any> &args, MemoryManager &mm)
