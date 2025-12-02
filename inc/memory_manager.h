@@ -35,11 +35,15 @@ class MemoryManager {
         uint32_t getRAMSize();
         uint32_t getMemUsage();
         uint32_t getMemUsageForPID(int pid);
+        uint32_t getPageInCount();
+        uint32_t getPageOutCount();
 
     private:
         uint32_t memory_size;        // total physical memory size in bytes
         uint32_t frame_size;         // size of each page/frame in bytes
         uint32_t numFrames;        // total number of frames in memory
+        uint32_t pageInCount;       // number of paged in
+        uint32_t pageOutCount;       // number of paged out
 
         std::unique_ptr<uint8_t[]> memory;  // actual physical memory array
         std::vector<Frame> frameTable;      // metadata for each physical frame

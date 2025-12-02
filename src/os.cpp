@@ -43,6 +43,7 @@ void OS::reset ()
 {
     std::lock_guard<std::mutex> lock(this->mutex);
     this->cycle = 0;
+    this->activeCycle = 0;
     this->processAutoId = 0;
 
     this->cores.clear();
@@ -65,7 +66,10 @@ void OS::reset ()
 
 void OS::incrementCycles () { this->cycle++; }
 
-void OS::resetCycles () { this->cycle = 0; }
+void OS::resetCycles () { 
+    this->cycle = 0;
+    this->activeCycle = 0;
+}
 
 void OS::ls (bool writeReport)
 {
@@ -363,7 +367,29 @@ void OS::processSMI_main (){
 
     // Refresh window to show everything
     this->dm.refreshPad();
+}
 
+void OS::vmstat (){
+    std::lock_guard<std::mutex> lock(this->mutex);
+    this->dm.clearOutputWindow();
+
+    std::stringstream ss;
+
+    std::string line;
+    int y = 0;
+
+    int mem_usage = mm.getMemUsage();
+    int ram_size = mm.getRAMSize();
+    this->dm._mvwprintw(y++, 0, "Total Memory: %d", ram_size);
+    this->dm._mvwprintw(y++, 0, "Used Memory: %d / %d", mem_usage, ram_size);
+    this->dm._mvwprintw(y++, 0, "Free Memory: %d / %d", ram_size - mem_usage, ram_size);
+    this->dm._mvwprintw(y++, 0, "Idle CPU ticks: %d", this->cycle - this->activeCycle);
+    this->dm._mvwprintw(y++, 0, "Active CPU ticks: %d", this->activeCycle);
+    this->dm._mvwprintw(y++, 0, "Total CPU ticks: %d", this->cycle);
+    this->dm._mvwprintw(y++, 0, "Num paged in: %d", mm.getPageInCount());
+    this->dm._mvwprintw(y++, 0, "Num paged out: %d", mm.getPageOutCount());
+
+    this->dm.refreshPad();
 }
 
 void OS::setGenerateDummyProcesses (bool value)

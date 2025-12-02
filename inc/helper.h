@@ -3,7 +3,7 @@
 #include <stdexcept>
 
 bool isPowerOf2NInRange(uint32_t memory_size){
-    if (memory_size < (1 << 6) || memory_size > (1 << 16)){
+    if (memory_size < (1 << 3) || memory_size > (1 << 16)){
         return false;
     }
 

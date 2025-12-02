@@ -4,7 +4,9 @@ MemoryManager::MemoryManager( const std::string &filename, uint32_t memory_size,
     : memory_size(memory_size),
       frame_size(frame_size),
       numFrames(memory_size / frame_size),
-      backingStore(filename, frame_size)
+      backingStore(filename, frame_size),
+      pageInCount(0),
+      pageOutCount(0)
 {
     this->ageCounter = 0;
     memory = std::make_unique<uint8_t[]>(memory_size);
@@ -46,6 +48,7 @@ int MemoryManager::allocateFrame(int processId, int pageNumber) {
             frameTable[frameIndex].virtualPage,
             memory.get() + frameIndex * frame_size
         );
+        pageOutCount++;
     }
 
     if (!backingStore.pageExists(processId, pageNumber))
@@ -59,6 +62,7 @@ int MemoryManager::allocateFrame(int processId, int pageNumber) {
             pageNumber,
             blank.data()
         );
+        pageOutCount++;
     }
 
     // Load requested page into the frame
@@ -67,6 +71,7 @@ int MemoryManager::allocateFrame(int processId, int pageNumber) {
         pageNumber,
         memory.get() + frameIndex * frame_size
     );
+    pageInCount++;
 
     frameTable[frameIndex].isOccupied = true;
     frameTable[frameIndex].isDirty = false;
@@ -160,4 +165,12 @@ uint32_t MemoryManager::getMemUsageForPID(int pid) {
             used += frame_size;
     }
     return used;
+}
+
+uint32_t MemoryManager::getPageInCount(){
+    return pageInCount;
+}
+
+uint32_t MemoryManager::getPageOutCount(){
+    return pageOutCount;
 }
