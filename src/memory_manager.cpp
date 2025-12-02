@@ -62,7 +62,6 @@ int MemoryManager::allocateFrame(int processId, int pageNumber) {
             pageNumber,
             blank.data()
         );
-        pageOutCount++;
     }
 
     // Load requested page into the frame
