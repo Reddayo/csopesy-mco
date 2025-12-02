@@ -352,11 +352,7 @@ void OS::screenC (std::string processName,
 }
 
 /* TODO: mem size*/
-<<<<<<< HEAD
 void OS::screenS (std::string processName, uint32_t memsize)
-=======
-void OS::screenS (std::string processName /*, uint32_t memsize */)
->>>>>>> origin/screenC
 {
     // Lock mutex before creating a new process
     std::unique_lock<std::mutex> lock(this->mutex);
@@ -384,20 +380,11 @@ void OS::screenS (std::string processName /*, uint32_t memsize */)
     }
 
     std::shared_ptr<Process> process(new Process(
-<<<<<<< HEAD
         this->processAutoId, 
         processName,
         this->config.getMinIns() + rand() % (this->config.getMaxIns() -
                                              this->config.getMinIns() + 1),
         memsize,
-=======
-        this->processAutoId, processName,
-        this->config.getMinIns() +
-            rand() % (this->config.getMaxIns() - this->config.getMinIns() + 1),
-        this->config.getMinMemPerProc() +
-            rand() % (this->config.getMaxMemPerProc() -
-                      this->config.getMinMemPerProc() + 1),
->>>>>>> origin/screenC
         this->config.getMemPerFrame()));
 
     // TODO: Would be confusing when a process is named "Haachama", with id:
