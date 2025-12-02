@@ -26,6 +26,27 @@ Process::Process (int id,
     randomizeInstructions(instruction_count);
 }
 
+Process::Process (int id,
+                  std::string name,
+                  std::vector<std::shared_ptr<Instruction>> instructions,
+                  uint32_t memory_size,
+                  uint32_t mem_per_frame)
+    : id(id), name(name), state(READY), programCounter(0),
+      memory_size(memory_size), mem_per_frame(mem_per_frame),
+      instructions(instructions)
+{
+    requiredPages = (memory_size + mem_per_frame - 1) / mem_per_frame;
+    this->print_stream << "Required Pages: " << requiredPages
+                       << "; Memory Size: " << memory_size << "\n";
+    // this->variables["x"] = 0; //im assuming this doesn't really do anything
+    /* this->memsize = memsize; */
+
+    this->startTime = std::time(0);
+    this->logicalAddressCounter = 0;
+    this->memorySize = memory_size;
+    this->setTotalCycles(instructions.size());
+}
+
 std::string Process::getName () { return this->name; }
 
 int Process::getId () { return this->id; }

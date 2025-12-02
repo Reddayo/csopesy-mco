@@ -1,5 +1,6 @@
 #include <curses.h>
 #include <filesystem>
+#include <iostream>
 #include <map>
 #include <string>
 #include <thread>
@@ -53,9 +54,9 @@ int main ()
 
     Config config("config.txt");
 
-
     // Could be better
-    MemoryManager mm("csopesy-backing-store.txt", config.getMaxOverAllMem(), config.getMemPerFrame());
+    MemoryManager mm("csopesy-backing-store.txt", config.getMaxOverAllMem(),
+                     config.getMemPerFrame());
 
     OS os(dm, mm, config);
 
@@ -171,14 +172,20 @@ int main ()
                 dm.clearInputWindow();
                 dm.clearOutputWindow();
                 os.screenR(args[0].substr(3));
-            } /* else if(args[0].substr(0, 3) == "-c ") {
+            } else if (args[0].substr(0, 3) == "-c ") {
                 dm.clearInputWindow();
-                dm.clearOutputWIndow();
+                dm.clearOutputWindow();
 
-                might be ideal to pre process memsize here, instead of in the OS, 
-                so showErrorPrompt  can be used
-                os.screenC(args[0].subtr(3), and the "instruction_string here");
-            }*/ else {
+                std::string longarg = args[0].substr(3);
+                int index = longarg.find(' ');
+                int index2 = longarg.find(' ', index + 1);
+
+                // Mem size
+                uint32_t val = std::stoul(longarg.substr(index, index2));
+
+                os.screenC(longarg.substr(0, index), val,
+                           longarg.substr(index2));
+            } else {
                 dm.showErrorPrompt("Invalid command");
                 return;
             }

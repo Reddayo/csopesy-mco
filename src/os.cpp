@@ -1,5 +1,6 @@
 #include <any>
 #include <cstdint>
+#include <cstdlib>
 #include <ctime>
 #include <fstream>
 #include <iomanip>
@@ -241,6 +242,11 @@ std::vector<std::shared_ptr<Instruction>> parseInstructionSet (
             argsSS >> std::ws;
             arg.erase(arg.find_last_not_of(",; ") + 1);
 
+            if (instruction == "FOR") {
+                args_vec.push_back(parseInstructionSet(arg));
+                continue;
+            }
+
             // If hex addr
             if (arg.length() > 2 && arg.substr(0, 2) == "0x") {
                 try {
@@ -302,7 +308,7 @@ void OS::screenC (std::string processName,
     std::stringstream ss(instructionSet);
     std::string instruction_line;
 
-    if (memsize < 64 || memsize > 65536) { // 2^6 to 2^16
+    if (memsize >= 64 || memsize <= 65536) { // 2^6 to 2^16
         if (!(memsize > 0) && ((memsize & (memsize - 1)) == 0)) {
             this->dm._mvwprintw(
                 0, 0,
@@ -330,7 +336,7 @@ void OS::screenC (std::string processName,
     uint32_t instruction_count = parsed_instructions.size();
 
     std::shared_ptr<Process> process(
-        new Process(this->processAutoId, processName, instruction_count,
+        new Process(this->processAutoId, processName, parsed_instructions,
                     memsize, this->config.getMemPerFrame()));
 
     this->processAutoId++;
