@@ -106,6 +106,19 @@ void Process::_PRINT (std::vector<std::any> &args, MemoryManager &mm)
     print_stream << "\"\n";
 }
 
+/*
+uint16_t Process::allocateAddress() {
+    // 2-byte aligned allocation
+    while (std::any_of(variables.begin(), variables.end(),
+                       [this](auto &p){ return p.second == logicalAddressCounter; })) {
+        logicalAddressCounter += 2;
+    }
+    uint16_t allocated = logicalAddressCounter;
+    logicalAddressCounter += 2;
+    return allocated;
+}
+*/
+
 // ASSUMES THAT STUFF IS 2-BYTES ALIGNED
 void Process::_DECLARE (std::vector<std::any> &args, MemoryManager &mm)
 {

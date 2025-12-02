@@ -234,6 +234,8 @@ class Process
     uint32_t memory_size;   // memory of the process
     uint32_t mem_per_frame; // memory per page
     uint16_t requiredPages; // required pages of the process
+    uint32_t allocateAddress();
+    uint16_t getVarValue(std::any& args, MemoryManager& mm);
 
     // the max is 65535, maxed starting mappable address is whatever the
     // memory_size is - 2
