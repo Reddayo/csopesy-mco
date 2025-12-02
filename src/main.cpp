@@ -204,6 +204,11 @@ int main ()
     ci_main.addCommand( //
         "process-smi", 0, false,
         [&os] (CommandArguments &) { os.processSMI_main(); });
+    
+    // vmstat command
+    ci_main.addCommand( //
+        "vmstat", 0, false,
+        [&os] (CommandArguments &) { os.vmstat(); });
 
     // Process command interpreter ---------------------------------------------
 

@@ -6,6 +6,7 @@
 #include <limits>
 #include <sstream>
 #include <string>
+#include <typeinfo>
 
 #include "../inc/process.h"
 
@@ -152,38 +153,80 @@ void Process::_DECLARE (std::vector<std::any> &args, MemoryManager &mm)
 
 void Process::_ADD (std::vector<std::any> &args, MemoryManager &mm)
 {
-    // Get memory addresses of variables
-    int varAddrDest = getArgValueUINT16(args[0]);
-    int varAddr1 = getArgValueUINT16(args[1]);
-    int varAddr2 = getArgValueUINT16(args[2]);
+    int val1, val2;
 
-    // ADD (var, var/uint16, var/uint16)
-    int result = mm.read(this->id, varAddr1, 2) + mm.read(this->id, varAddr2, 2);
+    if (args[1].type() == typeid(std::string)) {
+        std::string var1 = std::any_cast<std::string>(args[1]);
+        val1 = mm.read(this->id, variables[var1], 2);
+    }
+    else {
+        val1 = std::any_cast<uint16_t>(args[1]);
+    }
 
-    // Clamp uint16 to [0, max(uint16)]
+    if (args[2].type() == typeid(std::string)) {
+        std::string var2 = std::any_cast<std::string>(args[2]);
+        val2 = mm.read(this->id, variables[var2], 2);
+    }
+    else {
+        val2 = std::any_cast<uint16_t>(args[2]);
+    }
+
+    int result = val1 + val2;
     result = std::clamp(result, 0,
                         static_cast<int>(std::numeric_limits<uint16_t>::max()));
 
     // Write result into memory
-    mm.write(this->id, varAddrDest, static_cast<uint16_t>(result), 2);
+    std::string var0 = std::any_cast<std::string>(args[0]);
+    if (variables.count(var0) > 0) {
+        mm.write(this->id, variables[var0], static_cast<uint16_t>(result), 2);
+    }
+    else {
+        mm.write(this->id, logicalAddressCounter, static_cast<uint16_t>(result), 2);
+        logicalAddressCounter += 2;
+    }
+
+    print_stream << "\nAddition instruction: " << std::any_cast<std::string>(args[0])
+                 << " = " << val1 << " + " << val2 << " = " << result
+                 << "\n\n";
 }
 
 void Process::_SUBTRACT (std::vector<std::any> &args, MemoryManager &mm)
 {
-    // Get memory addresses of variables
-    int varAddrDest = getArgValueUINT16(args[0]);
-    int varAddr1 = getArgValueUINT16(args[1]);
-    int varAddr2 = getArgValueUINT16(args[2]);
+    int val1, val2;
 
-    // ADD (var, var/uint16, var/uint16)
-    int result = mm.read(this->id, varAddr1, 2) - mm.read(this->id, varAddr2, 2);
+    if (args[1].type() == typeid(std::string)) {
+        std::string var1 = std::any_cast<std::string>(args[1]);
+        val1 = mm.read(this->id, variables[var1], 2);
+    }
+    else {
+        val1 = std::any_cast<uint16_t>(args[1]);
+    }
 
-    // Clamp uint16 to [0, max(uint16)]
+    if (args[2].type() == typeid(std::string)) {
+        std::string var2 = std::any_cast<std::string>(args[2]);
+        val2 = mm.read(this->id, variables[var2], 2);
+    }
+    else {
+        val2 = std::any_cast<uint16_t>(args[2]);
+    }
+
+    int result = val1 - val2;
     result = std::clamp(result, 0,
                         static_cast<int>(std::numeric_limits<uint16_t>::max()));
 
     // Write result into memory
-    mm.write(this->id, varAddrDest, static_cast<uint16_t>(result), 2);
+    std::string var0 = std::any_cast<std::string>(args[0]);
+    if (variables.count(var0) > 0) {
+        mm.write(this->id, variables[var0], static_cast<uint16_t>(result), 2);
+    }
+    else {
+        mm.write(this->id, logicalAddressCounter, static_cast<uint16_t>(result), 2);
+        logicalAddressCounter += 2;
+    }
+
+    print_stream << "\nSubtraction instruction: " << std::any_cast<std::string>(args[0])
+                 << " = " << val1 << " - " << val2 << " = " << result
+                 << "\n\n";
 }
 
 void Process::_SLEEP (std::vector<std::any> &args, MemoryManager &mm)
@@ -325,12 +368,14 @@ std::shared_ptr<Instruction> Process::createInstruction (int depth,
 
     case ADD:
         /* TODO: Uncomment for test case */
+        /*
         {
             // ADD(x, x, random number in [1, 10])
             instruction->args = {std::string("x"), std::string("x"),
                                  (uint16_t)(rand() % 10 + 1)};
             break;
-        } //*/
+        }
+        */
     case SUBTRACT: {
         // First argument is always a destination variable
         std::string var1 = generateVariableName();
