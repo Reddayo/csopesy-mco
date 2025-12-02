@@ -33,7 +33,7 @@ class OS
 
     void screenR(std::string processName);
 
-    void screenS(std::string processName);
+    void screenS(std::string processName, uint32_t memsize);
 
     void screenC(std::string processName, uint32_t memsize, std::string instructionSet);
 

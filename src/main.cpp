@@ -149,7 +149,7 @@ int main ()
     // screen -s and -r will cause a switch to process screen, but not -ls
     ci_main.addCommand(
         "screen", 1, true,
-        [&os, &dm, &ci_main, &ci_process] (CommandArguments &args) {
+        [&os, &config, &dm, &ci_main, &ci_process] (CommandArguments &args) {
             if (!os.isRunning()) {
                 dm.showErrorPrompt(
                     "OS is not initialized. Use command \"initialize\" first.");
@@ -165,7 +165,38 @@ int main ()
             else if (args[0].substr(0, 3) == "-s ") {
                 dm.clearInputWindow();
                 dm.clearOutputWindow();
-                os.screenS(args[0].substr(3));
+
+                std::string paramStr = args[0].substr(3);  
+                size_t spacePos = paramStr.find(' ');
+                if (spacePos == std::string::npos) {
+                    dm.showErrorPrompt("Usage: screen -s <name> <size>");
+                    return;
+                }
+
+                std::string name = paramStr.substr(0, spacePos);
+                std::string sizeStr = paramStr.substr(spacePos + 1);
+
+                uint32_t size = 0;
+
+                try {
+                    size = std::stoi(sizeStr);
+
+                    if (!((size != 0) && ((size & (size - 1)) == 0))) {
+                        dm.showErrorPrompt("Invalid size. Must be a power of 2.");
+                        return;
+                    }
+                    
+                    if (size < config.getMinMemPerProc() || size > config.getMaxMemPerProc()) {
+                        dm.showErrorPrompt("Invalid size. Must be within allowed range.");
+                        return;
+                    }
+
+                } catch (...) {
+                    dm.showErrorPrompt("Invalid size. Must be an integer.");
+                    return;
+                }
+
+                os.screenS(name, size);
             } // screen -r process_name
             else if (args[0].substr(0, 3) == "-r ") {
                 dm.clearInputWindow();

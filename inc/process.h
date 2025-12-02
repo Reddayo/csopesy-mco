@@ -229,8 +229,6 @@ class Process
     uint32_t mem_per_frame; // memory per page
     uint16_t requiredPages; // required pages of the process
 
-    uint16_t runningProcess;
-
     // the max is 65535, maxed starting mappable address is whatever the
     // memory_size is - 2
     uint32_t logicalAddressCounter;
