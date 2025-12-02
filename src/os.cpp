@@ -515,8 +515,8 @@ void OS::processSMI_main ()
         this->dm._mvwprintw(y++, 0, "%s", line.c_str());
     }
 
-    this->dm._mvwprintw(y++, 0, "Total Memory Used For Real: %d \n",
-                        totalMemUsedForReal);
+    /* this->dm._mvwprintw(y++, 0, "Total Memory Used For Real: %d \n",
+                        totalMemUsedForReal); */
 
     // Refresh window to show everything
     this->dm.refreshPad();

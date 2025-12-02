@@ -168,7 +168,7 @@ void Process::_ADD(std::vector<std::any> &args, MemoryManager &mm)
         addr = variables[destVar];
     } else {
         if (variables.size() >= 32) {
-            print_stream << "ADD instruction ignored: reached 32 variable limit.\n";
+            // print_stream << "ADD instruction ignored: reached 32 variable limit.\n";
             return;
         }
 
@@ -204,7 +204,7 @@ void Process::_SUBTRACT(std::vector<std::any> &args, MemoryManager &mm)
         addr = variables[destVar];
     } else {
         if (variables.size() >= 32) {
-            print_stream << "SUBTRACT instruction ignored: reached 32 variable limit.\n";
+            // print_stream << "SUBTRACT instruction ignored: reached 32 variable limit.\n";
             return;
         }
 
