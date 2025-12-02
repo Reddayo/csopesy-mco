@@ -99,7 +99,7 @@ void Process::_PRINT (std::vector<std::any> &args, MemoryManager &mm)
         for (auto i = begin(args) + 1, e = end(args); i != e; ++i) {
             std::string var_name = std::any_cast<std::string>(*i);
 
-            print_stream << this->variables[var_name];
+            print_stream << mm.read(this->id, variables[var_name], 2);
         }
     };
 
