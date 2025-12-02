@@ -120,160 +120,106 @@ uint16_t Process::allocateAddress() {
 */
 
 // ASSUMES THAT STUFF IS 2-BYTES ALIGNED
-void Process::_DECLARE (std::vector<std::any> &args, MemoryManager &mm)
+void Process::_DECLARE(std::vector<std::any> &args, MemoryManager &mm)
 {
-    // DECLARE (var, uint16)
-
     if (variables.size() >= 32) {
-        std::time_t now = std::time(0);
-        print_stream
-            << std::put_time(std::localtime(&now), "(%m/%d/%Y %H:%M:%S) ")
-            << "Declare instruction failed. Reached 32 variables limit: "
-            << variables.size() << " " << logicalAddressCounter << "\n";
+        print_stream << "Declare instruction failed: reached 32 variables limit.\n";
         return;
     }
 
     std::string varName = std::any_cast<std::string>(args[0]);
     uint16_t value = static_cast<uint16_t>(getArgValueUINT16(args[1]));
 
-    // check if that address is occupied already if not increment
+    uint16_t addr;
+    if (variables.count(varName) > 0) {
+        // overwrite existing variable
+        addr = variables[varName];
+    } else {
+        // assign next free address
+        addr = logicalAddressCounter;
+        variables[varName] = addr;
+        logicalAddressCounter += 2; // only increment when allocating new
+    }
 
-    while (std::any_of(variables.begin(), variables.end(), [this] (auto &p) {
-        return p.second == logicalAddressCounter;
-    })) {
+    mm.write(this->id, addr, value, 2);
+
+    /* print_stream << "Declare Success: Address: " << addr
+                 << " Value: " << value << " Count: " << variables.size()
+                 << " Name: " << varName << "\n";
+    */
+}
+void Process::_ADD(std::vector<std::any> &args, MemoryManager &mm)
+{
+    int val1 = (args[1].type() == typeid(std::string))
+                    ? mm.read(this->id, variables[std::any_cast<std::string>(args[1])], 2)
+                    : std::any_cast<uint16_t>(args[1]);
+
+    int val2 = (args[2].type() == typeid(std::string))
+                    ? mm.read(this->id, variables[std::any_cast<std::string>(args[2])], 2)
+                    : std::any_cast<uint16_t>(args[2]);
+
+    int result = std::clamp(val1 + val2, 0, static_cast<int>(std::numeric_limits<uint16_t>::max()));
+
+    std::string destVar = std::any_cast<std::string>(args[0]);
+    uint16_t addr;
+
+    if (variables.count(destVar) > 0) {
+        // overwrite existing variable
+        addr = variables[destVar];
+    } else {
+        if (variables.size() >= 32) {
+            print_stream << "ADD instruction ignored: reached 32 variable limit.\n";
+            return;
+        }
+
+        // allocate new address
+        addr = logicalAddressCounter;
+        variables[destVar] = addr;
         logicalAddressCounter += 2;
     }
 
-    variables[varName] = logicalAddressCounter;
+    mm.write(this->id, addr, static_cast<uint16_t>(result), 2);
 
-    // store initial value in physical memory
-    mm.write(this->id, logicalAddressCounter, value, 2);
-    // Debugging do not remove, until you're sure it's fine
-    auto now = std::chrono::system_clock::now();
-    std::time_t now_c = std::chrono::system_clock::to_time_t(now);
-    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-                  now.time_since_epoch()) %
-              1000;
-
-    print_stream << std::put_time(std::localtime(&now_c), "(%m/%d/%Y %H:%M:%S)")
-                 << "." << std::setw(3) << std::setfill('0') << ms.count()
-                 << " "
-                 << "Declare Success: Address: " << logicalAddressCounter
-                 << " Value: " << value << " Count: " << variables.size()
-                 << " Name: " << varName << "\n";
-
-    logicalAddressCounter += 2;
+    /* print_stream << "Addition instruction: " << destVar
+                 << " = " << val1 << " + " << val2 << " = " << result << "\n"; */
 }
 
-
-
-void Process::_ADD (std::vector<std::any> &args, MemoryManager &mm)
+void Process::_SUBTRACT(std::vector<std::any> &args, MemoryManager &mm)
 {
-    int val1, val2;
+    int val1 = (args[1].type() == typeid(std::string))
+                    ? mm.read(this->id, variables[std::any_cast<std::string>(args[1])], 2)
+                    : std::any_cast<uint16_t>(args[1]);
 
-    if (args[1].type() == typeid(std::string)) {
-        std::string var1 = std::any_cast<std::string>(args[1]);
-        val1 = mm.read(this->id, variables[var1], 2);
-    }
-    else {
-        val1 = std::any_cast<uint16_t>(args[1]);
-    }
+    int val2 = (args[2].type() == typeid(std::string))
+                    ? mm.read(this->id, variables[std::any_cast<std::string>(args[2])], 2)
+                    : std::any_cast<uint16_t>(args[2]);
 
-    if (args[2].type() == typeid(std::string)) {
-        std::string var2 = std::any_cast<std::string>(args[2]);
-        val2 = mm.read(this->id, variables[var2], 2);
-    }
-    else {
-        val2 = std::any_cast<uint16_t>(args[2]);
-    }
+    int result = std::clamp(val1 - val2, 0, static_cast<int>(std::numeric_limits<uint16_t>::max()));
 
-    int result = val1 + val2;
-    result = std::clamp(result, 0,
-                        static_cast<int>(std::numeric_limits<uint16_t>::max()));
-    
     std::string destVar = std::any_cast<std::string>(args[0]);
     uint16_t addr;
-    // Write result into memory
+
     if (variables.count(destVar) > 0) {
-            // Reuse existing variable
-            addr = variables[destVar];
-        } else {
-            // If we're already at 32 variables, ignore new allocation
-            if (variables.size() >= 32) {
-                print_stream << "ADD instruction ignored: reached 32 variable limit.\n";
-                return;
-            }
-
-            // Find next free 2-byte-aligned address
-            while (std::any_of(variables.begin(), variables.end(), [this](auto &p){
-                return p.second == logicalAddressCounter;
-            })) {
-                logicalAddressCounter += 2;
-            }
-
-            addr = logicalAddressCounter;
-            variables[destVar] = addr;
-            logicalAddressCounter += 2;
+        // overwrite existing variable
+        addr = variables[destVar];
+    } else {
+        if (variables.size() >= 32) {
+            print_stream << "SUBTRACT instruction ignored: reached 32 variable limit.\n";
+            return;
         }
 
-        mm.write(this->id, addr, static_cast<uint16_t>(result), 2);
+        // allocate new address
+        addr = logicalAddressCounter;
+        variables[destVar] = addr;
+        logicalAddressCounter += 2;
+    }
 
-        print_stream << "\nAddition instruction: " << destVar
-                    << " = " << val1 << " + " << val2 << " = " << result << "\n\n";
+    mm.write(this->id, addr, static_cast<uint16_t>(result), 2);
+
+    /* print_stream << "Subtraction instruction: " << destVar
+                 << " = " << val1 << " - " << val2 << " = " << result << "\n"; */
 }
 
-void Process::_SUBTRACT (std::vector<std::any> &args, MemoryManager &mm)
-{
-    int val1, val2;
-
-    if (args[1].type() == typeid(std::string)) {
-        std::string var1 = std::any_cast<std::string>(args[1]);
-        val1 = mm.read(this->id, variables[var1], 2);
-    }
-    else {
-        val1 = std::any_cast<uint16_t>(args[1]);
-    }
-
-    if (args[2].type() == typeid(std::string)) {
-        std::string var2 = std::any_cast<std::string>(args[2]);
-        val2 = mm.read(this->id, variables[var2], 2);
-    }
-    else {
-        val2 = std::any_cast<uint16_t>(args[2]);
-    }
-
-    int result = val1 - val2;
-    result = std::clamp(result, 0,
-                        static_cast<int>(std::numeric_limits<uint16_t>::max()));
-
-    // Write result into memory
-    std::string destVar = std::any_cast<std::string>(args[0]);
-        uint16_t addr;
-
-        if (variables.count(destVar) > 0) {
-            addr = variables[destVar];
-        } else {
-            if (variables.size() >= 32) {
-                print_stream << "SUBTRACT instruction ignored: reached 32 variable limit.\n";
-                return;
-            }
-
-            while (std::any_of(variables.begin(), variables.end(), [this](auto &p){
-                return p.second == logicalAddressCounter;
-            })) {
-                logicalAddressCounter += 2;
-            }
-
-            addr = logicalAddressCounter;
-            variables[destVar] = addr;
-            logicalAddressCounter += 2;
-        }
-
-        mm.write(this->id, addr, static_cast<uint16_t>(result), 2);
-
-        print_stream << "\nSubtraction instruction: " << destVar
-                    << " = " << val1 << " - " << val2 << " = " << result << "\n\n";
-}
 
 void Process::_SLEEP (std::vector<std::any> &args, MemoryManager &mm)
 {
@@ -319,11 +265,11 @@ void Process::_READ (std::vector<std::any> &args, MemoryManager &mm)
                   now.time_since_epoch()) %
               1000;
 
-    print_stream << std::put_time(std::localtime(&now_c), "(%m/%d/%Y %H:%M:%S)")
+    /* print_stream << std::put_time(std::localtime(&now_c), "(%m/%d/%Y %H:%M:%S)")
                  << "." << std::setw(3) << std::setfill('0') << ms.count()
                  << " Reading from address " << address << " into variable "
                  << varname << " (memory location: " << var_address
-                 << "):\n    Value is " << value_read << "\n";
+                 << "):\n    Value is " << value_read << "\n"; */
 }
 void Process::_WRITE (std::vector<std::any> &args, MemoryManager &mm)
 {
@@ -336,10 +282,10 @@ void Process::_WRITE (std::vector<std::any> &args, MemoryManager &mm)
                   now.time_since_epoch()) %
               1000;
 
-    print_stream << std::put_time(std::localtime(&now_c), "(%m/%d/%Y %H:%M:%S)")
+    /* print_stream << std::put_time(std::localtime(&now_c), "(%m/%d/%Y %H:%M:%S)")
                  << "." << std::setw(3) << std::setfill('0') << ms.count()
                  << " Writing value " << value << " into address " << address
-                 << "\n";
+                 << "\n"; */
 
     mm.write(this->id, address, value,
              2);
