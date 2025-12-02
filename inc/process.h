@@ -50,6 +50,12 @@ class Process
             uint32_t memory_size,
             uint32_t mem_per_frame);
 
+    Process(int id,
+            std::string name,
+            std::vector<std::shared_ptr<Instruction>> instructions,
+            uint32_t memory_size,
+            uint32_t mem_per_frame);
+
     /** Pops an instruction and execute it (read ID and use a switch-case) */
     void execute(MemoryManager &mm);
 

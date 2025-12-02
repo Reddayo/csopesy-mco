@@ -1,23 +1,29 @@
+#include <any>
+#include <cstdint>
+#include <cstdlib>
 #include <ctime>
 #include <fstream>
 #include <iomanip>
 #include <list>
 #include <mutex>
+#include <regex>
 #include <sstream>
+#include <stack>
 #include <string>
 #include <thread>
+#include <vector>
 
 #include "../inc/core.h"
 #include "../inc/os.h"
 #include "../inc/scheduler.h"
 
-OS::OS (DisplayManager &dm,  MemoryManager &mm, Config &config)
+OS::OS (DisplayManager &dm, MemoryManager &mm, Config &config)
     : dm(dm),                                    // Display manager
       mm(mm),                                    // Memory Manager
       config(config),                            // Config values
       scheduler(Scheduler(config.getScheduler(), // Scheduler
                           config.getQuantumCycles())),
-      generateDummyProcesses(false)  
+      generateDummyProcesses(false)
 {
     for (int i = 0; i < config.getNumCPU(); i++) {
         this->cores.push_back(Core(i));
@@ -66,7 +72,8 @@ void OS::reset ()
 
 void OS::incrementCycles () { this->cycle++; }
 
-void OS::resetCycles () { 
+void OS::resetCycles ()
+{
     this->cycle = 0;
     this->activeCycle = 0;
 }
@@ -190,11 +197,166 @@ void OS::showDefaultProcessScreenMessage ()
         this->loadedProcess->getName().c_str());
 }
 
+std::vector<std::shared_ptr<Instruction>> parseInstructionSet (
+    std::string instructionSet)
+{
+    std::vector<std::shared_ptr<Instruction>> parsed_instructions;
+
+    std::stringstream ssRaw(instructionSet);
+    std::stringstream ssOut;
+    std::stack<char> tempStack;
+
+    ssRaw >> std::ws;
+    char c;
+    while (ssRaw.get(c)) {
+        if (c == '[' || c == '(') {
+            tempStack.push(c);
+        } else if (!tempStack.empty() && c == ']' && tempStack.top() == '[') {
+            tempStack.pop();
+        } else if (!tempStack.empty() && c == ')' && tempStack.top() == '(') {
+            tempStack.pop();
+        }
+
+        ssOut << c;
+        if (c == ';' && tempStack.empty()) {
+            ssOut << '\n';
+            ssRaw >> std::ws;
+        } else if (c == ',' && (tempStack.size() <= 1)) {
+            ssOut << '!'; // im out of ideas man
+            ssRaw >> std::ws;
+        }
+    }
+
+    const std::regex pattern("[()]");
+
+    std::string line;
+    while (std::getline(ssOut, line, '\n')) {
+        std::string cleaned = std::regex_replace(line, pattern, " ");
+
+        int split = cleaned.find(' ');
+        std::string instruction = cleaned.substr(0, split);
+        std::string args = cleaned.substr(split);
+
+        std::stringstream argsSS(args);
+        std::string arg;
+
+        std::vector<std::any> args_vec;
+
+        argsSS >> std::ws;
+        while (std::getline(argsSS, arg, '!')) {
+            argsSS >> std::ws;
+            arg.erase(arg.find_last_not_of(",; ") + 1);
+
+            if (instruction == "FOR" && args_vec.empty()) {
+                args_vec.push_back(
+                    parseInstructionSet(arg.substr(1, arg.length() - 2)));
+            }
+
+            // If hex addr
+            else if (arg.length() > 2 && arg.substr(0, 2) == "0x") {
+                try {
+                    // Convert to uint32
+                    uint32_t val = std::stoul(arg, nullptr, 16);
+                    args_vec.push_back(val);
+                } catch (...) {
+                    args_vec.push_back(arg);
+                }
+            } else {
+                try {
+                    // If numeric (uint16_t)
+                    // TODO: Range check idk
+                    uint16_t val = std::stoul(arg);
+                    args_vec.push_back(val);
+                } catch (...) {
+                    // If varname (string)
+                    args_vec.push_back(arg);
+                }
+            }
+        }
+
+        std::shared_ptr<Instruction> instructionObj(new Instruction);
+
+        instructionObj->args = args_vec;
+
+        // yandev time baby
+        if (instruction == "PRINT") {
+            instructionObj->id = PRINT;
+        } else if (instruction == "DECLARE") {
+            instructionObj->id = DECLARE;
+        } else if (instruction == "ADD") {
+            instructionObj->id = ADD;
+        } else if (instruction == "SUBTRACT") {
+            instructionObj->id = SUBTRACT;
+        } else if (instruction == "SLEEP") {
+            instructionObj->id = SLEEP;
+        } else if (instruction == "FOR") {
+            instructionObj->id = FOR;
+        } else if (instruction == "READ") {
+            instructionObj->id = READ;
+        } else if (instruction == "WRITE") {
+            instructionObj->id = WRITE;
+        }
+
+        parsed_instructions.push_back(instructionObj);
+    }
+
+    return parsed_instructions;
+}
+
 /* TODO: ScreenC*/
-void OS::screenC(std::string processName, uint32_t memsize, std::string instructionSet){}
+void OS::screenC (std::string processName,
+                  uint32_t memsize,
+                  std::string instructionSet)
+{
+    std::unique_lock<std::mutex> lock(this->mutex);
+
+    std::stringstream ss(instructionSet);
+    std::string instruction_line;
+
+    if (memsize >= 64 || memsize <= 65536) { // 2^6 to 2^16
+        if (!(memsize > 0) && ((memsize & (memsize - 1)) == 0)) {
+            this->dm._mvwprintw(
+                0, 0,
+                "invalid memory allocation: Memory size must be a power of 2.");
+            return;
+        }
+    } else {
+        this->dm._mvwprintw(0, 0,
+                            "invalid memory allocation: Memory size must be in "
+                            "the range of 64 (2^6) to 65536 (2^16)");
+        return;
+    }
+
+    // Parse
+    std::vector<std::shared_ptr<Instruction>> parsed_instructions =
+        parseInstructionSet(instructionSet);
+
+    if (parsed_instructions.size() < 1 || parsed_instructions.size() > 50) {
+        this->dm._mvwprintw(
+            0, 0,
+            "invalid command: Instruction set size must be between 1 and 50.");
+        return;
+    }
+
+    uint32_t instruction_count = parsed_instructions.size();
+
+    std::shared_ptr<Process> process(
+        new Process(this->processAutoId, processName, parsed_instructions,
+                    memsize, this->config.getMemPerFrame()));
+
+    this->processAutoId++;
+    this->loadedProcess = process; // Idk what this does, it used to be
+                                   // foundProcess but thats not a thing
+    this->showDefaultProcessScreenMessage();
+    this->scheduler.addProcess(process);
+}
 
 /* TODO: mem size*/
+<<<<<<< HEAD
 void OS::screenS (std::string processName, uint32_t memsize)
+=======
+void OS::screenS (std::string processName /*, uint32_t memsize */)
+>>>>>>> origin/screenC
 {
     // Lock mutex before creating a new process
     std::unique_lock<std::mutex> lock(this->mutex);
@@ -222,11 +384,20 @@ void OS::screenS (std::string processName, uint32_t memsize)
     }
 
     std::shared_ptr<Process> process(new Process(
+<<<<<<< HEAD
         this->processAutoId, 
         processName,
         this->config.getMinIns() + rand() % (this->config.getMaxIns() -
                                              this->config.getMinIns() + 1),
         memsize,
+=======
+        this->processAutoId, processName,
+        this->config.getMinIns() +
+            rand() % (this->config.getMaxIns() - this->config.getMinIns() + 1),
+        this->config.getMinMemPerProc() +
+            rand() % (this->config.getMaxMemPerProc() -
+                      this->config.getMinMemPerProc() + 1),
+>>>>>>> origin/screenC
         this->config.getMemPerFrame()));
 
     // TODO: Would be confusing when a process is named "Haachama", with id:
@@ -295,17 +466,16 @@ void OS::processSMI_process ()
     this->dm.refreshPad();
 }
 
-
-void OS::processSMI_main (){
+void OS::processSMI_main ()
+{
 
     std::lock_guard<std::mutex> lock(this->mutex);
     this->dm.clearOutputWindow();
 
-
     std::stringstream ss;
 
     std::string line;
-    int y = 0; 
+    int y = 0;
 
     // Number of cores
     int nCores = this->cores.size();
@@ -350,7 +520,7 @@ void OS::processSMI_main (){
 
         ss << "Mem Usage: " << processMem << " bytes\n";
 
-        totalMemUsedForReal += processMem; 
+        totalMemUsedForReal += processMem;
     }
 
     // Print each line of string -ls separately
@@ -358,7 +528,8 @@ void OS::processSMI_main (){
         this->dm._mvwprintw(y++, 0, "%s", line.c_str());
     }
 
-    this->dm._mvwprintw(y++, 0, "Total Memory Used For Real: %d \n", totalMemUsedForReal);
+    this->dm._mvwprintw(y++, 0, "Total Memory Used For Real: %d \n",
+                        totalMemUsedForReal);
 
     // Refresh window to show everything
     this->dm.refreshPad();
@@ -367,7 +538,8 @@ void OS::processSMI_main (){
     this->dm.refreshPad();
 }
 
-void OS::vmstat (){
+void OS::vmstat ()
+{
     std::lock_guard<std::mutex> lock(this->mutex);
     this->dm.clearOutputWindow();
 
@@ -380,8 +552,10 @@ void OS::vmstat (){
     int ram_size = mm.getRAMSize();
     this->dm._mvwprintw(y++, 0, "Total Memory: %d", ram_size);
     this->dm._mvwprintw(y++, 0, "Used Memory: %d / %d", mem_usage, ram_size);
-    this->dm._mvwprintw(y++, 0, "Free Memory: %d / %d", ram_size - mem_usage, ram_size);
-    this->dm._mvwprintw(y++, 0, "Idle CPU ticks: %d", this->cycle - this->activeCycle);
+    this->dm._mvwprintw(y++, 0, "Free Memory: %d / %d", ram_size - mem_usage,
+                        ram_size);
+    this->dm._mvwprintw(y++, 0, "Idle CPU ticks: %d",
+                        this->cycle - this->activeCycle);
     this->dm._mvwprintw(y++, 0, "Active CPU ticks: %d", this->activeCycle);
     this->dm._mvwprintw(y++, 0, "Total CPU ticks: %d", this->cycle);
     this->dm._mvwprintw(y++, 0, "Num paged in: %d", mm.getPageInCount());
