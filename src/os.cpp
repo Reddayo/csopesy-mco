@@ -227,7 +227,7 @@ std::vector<std::shared_ptr<Instruction>> parseInstructionSet (
         }
     }
 
-    const std::regex pattern("[()[\\]]");
+    const std::regex pattern("[()]");
 
     std::string line;
     while (std::getline(ssOut, line, '\n')) {
@@ -247,13 +247,13 @@ std::vector<std::shared_ptr<Instruction>> parseInstructionSet (
             argsSS >> std::ws;
             arg.erase(arg.find_last_not_of(",; ") + 1);
 
-            if (instruction == "FOR") {
-                args_vec.push_back(parseInstructionSet(arg));
-                continue;
+            if (instruction == "FOR" && args_vec.empty()) {
+                args_vec.push_back(
+                    parseInstructionSet(arg.substr(1, arg.length() - 2)));
             }
 
             // If hex addr
-            if (arg.length() > 2 && arg.substr(0, 2) == "0x") {
+            else if (arg.length() > 2 && arg.substr(0, 2) == "0x") {
                 try {
                     // Convert to uint32
                     uint32_t val = std::stoul(arg, nullptr, 16);
