@@ -124,6 +124,7 @@ void Process::_DECLARE (std::vector<std::any> &args, MemoryManager &mm)
     uint16_t value = static_cast<uint16_t>(getArgValueUINT16(args[1]));
 
     // check if that address is occupied already if not increment
+
     while (std::any_of(variables.begin(), variables.end(), [this] (auto &p) {
         return p.second == logicalAddressCounter;
     })) {
@@ -151,6 +152,8 @@ void Process::_DECLARE (std::vector<std::any> &args, MemoryManager &mm)
     logicalAddressCounter += 2;
 }
 
+
+
 void Process::_ADD (std::vector<std::any> &args, MemoryManager &mm)
 {
     int val1, val2;
@@ -174,20 +177,36 @@ void Process::_ADD (std::vector<std::any> &args, MemoryManager &mm)
     int result = val1 + val2;
     result = std::clamp(result, 0,
                         static_cast<int>(std::numeric_limits<uint16_t>::max()));
-
+    
+    std::string destVar = std::any_cast<std::string>(args[0]);
+    uint16_t addr;
     // Write result into memory
-    std::string var0 = std::any_cast<std::string>(args[0]);
-    if (variables.count(var0) > 0) {
-        mm.write(this->id, variables[var0], static_cast<uint16_t>(result), 2);
-    }
-    else {
-        mm.write(this->id, logicalAddressCounter, static_cast<uint16_t>(result), 2);
-        logicalAddressCounter += 2;
-    }
+    if (variables.count(destVar) > 0) {
+            // Reuse existing variable
+            addr = variables[destVar];
+        } else {
+            // If we're already at 32 variables, ignore new allocation
+            if (variables.size() >= 32) {
+                print_stream << "ADD instruction ignored: reached 32 variable limit.\n";
+                return;
+            }
 
-    print_stream << "\nAddition instruction: " << std::any_cast<std::string>(args[0])
-                 << " = " << val1 << " + " << val2 << " = " << result
-                 << "\n\n";
+            // Find next free 2-byte-aligned address
+            while (std::any_of(variables.begin(), variables.end(), [this](auto &p){
+                return p.second == logicalAddressCounter;
+            })) {
+                logicalAddressCounter += 2;
+            }
+
+            addr = logicalAddressCounter;
+            variables[destVar] = addr;
+            logicalAddressCounter += 2;
+        }
+
+        mm.write(this->id, addr, static_cast<uint16_t>(result), 2);
+
+        print_stream << "\nAddition instruction: " << destVar
+                    << " = " << val1 << " + " << val2 << " = " << result << "\n\n";
 }
 
 void Process::_SUBTRACT (std::vector<std::any> &args, MemoryManager &mm)
@@ -215,18 +234,32 @@ void Process::_SUBTRACT (std::vector<std::any> &args, MemoryManager &mm)
                         static_cast<int>(std::numeric_limits<uint16_t>::max()));
 
     // Write result into memory
-    std::string var0 = std::any_cast<std::string>(args[0]);
-    if (variables.count(var0) > 0) {
-        mm.write(this->id, variables[var0], static_cast<uint16_t>(result), 2);
-    }
-    else {
-        mm.write(this->id, logicalAddressCounter, static_cast<uint16_t>(result), 2);
-        logicalAddressCounter += 2;
-    }
+    std::string destVar = std::any_cast<std::string>(args[0]);
+        uint16_t addr;
 
-    print_stream << "\nSubtraction instruction: " << std::any_cast<std::string>(args[0])
-                 << " = " << val1 << " - " << val2 << " = " << result
-                 << "\n\n";
+        if (variables.count(destVar) > 0) {
+            addr = variables[destVar];
+        } else {
+            if (variables.size() >= 32) {
+                print_stream << "SUBTRACT instruction ignored: reached 32 variable limit.\n";
+                return;
+            }
+
+            while (std::any_of(variables.begin(), variables.end(), [this](auto &p){
+                return p.second == logicalAddressCounter;
+            })) {
+                logicalAddressCounter += 2;
+            }
+
+            addr = logicalAddressCounter;
+            variables[destVar] = addr;
+            logicalAddressCounter += 2;
+        }
+
+        mm.write(this->id, addr, static_cast<uint16_t>(result), 2);
+
+        print_stream << "\nSubtraction instruction: " << destVar
+                    << " = " << val1 << " - " << val2 << " = " << result << "\n\n";
 }
 
 void Process::_SLEEP (std::vector<std::any> &args, MemoryManager &mm)
@@ -295,7 +328,7 @@ void Process::_WRITE (std::vector<std::any> &args, MemoryManager &mm)
                  << " Writing value " << value << " into address " << address
                  << "\n";
 
-    mm.write(this->id, getArgValueUINT16(args[0]), getArgValueUINT16(args[1]),
+    mm.write(this->id, address, value,
              2);
 }
 

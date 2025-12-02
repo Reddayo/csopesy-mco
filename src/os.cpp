@@ -479,7 +479,7 @@ void OS::processSMI_main ()
     int ram_size = mm.getRAMSize();
     float memUtil = mem_usage * 100.0 / ram_size;
     float cpuUtil = nRunningCores * 100.0 / nCores;
-    this->dm._mvwprintw(y++, 0, "CPU Utlization: ", cpuUtil);
+    this->dm._mvwprintw(y++, 0, "CPU Utlization: %.2f", cpuUtil);
     this->dm._mvwprintw(y++, 0, "Memory Usage: %d / %d", mem_usage, ram_size);
     this->dm._mvwprintw(y++, 0, "Memory Utiization: %.2f", memUtil);
 
