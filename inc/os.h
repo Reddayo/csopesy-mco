@@ -41,6 +41,8 @@ class OS
 
     void processSMI_main();
 
+    void vmstat();
+
     void setGenerateDummyProcesses(bool value);
 
     /** @return True if the OS is running */
@@ -60,6 +62,8 @@ class OS
 
   private:
     int cycle;
+
+    int activeCycle;
 
     int processAutoId = 0;
 

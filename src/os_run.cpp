@@ -169,6 +169,16 @@ void OS::run ()
             // Count down all sleeping threads
             this->scheduler.countDownSleepingProcesses();
 
+            // Increment if in active state (at least one of cores is running)
+            
+
+            for (Core &core : this->cores) {
+                if (core.isRunning()) {
+                    this->activeCycle++;
+                    break;
+                }
+            }
+
             // Proceed to next cycle
             this->cycle++;
         }
